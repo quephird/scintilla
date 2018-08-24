@@ -17,3 +17,10 @@
   (testing "two vectors with all pairs that are close enough"
     (is (true? (≈ [1 2 3]
                   [1.000001 1.999991 3.000001])))))
+
+(deftest testing-plus
+  (testing "adding a point to a vector results in a new point"
+    (is (= [3 5 7 1] (plus [1 2 3 1] [2 3 4 0]))))
+
+  (testing "adding a vector to a vector results in a new vector"
+    (is (= [3 5 7 0] (plus [1 2 3 0] [2 3 4 0])))))
