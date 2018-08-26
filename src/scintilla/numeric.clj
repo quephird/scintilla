@@ -27,3 +27,11 @@
     (case [w1 w2]
       ([1 0] [0 1] [0 0]) (map + v1 v2)
       (throw (Exception. "Cannot add two points.")))))
+
+(defn minus
+  [[_ _ _ w1 :as v1] [_ _ _ w2 :as v2]]
+  (if (or (not= 4 (count v1)) (not= 4 (count v2)))
+    (throw (Exception. "Both arguments must be tuples of length four."))
+    (case [w1 w2]
+      ([1 1] [1 0] [0 0]) (map - v1 v2)
+      (throw (Exception. "Cannot subtract a point from a vector.")))))
