@@ -35,3 +35,15 @@
     (case [w1 w2]
       ([1 1] [1 0] [0 0]) (map - v1 v2)
       (throw (Exception. "Cannot subtract a point from a vector.")))))
+
+(defn times
+  [[x y z w] s]
+  [(* s x) (* s y) (* s z) w])
+
+(defn divided-by
+  [t s]
+  (times t (/ 1.0 s)))
+
+(defn negate
+  [t]
+  (times t -1.0))

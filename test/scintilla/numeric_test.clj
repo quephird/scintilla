@@ -50,3 +50,15 @@
     (let [result (minus [3 2 1 0] [5 6 7 0])]
       (is (= [-2 -4 -6 0] result))
       (is (vector? result)))))
+
+(deftest testing-times
+  (testing "multiplying a tuple by a scalar"
+    (is (= [-3.5 7.0 -10.5 1] (times [-1 2 -3 1] 3.5)))))
+
+(deftest testing-divided-by
+  (testing "dividing a tuple by a scalar"
+    (is (= [-0.5 1.0 -1.5 1] (divided-by [-1 2 -3 1] 2)))))
+
+(deftest testing-negate
+  (testing "negating a tuple"
+    (is (= [-1.0 -2.0 -3.0 1] (negate [1 2 3 1])))))
