@@ -1,4 +1,5 @@
-(ns scintilla.numeric)
+(ns scintilla.numeric
+  (:refer-clojure :exclude [+ - * /]))
 
 (def *epsilon* 0.00001)
 
@@ -8,7 +9,7 @@
 (extend java.lang.Double
   AlmostEqual
   {:≈ (fn [d1 d2]
-        (< (Math/abs (- d1 d2)) *epsilon*))})
+        (< (Math/abs (clojure.core/- d1 d2)) *epsilon*))})
 
 (extend java.lang.Long
   AlmostEqual
@@ -20,30 +21,24 @@
   {:≈ (fn [v1 v2]
         (every? true? (map ≈ v1 v2)))})
 
-(defn plus
-  [[_ _ _ w1 :as v1] [_ _ _ w2 :as v2]]
-  (if (or (not= 4 (count v1)) (not= 4 (count v2)))
-    (throw (Exception. "Both arguments must be tuples of length four."))
-    (case [w1 w2]
-      ([1 0] [0 1] [0 0]) (map + v1 v2)
-      (throw (Exception. "Cannot add two points.")))))
+(defprotocol Tuple
+  (+ [v1 v2])
+  (- [v] [v1 v2])
+  (* [v s])
+  (/ [v s]))
 
-(defn minus
-  [[_ _ _ w1 :as v1] [_ _ _ w2 :as v2]]
-  (if (or (not= 4 (count v1)) (not= 4 (count v2)))
-    (throw (Exception. "Both arguments must be tuples of length four."))
-    (case [w1 w2]
-      ([1 1] [1 0] [0 0]) (map - v1 v2)
-      (throw (Exception. "Cannot subtract a point from a vector.")))))
-
-(defn times
-  [[x y z w] s]
-  [(* s x) (* s y) (* s z) w])
-
-(defn divided-by
-  [t s]
-  (times t (/ 1.0 s)))
-
-(defn negate
-  [t]
-  (times t -1.0))
+(extend-type clojure.lang.PersistentVector
+  Tuple
+  (+ [[_ _ _ w1 :as v1] [_ _ _ w2 :as v2]]
+      (case [w1 w2]
+        ([1 0] [0 1] [0 0]) (mapv clojure.core/+ v1 v2)
+        (throw (Exception. "Cannot add two points."))))
+  (- ([v] (mapv clojure.core/- v))
+     ([[_ _ _ w1 :as v1] [_ _ _ w2 :as v2]]
+      (case [w1 w2]
+        ([1 1] [1 0] [0 0]) (mapv clojure.core/- v1 v2)
+        (throw (Exception. "Cannot subtract a point from a vector.")))))
+  (* [[x y z w] s]
+      [(clojure.core/* s x) (clojure.core/* s y) (clojure.core/* s z) w])
+  (/ [v s]
+     (* v (clojure.core// 1.0 s))))
