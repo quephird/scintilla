@@ -24,6 +24,8 @@
 (defprotocol Tuple
   (+ [v1 v2])
   (- [v] [v1 v2])
+  (⋅ [v1 v2])
+  (⨯ [v1 v2])
   (* [v s])
   (/ [v s])
   (magnitude [v])
@@ -40,6 +42,17 @@
     (case [w1 w2]
       ([1 1] [1 0] [0 0]) (mapv clojure.core/- v1 v2)
       (throw (Exception. "Cannot subtract a point from a vector.")))))
+  (⋅ [[x1 y1 z1 w1] [x2 y2 z2 w2]]
+    (if (and (zero? w1) (zero? w2))
+      (clojure.core/+ (clojure.core/* x1 x2) (clojure.core/* y1 y2) (clojure.core/* z1 z2))
+      (throw (Exception. "Can only take dot product of two vectors"))))
+  (⨯ [[x1 y1 z1 w1] [x2 y2 z2 w2]]
+    (if (and (zero? w1) (zero? w2))
+      [(clojure.core/- (clojure.core/* y1 z2) (clojure.core/* z1 y2))
+       (clojure.core/- (clojure.core/* z1 x2) (clojure.core/* x1 z2))
+       (clojure.core/- (clojure.core/* x1 y2) (clojure.core/* y1 x2))
+       0]
+      (throw (Exception. "Can only take cross product of two vectors"))))
   (* [[x y z w] s]
     (if (= w 0)
       [(clojure.core/* s x) (clojure.core/* s y) (clojure.core/* s z) w]

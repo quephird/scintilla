@@ -82,3 +82,15 @@
     (is (≈ [0.26726 0.53452 0.80178] (normalize [1 2 3 0]))))
   (testing "magnitude of normalized vector"
     (is (≈ 1 (magnitude (normalize [1 2 3 0]))))))
+
+(deftest testing-dot-product
+  (testing "two vectors' dot product should be a scalar value"
+    (is (= 20 (⋅ [1 2 3 0] [2 3 4 0])))))
+
+(deftest testing-cross-product
+  (let [a [1 2 3 0]
+        b [2 3 4 0]]
+    (testing "two vectors cross product should be another vector"
+      (is (= [-1 2 -1 0] (⨯ a b))))
+    (testing "swapping the two operands results in the same vector but in the opposite direction"
+      (is (= (⨯ a b) (- (⨯ b a)))))))
