@@ -1,8 +1,8 @@
 (ns scintilla.canvas)
 
 (defn make-canvas
-  [x y]
-  (vec (repeat y (vec (repeat x [0 0 0])))))
+  [width height]
+  (vec (repeat height (vec (repeat width [0 0 0])))))
 
 (defn write-pixel
   [canvas x y color]
