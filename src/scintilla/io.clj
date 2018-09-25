@@ -17,6 +17,7 @@
   (+ (count (last (clojure.string/split-lines acc)))
      (count (clojure.string/join " " (map str new-color-components)))))
 
+;; TODO: consider stringbuffers here; this is way too slow
 (defn- format-row
   [row]
   (->> row
@@ -41,3 +42,13 @@
     (->> (for [row canvas] (format-row row))
          (interpose "\n")
          (apply str))))
+
+(defn save-as-ppm
+  [canvas filename]
+  (let [header (ppm-header canvas)
+        body   (ppm-body canvas)]
+    (with-open [w (clojure.java.io/writer filename)]
+      (.write w header)
+      (.write w "\n")
+      (.write w body)
+      (.write w "\n"))))
