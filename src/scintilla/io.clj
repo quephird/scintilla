@@ -1,10 +1,5 @@
-(ns scintilla.io)
-
-(defn clamp-and-scale
-  [c]
-  (-> (cond (< c 0.0) 0.0 (> c 1.0) 1.0 :else c)
-      (* 255.0)
-      Math/round))
+(ns scintilla.io
+  (:require [scintilla.color :as color]))
 
 (defn ppm-header
   [canvas]
@@ -12,17 +7,16 @@
         width  (count (first canvas))]
     (format "P3\n%s %s\n255" width height)))
 
-(defn new-line-length
+(defn- new-line-length
   [acc & new-color-components]
   (+ (count (last (clojure.string/split-lines acc)))
      (count (clojure.string/join " " (map str new-color-components)))))
 
-;; TODO: consider stringbuffers here; this is way too slow
 (defn- format-row
   [row]
   (->> row
        (reduce (fn [acc color]
-         (let [[r g b] (map clamp-and-scale color)]
+         (let [[r g b] (map color/clamp-and-scale color)]
            (cond
              (empty? acc)
                (format "%s %s %s" r g b)
