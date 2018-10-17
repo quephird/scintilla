@@ -74,6 +74,21 @@
                           [-7 -1 1]]]
       (is (= expected-value (submatrix 2 1 a))))))
 
+(deftest testing-minor
+  (testing "a 3X3 matrix"
+    (let [a [[3 5 0]
+             [2 -1 -7]
+             [6 -1 5]]]
+      (is (= 25 (minor 1 0 a))))))
+
+(deftest testing-cofactor
+  (testing "a 3X3 matrix"
+    (let [a [[3 5 0]
+             [2 -1 -7]
+             [6 -1 5]]]
+      (is (= -12 (cofactor 0 0 a)))
+      (is (= -25 (cofactor 1 0 a))))))
+
 (deftest testing-determinant
   (testing "a 2X2 matrix"
     (let [a [[1 5]

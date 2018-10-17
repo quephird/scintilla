@@ -50,6 +50,19 @@
     1
     -1))
 
+(declare minor)
+(declare determinant)
+
+(defn minor
+  [row-idx column-idx matrix]
+  (let [matrix' (submatrix row-idx column-idx matrix)]
+    (determinant matrix')))
+
+(defn cofactor
+  [row-idx column-idx matrix]
+  (* (sign row-idx column-idx)
+     (minor row-idx column-idx matrix)))
+
 (defn determinant
   [matrix]
   (case (count matrix)
@@ -57,8 +70,7 @@
       (let [[[a b] [c d]] matrix]
         (- (* a d) (* b c)))
     (reduce (fn [acc column-idx]
-              (+ acc (* (sign 0 column-idx)
-                        (get (first matrix) column-idx)
-                        (determinant (submatrix 0 column-idx matrix)))))
+              (+ acc (* (get (first matrix) column-idx)
+                        (cofactor 0 column-idx matrix))))
             0
             (range (count matrix)))))
