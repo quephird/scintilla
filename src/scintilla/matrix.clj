@@ -1,6 +1,6 @@
 (ns scintilla.matrix)
 
-(def I
+(def I₄
   [[1 0 0 0]
    [0 1 0 0]
    [0 0 1 0]
@@ -33,6 +33,10 @@
   [matrix scalar]
   (mapv (fn [row]
           (mapv (fn [cell] (* scalar cell)) row)) matrix))
+
+(defn scalar-divide
+  [matrix scalar]
+  (scalar-times matrix (/ 1.0 scalar)))
 
 (defn remove-at-index
   [index vector]
@@ -74,3 +78,22 @@
                         (cofactor 0 column-idx matrix))))
             0
             (range (count matrix)))))
+
+(defn cofactor-matrix
+  [matrix]
+  (let [dimension (count matrix)]
+    (mapv (fn [row-idx]
+            (mapv (fn [column-idx]
+                    (cofactor row-idx column-idx matrix))
+                  (range dimension)))
+          (range dimension))))
+
+(defn inverse
+  [matrix]
+  (let [d (determinant matrix)]
+    (if (zero? d)
+      (throw (Exception. "Matrix has no inverse"))
+      (-> matrix
+          cofactor-matrix
+          transpose
+          (scalar-divide d)))))
