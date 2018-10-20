@@ -31,7 +31,7 @@
                           [31 64 128 256]
                           [38 79 158 316]
                           [45 94 188 376]]]
-      (is (= expected-value (matrix-times a b)))))
+      (is (= expected-value (matrix-times a b))))))
 
 (deftest testing-tuple-times
   (testing "multiplying a 4X4 matrix with a 4 element tuple"
@@ -54,7 +54,7 @@
                           [4 8 8 4]
                           [16 12 8 2]
                           [0 0 0 2]]]
-      (is (= expected-value (scalar-times a b)))))))
+      (is (= expected-value (scalar-times a b))))))
 
 (deftest testing-submatrix
   (testing "a 3X3 matrix"

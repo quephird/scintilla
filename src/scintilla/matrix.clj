@@ -24,9 +24,7 @@
 (defn tuple-times
   [matrix tuple]
   (mapv (fn [row]
-          (mapv (fn [element]
-                  (reduce + 0 (map * row tuple)))
-                tuple))
+          (reduce + 0 (map * row tuple)))
         matrix))
 
 (defn scalar-times
