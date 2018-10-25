@@ -66,3 +66,54 @@
       (let [Rz (rotation-z-matrix π⟋2)
             expected-value [-1.0 0.0 0.0 1.0]]
         (is (≈ expected-value (tuple-times Rz p)))))))
+
+(deftest testing-shearing
+  (testing "shearing x in proportion to y"
+    (let [S (shearing-matrix 1 0 0 0 0 0)
+          p [2 3 4 1]
+          expected-value [5 3 4 1]]
+      (is (≈ expected-value (tuple-times S p)))))
+  (testing "shearing x in proportion to z"
+    (let [S (shearing-matrix 0 1 0 0 0 0)
+          p [2 3 4 1]
+          expected-value [6 3 4 1]]
+      (is (≈ expected-value (tuple-times S p)))))
+  (testing "shearing y in proportion to x"
+    (let [S (shearing-matrix 0 0 1 0 0 0)
+          p [2 3 4 1]
+          expected-value [2 5 4 1]]
+      (is (≈ expected-value (tuple-times S p)))))
+  (testing "shearing y in proportion to z"
+    (let [S (shearing-matrix 0 0 0 1 0 0)
+          p [2 3 4 1]
+          expected-value [2 7 4 1]]
+      (is (≈ expected-value (tuple-times S p)))))
+  (testing "shearing z in proportion to x"
+    (let [S (shearing-matrix 0 0 0 0 1 0)
+          p [2 3 4 1]
+          expected-value [2 3 6 1]]
+      (is (≈ expected-value (tuple-times S p)))))
+  (testing "shearing z in proportion to y"
+    (let [S (shearing-matrix 0 0 0 0 0 1)
+          p [2 3 4 1]
+          expected-value [2 3 7 1]]
+      (is (≈ expected-value (tuple-times S p))))))
+
+(deftest testing-all-transformations
+  (let [p  [1 0 1 1]
+        Rx (rotation-x-matrix π⟋2)
+        S  (scaling-matrix 5 5 5)
+        T  (translation-matrix 10 5 7)]
+    (testing "individual transformations applied in a sequence"
+      (let [p₂ (tuple-times Rx p)
+            p₃ (tuple-times S p₂)
+            p₄ (tuple-times T p₃)]
+        (is (≈ p₂ [1 -1 0 1]))
+        (is (≈ p₃ [5 -5 0 1]))
+        (is (≈ p₄ [15 0 7 1]))))
+    (testing "chained transformations must be applied in reverse order"
+      (let [M (->> Rx
+                   (matrix-times S)
+                   (matrix-times T))
+            new-p (tuple-times M p)]
+        (is (≈ new-p [15 0 7 1]))))))

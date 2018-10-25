@@ -47,6 +47,13 @@
    [    0.0      0.0  1.0  0.0]
    [    0.0      0.0  0.0  1.0]])
 
+(defn shearing-matrix
+  [xy xz yx yz zx zy]
+  [[ 1 xy xz  0]
+   [yx  1 yz  0]
+   [zx zy  1  0]
+   [ 0  0  0  1]])
+
 (defn translate
   [p x y z]
   (let [T (translation-matrix x y z)]
@@ -71,3 +78,8 @@
   [p θ]
   (let [Rz (rotation-z-matrix θ)]
     (tuple-times Rz p)))
+
+(defn shear
+  [p [xy xz yx yz zx zy]]
+  (let [S (shearing-matrix xy xz yx yz zx zy)]
+    (tuple-times S p)))
