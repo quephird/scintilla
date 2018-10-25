@@ -31,3 +31,38 @@
           S⁻¹ (inverse S)
           expected-value [-2 2 2 0]]
       (is (≈ expected-value (tuple-times S⁻¹ v))))))
+
+(deftest testing-rotation-x
+  (let [p [0 1 0 1]]
+    (testing "rotating a point around the x axis"
+      (let [Rx (rotation-x-matrix π⟋4)
+            expected-value [0.0 0.70711 0.70711 1.0]]
+        (is (≈ expected-value (tuple-times Rx p))))
+      (let [Rx (rotation-x-matrix π⟋2)
+            expected-value [0.0 0.0 1.0 1.0]]
+        (is (≈ expected-value (tuple-times Rx p)))))
+    (testing "rotating a point using a rotation matrix for an angle
+              is the same as using the inverse of a rotation matrix for the negative angle"
+      (let [Rx (rotation-x-matrix π⟋4)
+            Rx' (inverse (rotation-x-matrix (- π⟋4)))]
+        (is (≈ (tuple-times Rx p) (tuple-times Rx' p)))))))
+
+(deftest testing-rotation-y
+  (let [p [0 0 1 1]]
+    (testing "rotating a point around the y axis"
+      (let [Ry (rotation-y-matrix π⟋4)
+            expected-value [0.70711 0.0 0.70711 1.0]]
+        (is (≈ expected-value (tuple-times Ry p))))
+      (let [Ry (rotation-y-matrix π⟋2)
+            expected-value [1.0 0.0 0.0 1.0]]
+        (is (≈ expected-value (tuple-times Ry p)))))))
+
+(deftest testing-rotation-z
+  (let [p [0 1 0 1]]
+    (testing "rotating a point around the z axis"
+      (let [Rz (rotation-z-matrix π⟋4)
+            expected-value [-0.70711 0.70711 0.0 1.0]]
+        (is (≈ expected-value (tuple-times Rz p))))
+      (let [Rz (rotation-z-matrix π⟋2)
+            expected-value [-1.0 0.0 0.0 1.0]]
+        (is (≈ expected-value (tuple-times Rz p)))))))
