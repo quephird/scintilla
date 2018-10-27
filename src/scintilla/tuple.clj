@@ -16,6 +16,8 @@
   [x y z]
   [x y z 0])
 
+; Defines a protocol to allow colors to use the standard
+; mathematical operators.
 (defprotocol Tuple
   (+ [v1 v2])
   (- [v] [v1 v2])

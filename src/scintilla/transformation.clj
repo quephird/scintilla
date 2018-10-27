@@ -1,17 +1,22 @@
 (ns scintilla.transformation
   (:require [scintilla.matrix :refer :all]))
 
+; Just some cute shortcuts to make things look more mathy.
 (defn sin [θ] (Math/sin θ))
 (defn -sin [θ] (- (Math/sin θ)))
 (defn cos [θ] (Math/cos θ))
 (defn -cos [θ] (- (Math/cos θ)))
 
+; More cuteness, taking advantage of Clojure's support
+; of Unicode characters for names.
 (def π 3.1415926536)
 (def π⟋2 (/ π 2.0))
 (def π⟋3 (/ π 3.0))
 (def π⟋4 (/ π 4.0))
 (def π⟋6 (/ π 6.0))
 
+; These next six functions return 4 ⨯ 4 matrices
+; represented by their respective function names.
 (defn translation-matrix
   [x y z]
   [[1 0 0 x]
@@ -54,6 +59,8 @@
    [zx zy  1  0]
    [ 0  0  0  1]])
 
+; These next six functions return 1 ⨯ 4 tuples representing
+; points transformed by their respective strategies.
 (defn translate
   [p x y z]
   (let [T (translation-matrix x y z)]
