@@ -12,7 +12,7 @@
       (is (≈ [1 3 4 1] (position ray -1)))
       (is (≈ [4.5 3 4 1] (position ray 2.5))))))
 
-(deftest testing-intersections
+(deftest testing-find-intersections
   (testing "a ray that intersects a sphere at two points"
     (let [ray    (make-ray [0 0 -5 1] [0 0 1 0])
           sphere (make-sphere [0 0 0 1] 1)
@@ -42,3 +42,32 @@
           points (find-intersections sphere ray)]
       (is (= 2 (count points)))
       (is (≈ [-6.0 -4.0] (mapv :t points))))))
+
+(deftest testing-find-hit
+  (let [s (make-sphere [0 0 0 1] 1)]
+    (testing "when all intersections have positive t"
+      (let [i1 (make-intersection 1 s)
+            i2 (make-intersection 2 s)
+            intersections [i2 i1]
+            hit (find-hit intersections)]
+        (is (= hit i1))))
+    (testing "when some intersections have negative t"
+      (let [i1 (make-intersection -1 s)
+            i2 (make-intersection 1 s)
+            intersections [i2 i1]
+            hit (find-hit intersections)]
+        (is (= hit i2))))
+    (testing "when all intersections have negative t"
+      (let [i1 (make-intersection -2 s)
+            i2 (make-intersection -1 s)
+            intersections [i2 i1]
+            hit (find-hit intersections)]
+        (is (nil? hit))))
+    (testing "hit is intersection with lowest non-negative t"
+      (let [i1 (make-intersection 5 s)
+            i2 (make-intersection 7 s)
+            i3 (make-intersection -3 s)
+            i4 (make-intersection 2 s)
+            intersections [i1 i2 i3 i4]
+            hit (find-hit intersections)]
+        (is (= hit i4))))))

@@ -34,8 +34,9 @@
            (clojure.core// (clojure.core/- b √discriminant) (clojure.core/* -2.0 a))]))))
 
 (defn find-intersections
-  "Takes an abritrary shape and a ray and returns a vector
-   of either zero, one, or two points of intersection."
+  "Takes an abritrary shape and a ray and returns a list
+   of either zero, one, or two points of intersection, sorted
+   by increasing value of t."
   [{:keys [shape-center radius] :as shape}
    {:keys [point direction]}]
   (let [shape-to-ray (- point shape-center)
@@ -44,3 +45,12 @@
         c (clojure.core/- (⋅ shape-to-ray shape-to-ray) radius)
         tvals (find-roots a b c)]
     (map #(make-intersection % shape) tvals)))
+
+(defn find-hit
+  "Takes a set of intersections and selects only the
+   'visible' one, which is the intesection with the least positive
+   t value out of the set."
+   [intersections]
+   (->> intersections
+       (sort-by :t)
+       (some (fn [i] (if (< 0 (:t i)) i)))))
