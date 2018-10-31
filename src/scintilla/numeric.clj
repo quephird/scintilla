@@ -26,3 +26,9 @@
   AlmostEqual
   {:≈ (fn [v1 v2]
         (every? true? (map ≈ v1 v2)))})
+
+; Compares each pair of elements from the two sets.
+(extend clojure.lang.PersistentHashSet
+  AlmostEqual
+  {:≈ (fn [v1 v2]
+        (every? true? (map ≈ v1 v2)))})
