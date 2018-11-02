@@ -71,3 +71,18 @@
             intersections [i1 i2 i3 i4]
             hit (find-hit intersections)]
         (is (= hit i4))))))
+
+(deftest testing-translate
+  (testing "translating a ray has no effect on its direction vector"
+    (let [ray (make-ray [1 2 3 1] [0 1 0 0])
+          {:keys [point direction]} (make-ray [4 6 8 1] [0 1 0 0])]
+      (is (≈ point (:point (translate ray 3 4 5))))
+      (is (≈ direction (:direction (translate ray 3 4 5)))))))
+
+(deftest testing-scale
+  (testing "scaling a ray transforms both its point and direction vector"
+    (let [ray (make-ray [1 2 3 1] [0 1 0 0])
+          {:keys [point direction]} (make-ray [2 6 12 1] [0 3 0 0])
+          scaled-ray (scale ray 2 3 4)]
+      (is (≈ point (:point scaled-ray )))
+      (is (≈ direction (:direction scaled-ray ))))))

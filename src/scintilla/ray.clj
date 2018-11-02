@@ -1,5 +1,7 @@
 (ns scintilla.ray
-  (:require [scintilla.tuple :refer :all]))
+  (:require [scintilla.matrix :as m]
+            [scintilla.transformation :as t]
+            [scintilla.tuple :refer :all]))
 
 (defn make-ray
   "Constructs a data structure representing a ray"
@@ -54,3 +56,16 @@
    (->> intersections
        (sort-by :t)
        (some (fn [i] (if (< 0 (:t i)) i)))))
+
+;; TODO: Think of how to either move this into the transformation
+;; namespace or move what's currently in there back into the matrix
+;; namespace.
+(defn translate
+  [{:keys [point direction]} x y z]
+  (let [T (t/translation-matrix x y z)]
+    (make-ray (m/tuple-times T point) direction)))
+
+(defn scale
+  [{:keys [point direction]} x y z]
+  (let [S (t/scaling-matrix x y z)]
+    (make-ray (m/tuple-times S point) (m/tuple-times S direction))))
