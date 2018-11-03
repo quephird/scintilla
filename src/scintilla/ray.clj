@@ -54,8 +54,8 @@
   [{:keys [shape-type matrix] :as shape} ray]
   (case shape-type
     :sphere
-      (let [{:keys [point direction]} (transform ray matrix)
-            shape-to-ray (- point [0 0 0 1])
+      (let [{:keys [point direction]} (transform ray (m/inverse matrix))
+            shape-to-ray (- point [0 0 0 1.0])
             a (⋅ direction direction)
             b (clojure.core/* 2 (⋅ direction shape-to-ray))
             c (clojure.core/- (⋅ shape-to-ray shape-to-ray) 1.0)

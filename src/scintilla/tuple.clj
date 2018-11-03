@@ -1,4 +1,5 @@
-(ns scintilla.tuple)
+(ns scintilla.tuple
+  (:require [scintilla.numeric :refer [≈]]))
 
 (defn point?
   [[_ _ _ w]]
@@ -28,16 +29,18 @@
   (magnitude [v])
   (normalize [v]))
 
+;; TODO: Need to come up with better strategy for throwing
+;; under certain conditions
 (extend-type clojure.lang.PersistentVector
   Tuple
   (+ [[_ _ _ w1 :as v1] [_ _ _ w2 :as v2]]
-    (case [w1 w2]
-      ([1 0] [0 1] [0 0]) (mapv clojure.core/+ v1 v2)
+    (if (or (zero? w1) (zero? w2))
+      (mapv clojure.core/+ v1 v2)
       (throw (Exception. "Cannot add two points."))))
   (- ([v] (mapv clojure.core/- v))
    ([[_ _ _ w1 :as v1] [_ _ _ w2 :as v2]]
-    (case [w1 w2]
-      ([1 1] [1 0] [0 0]) (mapv clojure.core/- v1 v2)
+    (if (not (and (zero? w1) (≈ w2 1.0)))
+      (mapv clojure.core/- v1 v2)
       (throw (Exception. "Cannot subtract a point from a vector.")))))
   (⋅ [[x1 y1 z1 w1] [x2 y2 z2 w2]]
     (if (and (zero? w1) (zero? w2))

@@ -16,62 +16,46 @@
 (deftest testing-find-intersections
   (testing "a ray that intersects a sphere at two points"
     (let [ray    (make-ray [0 0 -5 1] [0 0 1 0])
-          sphere (make-sphere [0 0 0 1])
+          sphere (make-sphere)
           points (find-intersections sphere ray)]
       (is (= 2 (count points)))
       (is (≈ [4.0 6.0] (mapv :t points)))))
   (testing "a ray that intersects a sphere at one point"
     (let [ray    (make-ray [0 1 -5 1] [0 0 1 0])
-          sphere (make-sphere [0 0 0 1])
+          sphere (make-sphere)
           points (find-intersections sphere ray)]
       (is (= 1 (count points)))
       (is (≈ [5.0] (mapv :t points)))))
   (testing "a ray that intersects a sphere at one point"
     (let [ray    (make-ray [0 2 -5 1] [0 0 1 0])
-          sphere (make-sphere [0 0 0 1])
+          sphere (make-sphere)
           points (find-intersections sphere ray)]
       (is (= 0 (count points)))))
   (testing "a ray that originates from within a sphere"
     (let [ray    (make-ray [0 0 0 1] [0 0 1 0])
-          sphere (make-sphere [0 0 0 1])
+          sphere (make-sphere)
           points (find-intersections sphere ray)]
       (is (= 2 (count points)))
       (is (≈ [-1.0 1.0] (mapv :t points)))))
   (testing "a ray that originates in front of a sphere"
     (let [ray    (make-ray [0 0 5 1] [0 0 1 0])
-          sphere (make-sphere [0 0 0 1])
+          sphere (make-sphere)
           points (find-intersections sphere ray)]
       (is (= 2 (count points)))
-      (is (≈ [-6.0 -4.0] (mapv :t points))))))
-
-(deftest testing-find-hit
-  (let [s (make-sphere [0 0 0 1])]
-    (testing "when all intersections have positive t"
-      (let [i1 (make-intersection 1 s)
-            i2 (make-intersection 2 s)
-            intersections [i2 i1]
-            hit (find-hit intersections)]
-        (is (= hit i1))))
-    (testing "when some intersections have negative t"
-      (let [i1 (make-intersection -1 s)
-            i2 (make-intersection 1 s)
-            intersections [i2 i1]
-            hit (find-hit intersections)]
-        (is (= hit i2))))
-    (testing "when all intersections have negative t"
-      (let [i1 (make-intersection -2 s)
-            i2 (make-intersection -1 s)
-            intersections [i2 i1]
-            hit (find-hit intersections)]
-        (is (nil? hit))))
-    (testing "hit is intersection with lowest non-negative t"
-      (let [i1 (make-intersection 5 s)
-            i2 (make-intersection 7 s)
-            i3 (make-intersection -3 s)
-            i4 (make-intersection 2 s)
-            intersections [i1 i2 i3 i4]
-            hit (find-hit intersections)]
-        (is (= hit i4))))))
+      (is (≈ [-6.0 -4.0] (mapv :t points)))))
+  (testing "intersecting a scaled sphere with a ray"
+    (let [ray           (make-ray [0 0 -5 1] [0 0 1 0])
+          S             (t/scaling-matrix 2 2 2)
+          sphere        (make-sphere S)
+          intersections (find-intersections sphere ray)]
+      (is (= 2 (count intersections)))
+      (is (≈ [3.0 7.0] (mapv :t intersections)))))
+  (testing "intersecting a translated sphere with a ray"
+    (let [ray           (make-ray [0 0 -5 1] [0 0 1 0])
+          T             (t/translation-matrix 5 0 0)
+          sphere        (make-sphere T)
+          intersections (find-intersections sphere ray)]
+      (is (= 0 (count intersections))))))
 
 (deftest testing-transform
   (testing "translating a ray has no effect on its direction vector"
@@ -86,3 +70,35 @@
           S (t/scaling-matrix 2 3 4)]
       (is (≈ point (:point (transform ray S))))
       (is (≈ direction (:direction (transform ray S)))))))
+
+(deftest testing-find-hit
+  (testing "when all intersections have positive t"
+    (let [s (make-sphere)
+          i1 (make-intersection 1 s)
+          i2 (make-intersection 2 s)
+          intersections [i2 i1]
+          hit (find-hit intersections)]
+      (is (= hit i1))))
+  (testing "when some intersections have negative t"
+    (let [s (make-sphere)
+          i1 (make-intersection -1 s)
+          i2 (make-intersection 1 s)
+          intersections [i2 i1]
+          hit (find-hit intersections)]
+      (is (= hit i2))))
+  (testing "when all intersections have negative t"
+    (let [s (make-sphere)
+          i1 (make-intersection -2 s)
+          i2 (make-intersection -1 s)
+          intersections [i2 i1]
+          hit (find-hit intersections)]
+      (is (nil? hit))))
+  (testing "hit is intersection with lowest non-negative t"
+    (let [s (make-sphere)
+          i1 (make-intersection 5 s)
+          i2 (make-intersection 7 s)
+          i3 (make-intersection -3 s)
+          i4 (make-intersection 2 s)
+          intersections [i1 i2 i3 i4]
+          hit (find-hit intersections)]
+      (is (= hit i4)))))
