@@ -2,6 +2,7 @@
   (:require [clojure.test :refer :all]
             [scintilla.ray :refer :all]
             [scintilla.shapes :refer :all]
+            [scintilla.transformation :as t]
             [scintilla.numeric :refer [≈]]))
 
 (deftest testing-position
@@ -15,36 +16,36 @@
 (deftest testing-find-intersections
   (testing "a ray that intersects a sphere at two points"
     (let [ray    (make-ray [0 0 -5 1] [0 0 1 0])
-          sphere (make-sphere [0 0 0 1] 1)
+          sphere (make-sphere [0 0 0 1])
           points (find-intersections sphere ray)]
       (is (= 2 (count points)))
       (is (≈ [4.0 6.0] (mapv :t points)))))
   (testing "a ray that intersects a sphere at one point"
     (let [ray    (make-ray [0 1 -5 1] [0 0 1 0])
-          sphere (make-sphere [0 0 0 1] 1)
+          sphere (make-sphere [0 0 0 1])
           points (find-intersections sphere ray)]
       (is (= 1 (count points)))
       (is (≈ [5.0] (mapv :t points)))))
   (testing "a ray that intersects a sphere at one point"
     (let [ray    (make-ray [0 2 -5 1] [0 0 1 0])
-          sphere (make-sphere [0 0 0 1] 1)
+          sphere (make-sphere [0 0 0 1])
           points (find-intersections sphere ray)]
       (is (= 0 (count points)))))
   (testing "a ray that originates from within a sphere"
     (let [ray    (make-ray [0 0 0 1] [0 0 1 0])
-          sphere (make-sphere [0 0 0 1] 1)
+          sphere (make-sphere [0 0 0 1])
           points (find-intersections sphere ray)]
       (is (= 2 (count points)))
       (is (≈ [-1.0 1.0] (mapv :t points)))))
   (testing "a ray that originates in front of a sphere"
     (let [ray    (make-ray [0 0 5 1] [0 0 1 0])
-          sphere (make-sphere [0 0 0 1] 1)
+          sphere (make-sphere [0 0 0 1])
           points (find-intersections sphere ray)]
       (is (= 2 (count points)))
       (is (≈ [-6.0 -4.0] (mapv :t points))))))
 
 (deftest testing-find-hit
-  (let [s (make-sphere [0 0 0 1] 1)]
+  (let [s (make-sphere [0 0 0 1])]
     (testing "when all intersections have positive t"
       (let [i1 (make-intersection 1 s)
             i2 (make-intersection 2 s)
@@ -72,17 +73,16 @@
             hit (find-hit intersections)]
         (is (= hit i4))))))
 
-(deftest testing-translate
+(deftest testing-transform
   (testing "translating a ray has no effect on its direction vector"
     (let [ray (make-ray [1 2 3 1] [0 1 0 0])
-          {:keys [point direction]} (make-ray [4 6 8 1] [0 1 0 0])]
-      (is (≈ point (:point (translate ray 3 4 5))))
-      (is (≈ direction (:direction (translate ray 3 4 5)))))))
-
-(deftest testing-scale
+          {:keys [point direction]} (make-ray [4 6 8 1] [0 1 0 0])
+          T (t/translation-matrix 3 4 5)]
+      (is (≈ point (:point (transform ray T))))
+      (is (≈ direction (:direction (transform ray T))))))
   (testing "scaling a ray transforms both its point and direction vector"
     (let [ray (make-ray [1 2 3 1] [0 1 0 0])
           {:keys [point direction]} (make-ray [2 6 12 1] [0 3 0 0])
-          scaled-ray (scale ray 2 3 4)]
-      (is (≈ point (:point scaled-ray )))
-      (is (≈ direction (:direction scaled-ray ))))))
+          S (t/scaling-matrix 2 3 4)]
+      (is (≈ point (:point (transform ray S))))
+      (is (≈ direction (:direction (transform ray S)))))))

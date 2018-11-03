@@ -14,6 +14,18 @@
   [{:keys [point direction] :as ray} t]
   (+ point (* direction t)))
 
+;; TODO: Think of how to either move this into the transformation
+;; namespace or move what's currently in there back into the matrix
+;; namespace.
+(defn transform
+  "NOTA BENE: note that a translation matrix applied to a vector
+   is an effective no-op, but that a scaling matrix is not, which
+   works to our advantage here because that is the desired behavior
+   and we don't need to know what kind of transformation matrix
+   is passed in."
+  [{:keys [point direction]} matrix]
+  (make-ray (m/tuple-times matrix point) (m/tuple-times matrix direction)))
+
 (defn make-intersection
   "Constructs a data structure representing an intersection"
   [t shape]
@@ -39,14 +51,16 @@
   "Takes an abritrary shape and a ray and returns a list
    of either zero, one, or two points of intersection, sorted
    by increasing value of t."
-  [{:keys [shape-center radius] :as shape}
-   {:keys [point direction]}]
-  (let [shape-to-ray (- point shape-center)
-        a (⋅ direction direction)
-        b (clojure.core/* 2 (⋅ direction shape-to-ray))
-        c (clojure.core/- (⋅ shape-to-ray shape-to-ray) radius)
-        tvals (find-roots a b c)]
-    (map #(make-intersection % shape) tvals)))
+  [{:keys [shape-type matrix] :as shape} ray]
+  (case shape-type
+    :sphere
+      (let [{:keys [point direction]} (transform ray matrix)
+            shape-to-ray (- point [0 0 0 1])
+            a (⋅ direction direction)
+            b (clojure.core/* 2 (⋅ direction shape-to-ray))
+            c (clojure.core/- (⋅ shape-to-ray shape-to-ray) 1.0)
+            tvals (find-roots a b c)]
+        (map #(make-intersection % shape) tvals))))
 
 (defn find-hit
   "Takes a set of intersections and selects only the
@@ -56,16 +70,3 @@
    (->> intersections
        (sort-by :t)
        (some (fn [i] (if (< 0 (:t i)) i)))))
-
-;; TODO: Think of how to either move this into the transformation
-;; namespace or move what's currently in there back into the matrix
-;; namespace.
-(defn translate
-  [{:keys [point direction]} x y z]
-  (let [T (t/translation-matrix x y z)]
-    (make-ray (m/tuple-times T point) direction)))
-
-(defn scale
-  [{:keys [point direction]} x y z]
-  (let [S (t/scaling-matrix x y z)]
-    (make-ray (m/tuple-times S point) (m/tuple-times S direction))))
