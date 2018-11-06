@@ -54,21 +54,21 @@
        0]
       (throw (Exception. "Can only take cross product of two vectors"))))
   (* [[x y z w] s]
-    (if (= w 0)
+    (if (zero? w)
       [(clojure.core/* s x) (clojure.core/* s y) (clojure.core/* s z) w]
       (throw (Exception. "Cannot scale a point."))))
   (/ [[_ _ _ w :as v] s]
-    (if (= w 0)
+    (if (zero? w)
       (* v (clojure.core// 1.0 s))
       (throw (Exception. "Cannot scale a point."))))
   (magnitude [[x y z w]]
-    (if (= w 0)
+    (if (zero? w)
       (->> [x y z]
            (map #(Math/pow % 2))
            (reduce clojure.core/+ 0)
            (Math/sqrt))
       (throw (Exception. "Cannot scale a point."))))
   (normalize [[_ _ _ w :as v]]
-    (if (= w 0)
+    (if (zero? w)
       (/ v (magnitude v))
       (throw (Exception. "Cannot normalize a point.")))))
