@@ -2,8 +2,9 @@
   (:require [scintilla.matrix :refer [I₄]]))
 
 (defn make-sphere
-  ([]
-    (make-sphere I₄))
-  ([matrix]
+  ([color]
+    (make-sphere color I₄))
+  ([color matrix]
     {:shape-type :sphere
-     :matrix matrix}))
+     :matrix matrix
+     :color color}))

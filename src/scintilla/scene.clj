@@ -32,7 +32,7 @@
         wall-point [0.0 0.0 10.0 1]
         transform (m/matrix-times (t/shearing-matrix 1.0 0.0 0.0 0.0 0.0 0.0)
                                   (t/scaling-matrix 0.5 1.0 1.0))
-        sphere  (s/make-sphere transform)]
+        sphere  (s/make-sphere [0 1 0] transform)]
     ;; For each pixel in the canvas...
     (into []
       (for [x (range canvas-w)]
@@ -52,6 +52,6 @@
               ;; If there's a hit...
               (if hit
                 ;; ... then set the color of the pixel to that of the hit object...
-                [1.0 0.0 0.0]
+                (get-in hit [:shape :color])
                 ;; ... else set the pixel to black
                 [0.0 0.0 0.0]))))))))
