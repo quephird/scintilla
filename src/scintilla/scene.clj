@@ -11,6 +11,8 @@
 ;   * height in scene world
 ;   * depth in scene world
 
+;; TODO: Consider not using protocols for vector types;
+;; they make this code too verbose.
 (defn pixel->scene
   "Converts the (x,y) coordinates in the canvas system
    to (x,y,z) coordinates of the scene world system"
@@ -29,7 +31,7 @@
   ;; ought to be passed into this function.
   (let [wall-dimensions [7.0 7.0]
         camera-point [0.0 0.0 -5.0 1]
-        wall-point [0.0 0.0 10.0 1]
+        wall-center [0.0 0.0 10.0 1]
         transform (m/matrix-times (t/shearing-matrix 1.0 0.0 0.0 0.0 0.0 0.0)
                                   (t/scaling-matrix 0.5 1.0 1.0))
         sphere  (s/make-sphere [0 1 0] transform)]
@@ -39,7 +41,7 @@
         (into []
           (for [y (range canvas-h)]
             (let [;; Convert to scene world coordinates
-                  wall-point (pixel->scene [x y] canvas-dimensions wall-point wall-dimensions)
+                  wall-point (pixel->scene [x y] canvas-dimensions wall-center wall-dimensions)
                   ;; Compute the ray between the camera and the pixel
                   direction (- wall-point camera-point)
                   ;; Construct new ray from camera to wall
@@ -47,8 +49,7 @@
                   ;; See if the ray intersects anything
                   intersections (r/find-intersections sphere ray)
                   ;; Find the closest hit, if any
-                  hit (r/find-hit intersections)
-                  ]
+                  hit (r/find-hit intersections)]
               ;; If there's a hit...
               (if hit
                 ;; ... then set the color of the pixel to that of the hit object...
