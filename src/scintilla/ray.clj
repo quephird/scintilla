@@ -47,20 +47,21 @@
           [(clojure.core// (clojure.core/+ b √discriminant) (clojure.core/* -2.0 a))
            (clojure.core// (clojure.core/- b √discriminant) (clojure.core/* -2.0 a))]))))
 
-(defn find-intersections
+(defmulti find-intersections
   "Takes an abritrary shape and a ray and returns a list
    of either zero, one, or two points of intersection, sorted
    by increasing value of t."
-  [{:keys [shape-type matrix] :as shape} ray]
-  (case shape-type
-    :sphere
-      (let [{:keys [point direction]} (transform ray (m/inverse matrix))
-            shape-to-ray (- point [0 0 0 1.0])
-            a (⋅ direction direction)
-            b (clojure.core/* 2 (⋅ direction shape-to-ray))
-            c (clojure.core/- (⋅ shape-to-ray shape-to-ray) 1.0)
-            tvals (find-roots a b c)]
-        (map #(make-intersection % shape) tvals))))
+  (fn [shape _] (:shape-type shape)))
+
+(defmethod find-intersections :sphere
+  [{:keys [matrix] :as shape} ray]
+  (let [{:keys [point direction]} (transform ray (m/inverse matrix))
+        shape-to-ray (- point [0 0 0 1.0])
+        a (⋅ direction direction)
+        b (clojure.core/* 2 (⋅ direction shape-to-ray))
+        c (clojure.core/- (⋅ shape-to-ray shape-to-ray) 1.0)
+        tvals (find-roots a b c)]
+    (map #(make-intersection % shape) tvals)))
 
 (defn find-hit
   "Takes a set of intersections and selects only the
