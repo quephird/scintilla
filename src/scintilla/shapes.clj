@@ -29,3 +29,11 @@
         (tuple-times object-normal)
         (assoc 3 0)  ;; Per the book, this is a hack
         normalize)))
+
+(defn find-reflection
+  [in-vector normal-vector]
+  (->> normal-vector
+       (⋅ in-vector)
+       (clojure.core/* 2.0)
+       (* normal-vector)
+       (- in-vector)))

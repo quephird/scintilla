@@ -38,3 +38,15 @@
           point  [0 0.70711 -0.70711 1]
           expected-value [0 0.97014 -0.24254 0]]
       (is (≈ expected-value (find-normal sphere point))))))
+
+(deftest testing-find-reflection
+  (testing "reflecting a vector approaching at 45°"
+    (let [v [1 -1 0 0]
+          n [0 1 0 0]
+          expected-value [1 1 0 0]]
+      (is (≈ expected-value (find-reflection v n)))))
+  (testing "reflecting a vector off a slanted surface"
+    (let [v [0 -1 0 0]
+          n [0.70711 0.70711 0 0]
+          expected-value [1 0 0 0]]
+      (is (≈ expected-value (find-reflection v n))))))
