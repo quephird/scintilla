@@ -1,24 +1,20 @@
-(ns scintilla.color
-  (:refer-clojure :exclude [+ - * /]))
+(ns scintilla.color)
 
-; Defines a protocol to allow colors to use the standard
-; mathematical operators.
-(defprotocol Color
-  (+ [v1 v2])
-  (- [v1 v2])
-  (* [v s])
-  (◦ [v1 v2]))
+(defn add
+  [v1 v2]
+  (mapv + v1 v2))
 
-(extend-type clojure.lang.PersistentVector
-  Color
-  (+ [v1 v2]
-    (mapv clojure.core/+ v1 v2))
-  (- [v1 v2]
-    (mapv clojure.core/- v1 v2))
-  (* [v s]
-    (mapv #(clojure.core/* s %) v))
-  (◦ [v1 v2]
-    (mapv clojure.core/* v1 v2)))
+(defn subtract
+  [v1 v2]
+  (mapv - v1 v2))
+
+(defn scalar-times
+  [v s]
+  (mapv #(* s %) v))
+
+(defn hadamard-product
+  [v1 v2]
+  (mapv * v1 v2))
 
 (defn clamp-and-scale
   "Takes a color represented by RGB values, intended to be in the
