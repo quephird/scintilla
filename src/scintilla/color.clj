@@ -1,8 +1,8 @@
 (ns scintilla.color)
 
 (defn add
-  [v1 v2]
-  (mapv + v1 v2))
+  [& vs]
+  (apply mapv + vs))
 
 (defn subtract
   [v1 v2]

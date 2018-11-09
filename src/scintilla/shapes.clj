@@ -1,5 +1,6 @@
 (ns scintilla.shapes
-  (:require [scintilla.matrix :refer :all]
+  (:require [scintilla.materials :as a]
+            [scintilla.matrix :refer :all]
             [scintilla.tuple :refer :all]))
 
 (def default-color [1 0 0])
@@ -10,7 +11,10 @@
   ([color]
     (make-sphere color I₄))
   ([color matrix]
+    (make-sphere color matrix a/default-material))
+  ([color matrix material]
     {:shape-type :sphere
+     :material material
      :matrix matrix
      :color color}))
 
