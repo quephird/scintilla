@@ -8,6 +8,7 @@
   {:position position
    :intensity intensity})
 
+;; TODO: Refactor these helpers a bit
 (defn ambient
   [material light surface-position]
   (let [effective-color (c/hadamard-product (:color material) (:intensity light))

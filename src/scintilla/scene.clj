@@ -1,5 +1,7 @@
 (ns scintilla.scene
   (:require [scintilla.canvas :as c]
+            [scintilla.lighting :as l]
+            [scintilla.materials :as a]
             [scintilla.matrix :as m]
             [scintilla.ray :as r]
             [scintilla.shapes :as s]
@@ -34,9 +36,12 @@
   (let [wall-dimensions [7.0 7.0]
         camera-point [0.0 0.0 -5.0 1]
         wall-center [0.0 0.0 10.0 1]
-        transform (m/matrix-times (t/shearing-matrix 1.0 0.0 0.0 0.0 0.0 0.0)
-                                  (t/scaling-matrix 0.5 1.0 1.0))
-        sphere  (s/make-sphere [0 1 0] transform)]
+        transform (t/scaling-matrix 0.5 0.5 0.5)
+        ; transform (m/matrix-times (t/shearing-matrix 1.0 0.0 0.0 0.0 0.0 0.0)
+        ;                           (t/scaling-matrix 0.5 1.0 1.0))
+        material (a/make-material [1 0.2 1] 0.1 0.9 0.9 200)
+        sphere  (s/make-sphere [0 1 0] transform material)
+        light (l/make-light [-10 10 -10 1] [1 1 1])]
     ;; For each pixel in the canvas...
     (into []
       (for [x (range canvas-w)]
@@ -45,7 +50,7 @@
             (let [;; Convert to scene world coordinates
                   wall-point (pixel->scene [x y] canvas-dimensions wall-center wall-dimensions)
                   ;; Compute the ray between the camera and the pixel
-                  direction (- wall-point camera-point)
+                  direction (normalize (- wall-point camera-point))
                   ;; Construct new ray from camera to wall
                   ray (r/make-ray camera-point direction)
                   ;; See if the ray intersects anything
@@ -54,7 +59,12 @@
                   hit (r/find-hit intersections)]
               ;; If there's a hit...
               (if hit
+                ;; TODO: Refactor this a bit
                 ;; ... then set the color of the pixel to that of the hit object...
-                (get-in hit [:shape :color])
+                (let [surface-point (r/position ray (:t hit))
+                      surface-normal (s/find-normal (:shape hit) surface-point)
+                      eye-direction (* (:direction ray) -1.0)]
+                  (l/lighting material light surface-point eye-direction surface-normal))
+                  ; (get-in hit [:shape :color])
                 ;; ... else set the pixel to black
                 [0.0 0.0 0.0]))))))))
