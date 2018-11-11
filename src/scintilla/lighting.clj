@@ -8,6 +8,9 @@
   {:position position
    :intensity intensity})
 
+(def default-light
+  (make-light [-10 10 -10 1] [1 1 1]))
+
 (defn ambient
   [material light surface-position]
   (let [effective-color (c/hadamard-product (:color material) (:intensity light))]

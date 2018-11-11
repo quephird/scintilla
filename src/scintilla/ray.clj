@@ -63,6 +63,10 @@
         tvals (find-roots a b c)]
     (map #(make-intersection % shape) tvals)))
 
+(defn find-all-intersections
+  [{:keys [objects] :as world} ray]
+  (apply concat (map #(find-intersections % ray) objects)))
+
 (defn find-hit
   "Takes a set of intersections and selects only the
    'visible' one, which is the intesection with the least positive

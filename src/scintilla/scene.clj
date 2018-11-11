@@ -8,10 +8,18 @@
             [scintilla.transformation :as t]
             [scintilla.tuple :refer :all]))
 
-; perspective rectangle
-;   * width in scene world
-;   * height in scene world
-;   * depth in scene world
+(defn make-world
+  ([]
+    (make-world []))
+  ([objects]
+    (make-world objects l/default-light))
+  ([objects light]
+    {:objects objects
+     :light light}))
+
+(defn add-objects
+  [world objects]
+  (update-in world [:objects] concat objects))
 
 ;; TODO: Consider not using protocols for vector types;
 ;; they make this code too verbose.
@@ -65,6 +73,5 @@
                       surface-normal (s/find-normal (:shape hit) surface-point)
                       eye-direction (* (:direction ray) -1.0)]
                   (l/lighting material light surface-point eye-direction surface-normal))
-                  ; (get-in hit [:shape :color])
                 ;; ... else set the pixel to black
                 [0.0 0.0 0.0]))))))))

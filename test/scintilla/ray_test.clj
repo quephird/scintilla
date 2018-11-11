@@ -1,6 +1,9 @@
 (ns scintilla.ray-test
   (:require [clojure.test :refer :all]
+            [scintilla.materials :as a]
+            [scintilla.matrix :as m]
             [scintilla.ray :refer :all]
+            [scintilla.scene :as s]
             [scintilla.shapes :refer :all]
             [scintilla.transformation :as t]
             [scintilla.numeric :refer [≈]]))
@@ -56,6 +59,18 @@
           sphere        (make-sphere [1.0 0.0 0.0] T)
           intersections (find-intersections sphere ray)]
       (is (= 0 (count intersections))))))
+
+(deftest testing-find-all-intersections
+  (testing "a ray that intersects a sphere at two points"
+    (let [material1     (a/make-material [0.8 1.0 0.6] 0.1 0.7 0.2 200)
+          sphere1       (make-sphere [1.0 0.0 0.0] m/I₄ material1)
+          transform2    (t/scaling-matrix 0.5 0.5 0.5)
+          sphere2       (make-sphere [1.0 0.0 0.0] transform2 a/default-material)
+          world         (s/add-objects (s/make-world) [sphere1 sphere2])
+          ray           (make-ray [0 0 -5 1] [0 0 1 0])
+          intersections (find-all-intersections world ray)]
+      (is (= 4 (count intersections)))
+      (is (≈ [4.0 4.5 5.5 6.0] (set (mapv :t intersections)))))))
 
 (deftest testing-transform
   (testing "translating a ray has no effect on its direction vector"
