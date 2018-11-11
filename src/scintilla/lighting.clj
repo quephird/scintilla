@@ -8,11 +8,9 @@
   {:position position
    :intensity intensity})
 
-;; TODO: Refactor these helpers a bit
 (defn ambient
   [material light surface-position]
-  (let [effective-color (c/hadamard-product (:color material) (:intensity light))
-        light-vector    (normalize (- (:position light) surface-position))]
+  (let [effective-color (c/hadamard-product (:color material) (:intensity light))]
     (c/scalar-times effective-color (:ambient material))))
 
 (defn diffuse
@@ -26,8 +24,7 @@
 
 (defn specular
   [material light surface-position eye-direction surface-normal]
-  (let [effective-color   (c/hadamard-product (:color material) (:intensity light))
-        light-vector      (normalize (- (:position light) surface-position))
+  (let [light-vector      (normalize (- (:position light) surface-position))
         light-dot-normal  (⋅ light-vector surface-normal)
         reflection-vector (s/find-reflection (* light-vector -1.0) surface-normal)
         reflect-dot-eye   (⋅ reflection-vector eye-direction)
@@ -37,11 +34,7 @@
         (c/scalar-times (:intensity light) (clojure.core/* (:specular material) reflection-coefficient)))))
 
 (defn lighting
-  [material
-   light
-   surface-position
-   eye-direction
-   surface-normal]
-   (c/add (ambient material light surface-position)
-          (diffuse material light surface-position surface-normal)
-          (specular material light surface-position eye-direction surface-normal)))
+  [material light surface-position eye-direction surface-normal]
+  (c/add (ambient material light surface-position)
+         (diffuse material light surface-position surface-normal)
+         (specular material light surface-position eye-direction surface-normal)))
