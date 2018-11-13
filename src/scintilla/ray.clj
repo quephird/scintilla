@@ -64,6 +64,8 @@
     (map #(make-intersection % shape) tvals)))
 
 (defn find-all-intersections
+  "Returns the set of all intersections that the given ray
+   makes with the set of objects in the given world."
   [{:keys [objects] :as world} ray]
   (apply concat (map #(find-intersections % ray) objects)))
 

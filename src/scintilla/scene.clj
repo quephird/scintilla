@@ -1,25 +1,17 @@
-(ns scintilla.scene
-  (:require [scintilla.canvas :as c]
-            [scintilla.lighting :as l]
-            [scintilla.materials :as a]
-            [scintilla.matrix :as m]
-            [scintilla.ray :as r]
-            [scintilla.shapes :as s]
-            [scintilla.transformation :as t]
-            [scintilla.tuple :refer :all]))
+(ns scintilla.scene)
 
-(defn make-world
+(defn make-scene
   ([]
-    (make-world []))
+    (make-scene []))
   ([objects]
-    (make-world objects l/default-light))
+    (make-scene objects l/default-light))
   ([objects light]
     {:objects objects
      :light light}))
 
 (defn add-objects
-  [world objects]
-  (update-in world [:objects] concat objects))
+  [scene objects]
+  (update-in scene [:objects] concat objects))
 
 ;; TODO: Consider not using protocols for vector types;
 ;; they make this code too verbose.
@@ -35,43 +27,3 @@
    (let [scene-x (clojure.core/- (clojure.core/* wall-w (clojure.core// pixel-x canvas-w)) (clojure.core// wall-w 2.0))
          scene-y (clojure.core/- (clojure.core/* wall-h (clojure.core// pixel-y canvas-h)) (clojure.core// wall-h 2.0))]
      [scene-x scene-y wall-z 1.0]))
-
-(defn render
-  "Produces new canvas, with specified dimensions, with object scene rendered to it"
-  [scene [canvas-w canvas-h :as canvas-dimensions]]
-  ;; NOTA BENE: At some point all of these object specifications
-  ;; ought to be passed into this function.
-  (let [wall-dimensions [7.0 7.0]
-        camera-point [0.0 0.0 -5.0 1]
-        wall-center [0.0 0.0 10.0 1]
-        transform (t/scaling-matrix 0.5 0.5 0.5)
-        ; transform (m/matrix-times (t/shearing-matrix 1.0 0.0 0.0 0.0 0.0 0.0)
-        ;                           (t/scaling-matrix 0.5 1.0 1.0))
-        material (a/make-material [1 0.2 1] 0.1 0.9 0.9 200)
-        sphere  (s/make-sphere [0 1 0] transform material)
-        light (l/make-light [-10 10 -10 1] [1 1 1])]
-    ;; For each pixel in the canvas...
-    (into []
-      (for [x (range canvas-w)]
-        (into []
-          (for [y (range canvas-h)]
-            (let [;; Convert to scene world coordinates
-                  wall-point (pixel->scene [x y] canvas-dimensions wall-center wall-dimensions)
-                  ;; Compute the ray between the camera and the pixel
-                  direction (normalize (- wall-point camera-point))
-                  ;; Construct new ray from camera to wall
-                  ray (r/make-ray camera-point direction)
-                  ;; See if the ray intersects anything
-                  intersections (r/find-intersections sphere ray)
-                  ;; Find the closest hit, if any
-                  hit (r/find-hit intersections)]
-              ;; If there's a hit...
-              (if hit
-                ;; TODO: Refactor this a bit
-                ;; ... then set the color of the pixel to that of the hit object...
-                (let [surface-point (r/position ray (:t hit))
-                      surface-normal (s/find-normal (:shape hit) surface-point)
-                      eye-direction (* (:direction ray) -1.0)]
-                  (l/lighting material light surface-point eye-direction surface-normal))
-                ;; ... else set the pixel to black
-                [0.0 0.0 0.0]))))))))

@@ -1,4 +1,4 @@
-(ns scintilla.io
+(ns scintilla.file
   (:require [scintilla.color :as color]))
 
 (defn ppm-header
