@@ -66,7 +66,7 @@
           sphere1       (make-sphere [1.0 0.0 0.0] m/I₄ material1)
           transform2    (t/scaling-matrix 0.5 0.5 0.5)
           sphere2       (make-sphere [1.0 0.0 0.0] transform2 a/default-material)
-          world         (s/add-objects (s/make-world) [sphere1 sphere2])
+          world         (s/add-objects (s/make-scene) [sphere1 sphere2])
           ray           (make-ray [0 0 -5 1] [0 0 1 0])
           intersections (find-all-intersections world ray)]
       (is (= 4 (count intersections)))

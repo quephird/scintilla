@@ -24,8 +24,7 @@
   (let [{color :color diffuse :diffuse} (:material shape)
         effective-color         (c/hadamard-product color intensity)
         light-vector            (normalize (- position surface-point))
-        light-dot-normal        (⋅ light-vector surface-normal)
-        ]
+        light-dot-normal        (⋅ light-vector surface-normal)]
     (if (< light-dot-normal 0)
         [0 0 0]
         (c/scalar-times effective-color (clojure.core/* diffuse light-dot-normal)))))

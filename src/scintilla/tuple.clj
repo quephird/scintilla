@@ -17,6 +17,8 @@
   [x y z]
   [x y z 0])
 
+;; TODO: Consider using specs to enforce various things here
+
 ; Defines a protocol to allow colors to use the standard
 ; mathematical operators.
 (defprotocol Tuple

@@ -1,6 +1,6 @@
-(ns scintilla.io-test
+(ns scintilla.file-test
   (:require [clojure.test :refer :all]
-            [scintilla.io :refer :all]
+            [scintilla.file :refer :all]
             [scintilla.canvas :as c]))
 
 (deftest testing-ppm-header
@@ -32,5 +32,4 @@
                           "255 204 153 255 204 153 255 204 153 255 204 153 255 204 153 255 204"
                           "153 255 204 153 255 204 153 255 204 153 255 204 153"]
           expected-value (clojure.string/join "\n" lines)]
-      (is (= body expected-value))))
-      )
+      (is (= body expected-value)))))

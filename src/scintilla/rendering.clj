@@ -8,6 +8,7 @@
             [scintilla.transformation :as t]
             [scintilla.tuple :refer :all]))
 
+;; TODO: Think of some tests for this namespace!!!
 ;; TODO: Need to package wall and camera metrics into perspective box
 (defn pixel-color
   "Computes the color of the pixel at the x,y coordinates

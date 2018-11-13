@@ -79,6 +79,7 @@
         (sort-by :t)
         (some (fn [i] (if (< 0 (:t i)) i)))))
 
+;; TODO: Need tests!!!!!
 (defn make-prepared-hit
   "Returns a map representing the object hit by the ray
    with other pre-computed entities associated with it."
