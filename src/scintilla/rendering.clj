@@ -8,6 +8,7 @@
             [scintilla.transformation :as t]
             [scintilla.tuple :refer :all]))
 
+;; TODO: Need to package wall and camera metrics into perspective box
 (defn pixel-color
   "Computes the color of the pixel at the x,y coordinates
    for the given scene and canvas"
@@ -31,12 +32,8 @@
         hit (r/find-hit intersections)]
     ;; If there's a hit...
     (if hit
-      ;; ... then set the color of the pixel to that of the hit object...
-      (let [material (get-in hit [:shape :material])
-            surface-point (r/position ray (:t hit))
-            surface-normal (s/find-normal (:shape hit) surface-point)
-            eye-direction (* (:direction ray) -1.0)]
-        (l/lighting material light surface-point eye-direction surface-normal))
+      ;; ... then set the color of the pixel to that computed for the hit object...
+      (l/lighting light (r/make-prepared-hit hit ray))
       ;; ... else set the pixel to black
       [0.0 0.0 0.0])))
 

@@ -12,32 +12,39 @@
   (make-light [-10 10 -10 1] [1 1 1]))
 
 (defn ambient
-  [material light surface-position]
-  (let [effective-color (c/hadamard-product (:color material) (:intensity light))]
-    (c/scalar-times effective-color (:ambient material))))
+  [{:keys [intensity] :as light}
+   {:keys [shape] :as prepared-hit}]
+  (let [{:keys [color ambient]} (:material shape)
+        effective-color         (c/hadamard-product color intensity)]
+    (c/scalar-times effective-color ambient)))
 
 (defn diffuse
-  [material light surface-position surface-normal]
-  (let [effective-color  (c/hadamard-product (:color material) (:intensity light))
-        light-vector     (normalize (- (:position light) surface-position))
-        light-dot-normal (⋅ light-vector surface-normal)]
+  [{:keys [intensity position] :as light}
+   {:keys [shape surface-normal surface-point] :as prepared-hit}]
+  (let [{color :color diffuse :diffuse} (:material shape)
+        effective-color         (c/hadamard-product color intensity)
+        light-vector            (normalize (- position surface-point))
+        light-dot-normal        (⋅ light-vector surface-normal)
+        ]
     (if (< light-dot-normal 0)
         [0 0 0]
-        (c/scalar-times effective-color (clojure.core/* (:diffuse material) light-dot-normal)))))
+        (c/scalar-times effective-color (clojure.core/* diffuse light-dot-normal)))))
 
 (defn specular
-  [material light surface-position eye-direction surface-normal]
-  (let [light-vector      (normalize (- (:position light) surface-position))
-        light-dot-normal  (⋅ light-vector surface-normal)
-        reflection-vector (s/find-reflection (* light-vector -1.0) surface-normal)
-        reflect-dot-eye   (⋅ reflection-vector eye-direction)
-        reflection-coefficient (Math/pow reflect-dot-eye (:shininess material))]
+  [{:keys [intensity position] :as light}
+   {:keys [eye-direction shape surface-normal surface-point] :as prepared-hit}]
+  (let [{:keys [shininess specular]} (:material shape)
+        light-vector                 (normalize (- position surface-point))
+        light-dot-normal             (⋅ light-vector surface-normal)
+        reflection-vector            (s/find-reflection (* light-vector -1.0) surface-normal)
+        reflect-dot-eye              (⋅ reflection-vector eye-direction)
+        reflection-coefficient       (Math/pow reflect-dot-eye shininess)]
     (if (or (< light-dot-normal 0) (< reflection-coefficient 0))
         [0 0 0]
-        (c/scalar-times (:intensity light) (clojure.core/* (:specular material) reflection-coefficient)))))
+        (c/scalar-times intensity (clojure.core/* specular reflection-coefficient)))))
 
 (defn lighting
-  [material light surface-position eye-direction surface-normal]
-  (c/add (ambient material light surface-position)
-         (diffuse material light surface-position surface-normal)
-         (specular material light surface-position eye-direction surface-normal)))
+  [light prepared-hit]
+  (c/add (ambient light prepared-hit)
+         (diffuse light prepared-hit)
+         (specular light prepared-hit)))

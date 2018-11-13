@@ -1,5 +1,6 @@
 (ns scintilla.ray
   (:require [scintilla.matrix :as m]
+            [scintilla.shapes :as s]
             [scintilla.transformation :as t]
             [scintilla.tuple :refer :all]))
 
@@ -75,5 +76,18 @@
    t value out of the set."
    [intersections]
    (->> intersections
-       (sort-by :t)
-       (some (fn [i] (if (< 0 (:t i)) i)))))
+        (sort-by :t)
+        (some (fn [i] (if (< 0 (:t i)) i)))))
+
+(defn make-prepared-hit
+  "Returns a map representing the object hit by the ray
+   with other pre-computed entities associated with it."
+  [hit ray]
+  (let [material       (get-in hit [:shape :material])
+        surface-point  (position ray (:t hit))
+        surface-normal (s/find-normal (:shape hit) surface-point)
+        eye-direction  (* (:direction ray) -1.0)]
+    (assoc hit
+      :surface-point surface-point
+      :surface-normal surface-normal
+      :eye-direction eye-direction)))

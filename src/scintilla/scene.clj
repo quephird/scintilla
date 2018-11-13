@@ -1,4 +1,5 @@
-(ns scintilla.scene)
+(ns scintilla.scene
+  (:require [scintilla.lighting :as l]))
 
 (defn make-scene
   ([]
@@ -15,8 +16,6 @@
 
 ;; TODO: Consider not using protocols for vector types;
 ;; they make this code too verbose.
-;; TODO: Figure out how to speed this up; maybe resort to
-;; a mutable array after all.
 (defn pixel->scene
   "Converts the (x,y) coordinates in the canvas system
    to (x,y,z) coordinates of the scene world system"
