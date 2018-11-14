@@ -2,7 +2,7 @@
   (:require [scintilla.matrix :as m]
             [scintilla.shapes :as s]
             [scintilla.transformation :as t]
-            [scintilla.tuple :refer :all]))
+            [scintilla.tuple :as u]))
 
 (defn make-ray
   "Constructs a data structure representing a ray"
@@ -13,7 +13,7 @@
 (defn position
   "Computes the position along the given ray parameterized by t."
   [{:keys [point direction] :as ray} t]
-  (+ point (* direction t)))
+  (u/plus point (u/scalar-times direction t)))
 
 ;; TODO: Think of how to either move this into the transformation
 ;; namespace or move what's currently in there back into the matrix
@@ -57,11 +57,11 @@
 (defmethod find-intersections :sphere
   [{:keys [matrix] :as shape} ray]
   (let [{:keys [point direction]} (transform ray (m/inverse matrix))
-        shape-to-ray (- point [0 0 0 1.0])
-        a (⋅ direction direction)
-        b (clojure.core/* 2 (⋅ direction shape-to-ray))
-        c (clojure.core/- (⋅ shape-to-ray shape-to-ray) 1.0)
-        tvals (find-roots a b c)]
+        shape-to-ray (u/subtract point [0 0 0 1.0])
+        a            (u/dot-product direction direction)
+        b            (* 2.0 (u/dot-product direction shape-to-ray))
+        c            (- (u/dot-product shape-to-ray shape-to-ray) 1.0)
+        tvals        (find-roots a b c)]
     (map #(make-intersection % shape) tvals)))
 
 (defn find-all-intersections
@@ -87,7 +87,7 @@
   (let [material       (get-in hit [:shape :material])
         surface-point  (position ray (:t hit))
         surface-normal (s/find-normal (:shape hit) surface-point)
-        eye-direction  (* (:direction ray) -1.0)]
+        eye-direction  (u/subtract (:direction ray))]
     (assoc hit
       :surface-point surface-point
       :surface-normal surface-normal
