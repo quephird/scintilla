@@ -3,63 +3,43 @@
             [scintilla.numeric :refer [≈]]
             [scintilla.tuple :refer :all]))
 
-(deftest testing-tuples
-  (testing "[1 2 3 1] is a point"
-    (is (true? (point? [1 2 3 1]))))
-
-  (testing "[1 2 3 0] is a vector"
-    (is (true? (vector? [1 2 3 0])))))
-
-(deftest making-tuples
-  (testing "make-point"
-    (is (point? (make-point 1 2 3))))
-
-  (testing "make-vector"
-    (is (vector? (make-vector 1 2 3)))))
-
 (deftest testing-plus
   (testing "adding a point to a vector results in a new point"
-    (let [result (+ [1 2 3 1] [2 3 4 0])]
-      (is (= [3 5 7 1] result))
-      (is (point? result))))
+    (let [result (plus [1 2 3 1] [2 3 4 0])]
+      (is (= [3 5 7 1] result))))
 
   (testing "adding a vector to a point results in a new point"
-    (let [result (+ [1 2 3 0] [2 3 4 1])]
-      (is (= [3 5 7 1] result))
-      (is (point? result))))
+    (let [result (plus [1 2 3 0] [2 3 4 1])]
+      (is (= [3 5 7 1] result))))
 
   (testing "adding a vector to a vector results in a new vector"
-    (let [result (+ [1 2 3 0] [2 3 4 0])]
-      (is (= [3 5 7 0] result))
-      (is (vector? result)))))
+    (let [result (plus [1 2 3 0] [2 3 4 0])]
+      (is (= [3 5 7 0] result)))))
 
-(deftest testing-minus
+(deftest testing-subtract
   (testing "subtracting one point from another results in a vector"
-    (let [result (- [3 2 1 1] [5 6 7 1])]
-      (is (= [-2 -4 -6 0] result))
-      (is (vector? result))))
+    (let [result (subtract [3 2 1 1] [5 6 7 1])]
+      (is (= [-2 -4 -6 0] result))))
 
   (testing "subtracting a vector from a point results in a point"
-    (let [result (- [3 2 1 1] [5 6 7 0])]
-      (is (= [-2 -4 -6 1] result))
-      (is (point? result))))
+    (let [result (subtract [3 2 1 1] [5 6 7 0])]
+      (is (= [-2 -4 -6 1] result))))
 
   (testing "subtracting one vector from another results in a vector"
-    (let [result (- [3 2 1 0] [5 6 7 0])]
-      (is (= [-2 -4 -6 0] result))
-      (is (vector? result)))))
+    (let [result (subtract [3 2 1 0] [5 6 7 0])]
+      (is (= [-2 -4 -6 0] result)))))
 
-(deftest testing-times
+(deftest testing-scalar-times
   (testing "multiplying a tuple by a scalar"
-    (is (= [-3.5 7.0 -10.5 0] (* [-1 2 -3 0] 3.5)))))
+    (is (= [-3.5 7.0 -10.5 0] (scalar-times [-1 2 -3 0] 3.5)))))
 
-(deftest testing-divided-by
+(deftest testing-scalar-divide
   (testing "dividing a tuple by a scalar"
-    (is (= [-0.5 1.0 -1.5 0] (/ [-1 2 -3 0] 2)))))
+    (is (= [-0.5 1.0 -1.5 0] (scalar-divide [-1 2 -3 0] 2)))))
 
 (deftest testing-negate
   (testing "negating a tuple"
-    (is (= [-1 -2 -3 0] (- [1 2 3 0])))))
+    (is (= [-1 -2 -3 0] (subtract [1 2 3 0])))))
 
 (deftest testing-magnitude
   (testing "vector with only x component"
@@ -83,12 +63,12 @@
 
 (deftest testing-dot-product
   (testing "two vectors' dot product should be a scalar value"
-    (is (= 20 (⋅ [1 2 3 0] [2 3 4 0])))))
+    (is (= 20 (dot-product [1 2 3 0] [2 3 4 0])))))
 
 (deftest testing-cross-product
   (let [a [1 2 3 0]
         b [2 3 4 0]]
     (testing "two vectors cross product should be another vector"
-      (is (= [-1 2 -1 0] (⨯ a b))))
+      (is (= [-1 2 -1 0] (cross-product a b))))
     (testing "swapping the two operands results in the same vector but in the opposite direction"
-      (is (= (⨯ a b) (- (⨯ b a)))))))
+      (is (= (cross-product a b) (subtract (cross-product b a)))))))
