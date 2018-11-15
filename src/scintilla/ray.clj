@@ -79,7 +79,6 @@
         (sort-by :t)
         (some (fn [i] (if (< 0 (:t i)) i)))))
 
-;; TODO: Need tests!!!!!
 (defn make-prepared-hit
   "Returns a map representing the object hit by the ray
    with other pre-computed entities associated with it."
@@ -87,8 +86,12 @@
   (let [material       (get-in hit [:shape :material])
         surface-point  (position ray (:t hit))
         surface-normal (s/find-normal (:shape hit) surface-point)
-        eye-direction  (u/subtract (:direction ray))]
+        eye-direction  (u/subtract (:direction ray))
+        inside         (> 0 (u/dot-product surface-normal eye-direction))]
     (assoc hit
-      :surface-point surface-point
-      :surface-normal surface-normal
-      :eye-direction eye-direction)))
+      :surface-point  surface-point
+      :surface-normal (if inside
+                          (u/subtract surface-normal)
+                          surface-normal)
+      :eye-direction  eye-direction
+      :inside         inside)))

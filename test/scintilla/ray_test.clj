@@ -117,3 +117,23 @@
           intersections [i1 i2 i3 i4]
           hit (find-hit intersections)]
       (is (= hit i4)))))
+
+(deftest testing-make-prepared-hit
+  (testing "precomputing the state of an intersection"
+    (let [ray            (make-ray [0 0 -5 1] [0 0 1 0])
+          sphere         (make-sphere)
+          hit            (find-hit (find-intersections sphere ray))
+          prepared-hit   (make-prepared-hit hit ray)]
+      (is (≈ [0 0 -1 1] (:surface-point prepared-hit)))
+      (is (≈ [0 0 -1 0] (:surface-normal prepared-hit)))
+      (is (≈ [0 0 -1 0] (:eye-direction prepared-hit)))
+      (is (= false (:inside prepared-hit)))))
+  (testing "precomputing the state of an intersection"
+    (let [ray            (make-ray [0 0 0 1] [0 0 1 0])
+          sphere         (make-sphere)
+          hit            (find-hit (find-intersections sphere ray))
+          prepared-hit   (make-prepared-hit hit ray)]
+      (is (≈ [0 0 1 1] (:surface-point prepared-hit)))
+      (is (≈ [0 0 -1 0]  (:surface-normal prepared-hit)))
+      (is (≈ [0 0 -1 0] (:eye-direction prepared-hit)))
+      (is (= true (:inside prepared-hit))))))
