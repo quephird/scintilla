@@ -8,6 +8,7 @@
             [scintilla.transformation :as t]
             [scintilla.tuple :refer :all]))
 
+;; TODO: Need to use ray/color-for in this method
 ;; TODO: Think of some tests for this namespace!!!
 ;; TODO: Need to package wall and camera metrics into perspective box
 (defn pixel-color

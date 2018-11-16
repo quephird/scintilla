@@ -1,5 +1,6 @@
 (ns scintilla.ray
-  (:require [scintilla.matrix :as m]
+  (:require [scintilla.lighting :as l]
+            [scintilla.matrix :as m]
             [scintilla.shapes :as s]
             [scintilla.transformation :as t]
             [scintilla.tuple :as u]))
@@ -95,3 +96,14 @@
                           surface-normal)
       :eye-direction  eye-direction
       :inside         inside)))
+
+(defn color-for
+  [{:keys [light] :as world} ray]
+  (let [hit (-> world
+                (find-all-intersections ray)
+                (find-hit))]
+    (if (nil? hit)
+      [0 0 0]
+      (as-> hit $
+            (make-prepared-hit $ ray)
+            (l/lighting light $)))))
