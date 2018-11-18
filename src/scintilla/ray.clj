@@ -98,7 +98,10 @@
       :inside         inside)))
 
 (defn color-for
-  [{:keys [light] :as world} ray]
+  "For the given world and ray from the camera to the canvas,
+   return the color correspondent to the hit object or simply
+   black if no object is hit."
+  [world ray]
   (let [hit (-> world
                 (find-all-intersections ray)
                 (find-hit))]
