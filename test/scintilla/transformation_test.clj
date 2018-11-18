@@ -1,7 +1,7 @@
 (ns scintilla.transformation-test
   (:require [scintilla.transformation :refer :all]
             [scintilla.matrix :as m]
-            [scintilla.numeric :refer [≈]]
+            [scintilla.numeric :refer :all]
             [clojure.test :refer :all]))
 
 (deftest testing-translation
