@@ -6,7 +6,7 @@
             [scintilla.scene :as e]
             [scintilla.shapes :as s]
             [scintilla.transformation :as t]
-            [scintilla.tuple :refer :all]))
+            [scintilla.tuple :as u]))
 
 ;; TODO: Need to use ray/color-for in this method
 ;; TODO: Think of some tests for this namespace!!!
@@ -15,21 +15,19 @@
   "Computes the color of the pixel at the x,y coordinates
    for the given scene and canvas"
   [[x y]
-   {:keys [light objects] :as scene}
+   {:keys [light] :as scene}
    wall-center
    wall-dimensions
    canvas-dimensions
    camera-point]
-  (let [;; TODO: Handle more than one object
-        sphere (first objects)
-        ;; Convert to scene world coordinates
+  (let [;; Convert to scene world coordinates
         wall-point (e/pixel->scene [x y] canvas-dimensions wall-center wall-dimensions)
         ;; Compute the ray between the camera and the pixel
-        direction (normalize (- wall-point camera-point))
+        direction (u/normalize (u/subtract wall-point camera-point))
         ;; Construct new ray from camera to wall
         ray (r/make-ray camera-point direction)
         ;; See if the ray intersects anything
-        intersections (r/find-intersections sphere ray)
+        intersections (r/find-all-intersections scene ray)
         ;; Find the closest hit, if any
         hit (r/find-hit intersections)]
     ;; If there's a hit...

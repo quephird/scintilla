@@ -1,5 +1,6 @@
 (ns scintilla.transformation
-  (:require [scintilla.matrix :refer :all]))
+  (:require [scintilla.matrix :as m]
+            [scintilla.tuple :as u]))
 
 ; Just some cute shortcuts to make things look more mathy.
 (defn sin [θ] (Math/sin θ))
@@ -7,6 +8,7 @@
 (defn cos [θ] (Math/cos θ))
 (defn -cos [θ] (- (Math/cos θ)))
 
+;; TODO: Remove these; replace any references in tests with local defs
 ; More cuteness, taking advantage of Clojure's support
 ; of Unicode characters for names.
 (def π 3.1415926536)
@@ -64,29 +66,44 @@
 (defn translate
   [p x y z]
   (let [T (translation-matrix x y z)]
-    (tuple-times T p)))
+    (m/tuple-times T p)))
 
 (defn scale
   [p x y z]
   (let [S (scaling-matrix x y z)]
-    (tuple-times S p)))
+    (m/tuple-times S p)))
 
 (defn rotate-x
   [p θ]
   (let [Rx (rotation-x-matrix θ)]
-    (tuple-times Rx p)))
+    (m/tuple-times Rx p)))
 
 (defn rotate-y
   [p θ]
   (let [Ry (rotation-y-matrix θ)]
-    (tuple-times Ry p)))
+    (m/tuple-times Ry p)))
 
 (defn rotate-z
   [p θ]
   (let [Rz (rotation-z-matrix θ)]
-    (tuple-times Rz p)))
+    (m/tuple-times Rz p)))
 
 (defn shear
   [p [xy xz yx yz zx zy]]
   (let [S (shearing-matrix xy xz yx yz zx zy)]
-    (tuple-times S p)))
+    (m/tuple-times S p)))
+
+(defn view-transform-matrix-for
+  [from-point to-point up-vector]
+  (let [forward-vector (u/normalize (u/subtract to-point from-point))
+        left-vector    (u/cross-product forward-vector (u/normalize up-vector))
+        true-up-vector (u/cross-product left-vector forward-vector)
+        orientation-matrix [left-vector
+                            true-up-vector
+                            (u/subtract forward-vector)
+                            [0 0 0 1]]
+        translation-matrix (->> from-point
+                                u/subtract
+                                (take 3)
+                                (apply translation-matrix))]
+    (m/matrix-times orientation-matrix translation-matrix)))

@@ -1,5 +1,8 @@
 (ns scintilla.scene
-  (:require [scintilla.lighting :as l]))
+  (:require [scintilla.lighting :as l]
+            [scintilla.matrix :as m]
+            [scintilla.transformation :as t]
+            [scintilla.tuple :as u]))
 
 (defn make-scene
   ([]
