@@ -17,8 +17,6 @@
   [scene objects]
   (update-in scene [:objects] concat objects))
 
-;; TODO: Consider not using protocols for vector types;
-;; they make this code too verbose.
 (defn pixel->scene
   "Converts the (x,y) coordinates in the canvas system
    to (x,y,z) coordinates of the scene world system"
@@ -26,6 +24,6 @@
    [canvas-w canvas-h :as canvas-dimensions]
    [wall-x wall-y wall-z _ :as wall-point]
    [wall-w wall-h :as wall-dimensions]]
-   (let [scene-x (clojure.core/- (clojure.core/* wall-w (clojure.core// pixel-x canvas-w)) (clojure.core// wall-w 2.0))
-         scene-y (clojure.core/- (clojure.core/* wall-h (clojure.core// pixel-y canvas-h)) (clojure.core// wall-h 2.0))]
+   (let [scene-x (- (* wall-w (/ pixel-x canvas-w)) (/ wall-w 2.0))
+         scene-y (- (* wall-h (/ pixel-y canvas-h)) (/ wall-h 2.0))]
      [scene-x scene-y wall-z 1.0]))
