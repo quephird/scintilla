@@ -8,9 +8,9 @@
   [{:keys [pixel-width pixel-height] :as camera} scene]
   (let [])
     (into []
-      (for [x (range pixel-width)]
+      (for [y (range pixel-height)]
         (into []
-          (for [y (range pixel-height)]
+          (for [x (range pixel-width)]
             (r/color-for scene (c/ray-for camera x y)))))))
 
 (defn render-to-file
