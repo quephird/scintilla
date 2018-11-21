@@ -1,22 +1,17 @@
 (ns scintilla.shapes
   (:require [scintilla.materials :as a]
-            [scintilla.matrix :as m]
+            [scintilla.matrix :refer [I₄] :as m]
             [scintilla.tuple :as u]))
-
-(def default-color [1 0 0])
 
 (defn make-sphere
   ([]
-    (make-sphere default-color))
-  ([color]
-    (make-sphere color m/I₄))
-  ([color matrix]
-    (make-sphere color matrix a/default-material))
-  ([color matrix material]
+    (make-sphere a/default-material))
+  ([material]
+    (make-sphere material I₄))
+  ([material transform]
     {:shape-type :sphere
      :material material
-     :matrix matrix
-     :color color}))
+     :matrix transform}))
 
 (defmulti find-normal (fn [shape _] (:shape-type shape)))
 

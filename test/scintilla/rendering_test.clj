@@ -13,9 +13,9 @@
 (deftest testing-render
   (testing "rendering a world with a camera"
     (let [material1      (a/make-material [0.8 1.0 0.6] 0.1 0.7 0.2 200)
-          sphere1        (s/make-sphere [1.0 0.0 0.0] I₄ material1)
+          sphere1        (s/make-sphere material1)
           transform2     (t/scaling-matrix 0.5 0.5 0.5)
-          sphere2        (s/make-sphere [1.0 0.0 0.0] transform2 a/default-material)
+          sphere2        (s/make-sphere a/default-material transform2)
           scene          (e/add-objects (e/make-scene) [sphere1 sphere2])
           from           [0 0 -5 1]
           to             [0 0 0 1]
