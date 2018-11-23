@@ -1,8 +1,10 @@
 (ns scintilla.ray-test
   (:require [clojure.test :refer :all]
+            [scintilla.camera :as c]
             [scintilla.lighting :as l]
             [scintilla.materials :as a]
             [scintilla.matrix :as m]
+            [scintilla.numeric :refer :all]
             [scintilla.ray :refer :all]
             [scintilla.scene :as s]
             [scintilla.shapes :refer :all]
@@ -138,3 +140,23 @@
       (is (≈ [0 0 -1 0] (:surface-normal prepared-hit)))
       (is (≈ [0 0 -1 0] (:eye-direction prepared-hit)))
       (is (= true (:inside prepared-hit))))))
+
+(deftest testing-ray-for
+  (testing "constructing a ray through the center of the canvas"
+    (let [camera (c/make-camera 201 101 π⟋2)
+          ray    (ray-for camera 100 50)]
+      (is (≈ [0 0 0 1] (:point ray)))
+      (is (≈ [0 0 -1 0] (:direction ray)))))
+  (testing "constructing a ray through the corner of the canvas"
+    (let [camera (c/make-camera 201 101 π⟋2)
+          ray    (ray-for camera 0 0)]
+      (is (≈ [0 0 0 1] (:point ray)))
+      (is (≈ [0.66519 0.33259 -0.66851] (:direction ray)))))
+  (testing "constructing a ray through the center of the canvas"
+    (let [R         (t/rotation-y-matrix π⟋4)
+          T         (t/translation-matrix 0 -2 5)
+          transform (m/matrix-times R T)
+          camera    (c/make-camera 201 101 π⟋2 transform)
+          ray       (ray-for camera 100 50)]
+      (is (≈ [0 2 -5 1] (:point ray)))
+      (is (≈ [0.70711 0 -0.70711 0] (:direction ray))))))

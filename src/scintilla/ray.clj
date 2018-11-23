@@ -1,5 +1,6 @@
 (ns scintilla.ray
-  (:require [scintilla.matrix :as m]
+  (:require [scintilla.camera :as c]
+            [scintilla.matrix :as m]
             [scintilla.shapes :as s]
             [scintilla.transformation :as t]
             [scintilla.tuple :as u]))
@@ -95,3 +96,17 @@
                           surface-normal)
       :eye-direction  eye-direction
       :inside         inside)))
+
+(defn ray-for
+  "Computes the ray for the given camera and (x,y) coordinates of its canvas,
+   in terms of the coordinate system correspondent with the inverse
+   of the camera's transform matrix."
+  [{:keys [half-world-width half-world-height transform] :as camera} x y]
+  (let [pixel-size (c/pixel-size-for camera)
+        [offset-x offset-y] (map #(* (+ % 0.5) pixel-size) [x y])
+        [world-x world-y]   (map - [half-world-width half-world-height] [offset-x offset-y])
+        inverse-transform   (m/inverse transform)
+        point'              (m/tuple-times inverse-transform [world-x world-y -1 1])
+        origin'             (m/tuple-times inverse-transform [0 0 0 1])
+        direction'          (u/normalize (u/subtract point' origin'))]
+    (make-ray origin' direction')))
