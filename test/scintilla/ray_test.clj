@@ -1,5 +1,6 @@
 (ns scintilla.ray-test
   (:require [clojure.test :refer :all]
+            [scintilla.lighting :as l]
             [scintilla.materials :as a]
             [scintilla.matrix :as m]
             [scintilla.ray :refer :all]
@@ -134,33 +135,6 @@
           hit            (find-hit (find-intersections sphere ray))
           prepared-hit   (make-prepared-hit hit ray)]
       (is (≈ [0 0 1 1] (:surface-point prepared-hit)))
-      (is (≈ [0 0 -1 0]  (:surface-normal prepared-hit)))
+      (is (≈ [0 0 -1 0] (:surface-normal prepared-hit)))
       (is (≈ [0 0 -1 0] (:eye-direction prepared-hit)))
       (is (= true (:inside prepared-hit))))))
-
-(deftest testing-color-for
-  (testing "the color when a ray misses"
-    (let [material1  (a/make-material [0.8 1.0 0.6] 0.1 0.7 0.2 200)
-          sphere1    (make-sphere material1)
-          transform2 (t/scaling-matrix 0.5 0.5 0.5)
-          sphere2    (make-sphere a/default-material transform2)
-          world      (s/add-objects (s/make-scene) [sphere1 sphere2])
-          ray        (make-ray [0 0 -5 1] [0 1 0 0])]
-      (is (≈ [0 0 0] (color-for world ray)))))
-  (testing "the color when a ray hits"
-    (let [material1  (a/make-material [0.8 1.0 0.6] 0.1 0.7 0.2 200)
-          sphere1    (make-sphere material1)
-          transform2 (t/scaling-matrix 0.5 0.5 0.5)
-          sphere2    (make-sphere a/default-material transform2)
-          world      (s/add-objects (s/make-scene) [sphere1 sphere2])
-          ray        (make-ray [0 0 -5 1] [0 0 1 0])]
-      (is (≈ [0.38066 0.47583 0.2855] (color-for world ray)))))
-  (testing "the color with an intersection behind the ray"
-    (let [material1  (a/make-material [0.8 1.0 0.6] 1.0 0.7 0.2 200)
-          sphere1    (make-sphere material1)
-          material2  (a/make-material [1 1 1] 1.0 0.9 0.9 200)
-          transform2 (t/scaling-matrix 0.5 0.5 0.5)
-          sphere2    (make-sphere material2 transform2)
-          world      (s/add-objects (s/make-scene) [sphere1 sphere2])
-          ray        (make-ray [0 0 0.75 1] [0 0 -1 0])]
-      (is (≈ [1.0 1.0 1.0] (color-for world ray))))))

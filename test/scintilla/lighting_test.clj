@@ -2,7 +2,47 @@
   (:require [clojure.test :refer :all]
             [scintilla.materials :as a]
             [scintilla.lighting :refer :all]
-            [scintilla.numeric :refer [≈]]))
+            [scintilla.numeric :refer [≈]]
+            [scintilla.ray :as r]
+            [scintilla.scene :as e]
+            [scintilla.shapes :as s]
+            [scintilla.transformation :as t]))
+
+
+(deftest testing-color-for
+  (testing "the color when a ray misses"
+    (let [material1  (a/make-material [0.8 1.0 0.6] 0.1 0.7 0.2 200)
+          sphere1    (s/make-sphere material1)
+          transform2 (t/scaling-matrix 0.5 0.5 0.5)
+          sphere2    (s/make-sphere a/default-material transform2)
+          world      (e/add-objects (e/make-scene) [sphere1 sphere2])
+          ray        (r/make-ray [0 0 -5 1] [0 1 0 0])]
+      (is (≈ [0 0 0] (color-for world ray)))))
+  (testing "the color when a ray hits"
+    (let [material1  (a/make-material [0.8 1.0 0.6] 0.1 0.7 0.2 200)
+          sphere1    (s/make-sphere material1)
+          transform2 (t/scaling-matrix 0.5 0.5 0.5)
+          sphere2    (s/make-sphere a/default-material transform2)
+          world      (e/add-objects (e/make-scene) [sphere1 sphere2])
+          ray        (r/make-ray [0 0 -5 1] [0 0 1 0])]
+      (is (≈ [0.38066 0.47583 0.2855] (color-for world ray)))))
+  (testing "the color with an intersection behind the ray"
+    (let [material1  (a/make-material [0.8 1.0 0.6] 1.0 0.7 0.2 200)
+          sphere1    (s/make-sphere material1)
+          material2  (a/make-material [1 1 1] 1.0 0.9 0.9 200)
+          transform2 (t/scaling-matrix 0.5 0.5 0.5)
+          sphere2    (s/make-sphere material2 transform2)
+          world      (e/add-objects (e/make-scene) [sphere1 sphere2])
+          ray        (r/make-ray [0 0 0.75 1] [0 0 -1 0])]
+      (is (≈ [1.0 1.0 1.0] (color-for world ray)))))
+
+    ;   (testing "lighting with the surface in shadow"
+    ;   Given eyev ← vector(0, 0, -1)
+    ; And normalv ← vector(0, 0, -1)
+    ; And light ← point_light(point(0, 0, -10), color(1, 1, 1)) And in_shadow ← true
+    ; When result ← lighting(m, light, position, eyev, normalv, in_shadow) Then result = color(0.1, 0.1, 0.1)"))
+
+      )
 
 (deftest testing-lighting
   (testing "lighting with the eye between the light and the surface

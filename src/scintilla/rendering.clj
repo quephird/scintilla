@@ -1,7 +1,7 @@
 (ns scintilla.rendering
   (:require [scintilla.camera :as c]
             [scintilla.file :as f]
-            [scintilla.ray :as r]))
+            [scintilla.lighting :as l]))
 
 (defn render
   "Renders the scene using the camera and returns the image data in a canvas data structure."
@@ -10,7 +10,7 @@
     (for [y (range pixel-height)]
       (into []
         (for [x (range pixel-width)]
-          (r/color-for scene (c/ray-for camera x y)))))))
+          (l/color-for scene (c/ray-for camera x y)))))))
 
 (defn render-to-file
   "Renders the scene using the camera and saves the image to a file."

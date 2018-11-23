@@ -1,5 +1,6 @@
 (ns scintilla.lighting
   (:require [scintilla.color :as c]
+            [scintilla.ray :as r]
             [scintilla.shapes :as s]
             [scintilla.tuple :as u]))
 
@@ -10,6 +11,20 @@
 
 (def default-light
   (make-light [-10 10 -10 1] [1 1 1]))
+
+(defn shadowed-by?
+  [{:keys [light] :as scene} point]
+  (let [light-direction (-> light
+                            :position
+                            (u/subtract point))
+        light-ray       (->> light-direction
+                             u/normalize
+                             (r/make-ray point))
+        hit             (->> light-ray
+                             (r/find-all-intersections scene)
+                             (r/find-hit))]
+    (and (not (nil? hit))
+         (< (:t hit) (u/magnitude light-direction)))))
 
 (defn ambient
   [{:keys [intensity] :as light}
@@ -47,3 +62,17 @@
   (c/add (ambient light prepared-hit)
          (diffuse light prepared-hit)
          (specular light prepared-hit)))
+
+(defn color-for
+  "For the given world and ray from the camera to the canvas,
+   return the color correspondent to the hit object or simply
+   black if no object is hit."
+  [{:keys [light] :as world} ray]
+  (let [hit (-> world
+               (r/find-all-intersections ray)
+               (r/find-hit))]
+  (if (nil? hit)
+      [0 0 0]
+      (as-> hit $
+            (r/make-prepared-hit $ ray)
+            (lighting light $)))))

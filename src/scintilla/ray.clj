@@ -1,6 +1,5 @@
 (ns scintilla.ray
-  (:require [scintilla.lighting :as l]
-            [scintilla.matrix :as m]
+  (:require [scintilla.matrix :as m]
             [scintilla.shapes :as s]
             [scintilla.transformation :as t]
             [scintilla.tuple :as u]))
@@ -96,17 +95,3 @@
                           surface-normal)
       :eye-direction  eye-direction
       :inside         inside)))
-
-(defn color-for
-  "For the given world and ray from the camera to the canvas,
-   return the color correspondent to the hit object or simply
-   black if no object is hit."
-  [{:keys [light] :as world} ray]
-  (let [hit (-> world
-                (find-all-intersections ray)
-                (find-hit))]
-    (if (nil? hit)
-      [0 0 0]
-      (as-> hit $
-            (make-prepared-hit $ ray)
-            (l/lighting light $)))))
