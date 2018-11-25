@@ -12,7 +12,9 @@
 (def default-light
   (make-light [-10 10 -10 1] [1 1 1]))
 
-(defn shadowed-by?
+(defn shadowed?
+  "Considers the light in the scene and a point and
+   determines whether or not an object shadows that point."
   [{:keys [light] :as scene} point]
   (let [light-direction (-> light
                             :position
@@ -20,11 +22,11 @@
         light-ray       (->> light-direction
                              u/normalize
                              (r/make-ray point))
-        hit             (->> light-ray
+        light-hit       (->> light-ray
                              (r/find-all-intersections scene)
                              (r/find-hit))]
-    (and (not (nil? hit))
-         (< (:t hit) (u/magnitude light-direction)))))
+    (and (not (nil? light-hit))
+         (< (:t light-hit) (u/magnitude light-direction)))))
 
 (defn ambient
   [{:keys [intensity] :as light}
@@ -58,21 +60,24 @@
         (c/scalar-times intensity (* specular reflection-coefficient)))))
 
 (defn lighting
-  [light prepared-hit]
-  (c/add (ambient light prepared-hit)
-         (diffuse light prepared-hit)
-         (specular light prepared-hit)))
+  [{:keys [light] :as scene}
+   {:keys [surface-point] :as prepared-hit}]
+  (if (shadowed? scene surface-point)
+    (ambient light prepared-hit)
+    (c/add (ambient light prepared-hit)
+           (diffuse light prepared-hit)
+           (specular light prepared-hit))))
 
 (defn color-for
   "For the given world and ray from the camera to the canvas,
    return the color correspondent to the hit object or simply
    black if no object is hit."
-  [{:keys [light] :as world} ray]
-  (let [hit (-> world
+  [{:keys [light] :as scene} ray]
+  (let [hit (-> scene
                (r/find-all-intersections ray)
                (r/find-hit))]
   (if (nil? hit)
       [0 0 0]
       (as-> hit $
             (r/make-prepared-hit $ ray)
-            (lighting light $)))))
+            (lighting scene $)))))
