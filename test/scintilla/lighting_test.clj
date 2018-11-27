@@ -208,12 +208,4 @@
           sphere2    (s/make-sphere material2 transform2)
           world      (e/add-objects (e/make-scene) [sphere1 sphere2])
           ray        (r/make-ray [0 0 0.75 1] [0 0 -1 0])]
-      (is (≈ [1.0 1.0 1.0] (color-for world ray)))))
-
-    ;   (testing "lighting with the surface in shadow"
-    ;   Given eyev ← vector(0, 0, -1)
-    ; And normalv ← vector(0, 0, -1)
-    ; And light ← point_light(point(0, 0, -10), color(1, 1, 1)) And in_shadow ← true
-    ; When result ← lighting(m, light, position, eyev, normalv, in_shadow) Then result = color(0.1, 0.1, 0.1)"))
-
-      )
+      (is (≈ [1.0 1.0 1.0] (color-for world ray))))))

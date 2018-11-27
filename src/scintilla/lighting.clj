@@ -13,8 +13,8 @@
   (make-light [-10 10 -10 1] [1 1 1]))
 
 (defn shadowed?
-  "Considers the light in the scene and a point and
-   determines whether or not an object shadows that point."
+  "Takes the light in the scene and a point and determines
+   whether or not any object shadows that point."
   [{:keys [light] :as scene} point]
   (let [light-direction (-> light
                             :position
@@ -60,6 +60,10 @@
         (c/scalar-times intensity (* specular reflection-coefficient)))))
 
 (defn lighting
+  "Determines the color for the point associated with the hit
+   and scene passed in; either it is the ambient color of the
+   object associated with the hit, or the sum of all three
+   possible contributions to the color."
   [{:keys [light] :as scene}
    {:keys [surface-point] :as prepared-hit}]
   (if (shadowed? scene surface-point)

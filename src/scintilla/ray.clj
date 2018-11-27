@@ -1,6 +1,7 @@
 (ns scintilla.ray
   (:require [scintilla.camera :as c]
             [scintilla.matrix :as m]
+            [scintilla.numeric :refer [ε]]
             [scintilla.shapes :as s]
             [scintilla.transformation :as t]
             [scintilla.tuple :as u]))
@@ -90,7 +91,7 @@
         eye-direction  (u/subtract (:direction ray))
         inside         (> 0 (u/dot-product surface-normal eye-direction))]
     (assoc hit
-      :surface-point  surface-point
+      :surface-point  (u/plus surface-point (u/scalar-times surface-normal ε))
       :surface-normal (if inside
                           (u/subtract surface-normal)
                           surface-normal)

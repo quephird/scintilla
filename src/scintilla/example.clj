@@ -55,7 +55,7 @@
 (defn- make-left-sphere
   []
   (let [material  (-> a/default-material
-                      (a/set-color [1 0.8 0.1])
+                      (a/set-color [0.9 0.3 0.2])
                       (a/set-diffuse 0.7)
                       (a/set-specular 0.3))
         transform (-> (t/translation-matrix -1.5 0.33 -0.75)
@@ -65,7 +65,7 @@
 (defn- make-middle-sphere
   []
   (let [material  (-> a/default-material
-                      (a/set-color [0.1 1.0 0.5])
+                      (a/set-color [0.4 0.4 0.8])
                       (a/set-diffuse 0.7)
                       (a/set-specular 0.3))
         transform (t/translation-matrix -0.5 1 0.5)]
@@ -74,7 +74,7 @@
 (defn- make-right-sphere
   []
   (let [material  (-> a/default-material
-                      (a/set-color [0.5 1 0.1])
+                      (a/set-color [0 0.5 0.5])
                       (a/set-diffuse 0.7)
                       (a/set-specular 0.3))
         transform (-> (t/translation-matrix 1.5 0.5 -0.5)

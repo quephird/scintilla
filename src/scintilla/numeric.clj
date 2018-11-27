@@ -7,7 +7,7 @@
 (def π⟋6 (/ π 6.0))
 
 ; Maximum tolerance for near equality.
-(def *epsilon* 0.00001)
+(def ε 0.00001)
 
 ; Sneaky, and perhaps too cute, way of defining a new
 ; operator for use with both numeric types and vectors.
@@ -18,7 +18,7 @@
 (extend java.lang.Double
   AlmostEqual
   {:≈ (fn [d1 d2]
-        (< (Math/abs (clojure.core/- d1 d2)) *epsilon*))})
+        (< (Math/abs (clojure.core/- d1 d2)) ε))})
 
 ; Casts Longs as Doubles and calls the above implementation.
 (extend java.lang.Long
