@@ -7,7 +7,7 @@
 (def π⟋6 (/ π 6.0))
 
 ; Maximum tolerance for near equality.
-(def ε 0.00001)
+(def ε 0.0001)
 
 ; Sneaky, and perhaps too cute, way of defining a new
 ; operator for use with both numeric types and vectors.
