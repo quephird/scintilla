@@ -87,7 +87,7 @@
   [hit ray]
   (let [material       (get-in hit [:shape :material])
         surface-point  (position ray (:t hit))
-        surface-normal (s/find-normal (:shape hit) surface-point)
+        surface-normal (s/normal-for (:shape hit) surface-point)
         eye-direction  (u/subtract (:direction ray))
         inside         (> 0 (u/dot-product surface-normal eye-direction))]
     (assoc hit

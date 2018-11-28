@@ -13,10 +13,10 @@
      :material material
      :matrix transform}))
 
-(defmulti find-normal (fn [shape _] (:shape-type shape)))
+(defmulti normal-for (fn [shape _] (:shape-type shape)))
 
 ;; TODO: Look into how to better do this in a less hacky way.
-(defmethod find-normal :sphere
+(defmethod normal-for :sphere
   [{:keys [matrix]} world-point]
   (let [object-point (-> matrix
                          m/inverse
