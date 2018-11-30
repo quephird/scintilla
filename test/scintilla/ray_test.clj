@@ -19,7 +19,7 @@
       (is (≈ [1 3 4 1] (position ray -1)))
       (is (≈ [4.5 3 4 1] (position ray 2.5))))))
 
-(deftest testing-find-intersections
+(deftest testing-find-intersections-for-sphere
   (testing "a ray that intersects a sphere at two points"
     (let [ray    (make-ray [0 0 -5 1] [0 0 1 0])
           sphere (make-sphere [1.0 0.0 0.0])
@@ -61,6 +61,36 @@
           T             (t/translation-matrix 5 0 0)
           sphere        (make-sphere [1.0 0.0 0.0] T)
           intersections (find-intersections sphere ray)]
+      (is (= 0 (count intersections))))))
+
+(deftest testing-find-intersections-for-plane
+  (testing "a ray intersecting an xz plane from above"
+    (let [plane             (make-plane)
+          ray               (make-ray [0 1 0 1] [0 -1 0 0])
+          intersections     (find-intersections plane ray)
+          {:keys [t shape]} (first intersections)]
+      (is (= 1 (count intersections)))
+      (is (= 1 t))
+      (is (= plane shape))))
+  (testing "a ray intersecting an xz plane from below"
+    (let [plane             (make-plane)
+          ray               (make-ray [0 -1 0 1] [0 1 0 0])
+          intersections     (find-intersections plane ray)
+          {:keys [t shape]} (first intersections)]
+      (is (= 1 (count intersections)))
+      (is (= 1 t))
+      (is (= plane shape))))
+  (testing "a ray parallel to the xz plane"
+    (let [plane             (make-plane)
+          ray               (make-ray [0 10 0 1] [0 0 1 0])
+          intersections     (find-intersections plane ray)
+          {:keys [t shape]} (first intersections)]
+      (is (= 0 (count intersections)))))
+  (testing "a ray that lies in the xz plane"
+    (let [plane             (make-plane)
+          ray               (make-ray [0 0 0 1] [0 0 1 0])
+          intersections     (find-intersections plane ray)
+          {:keys [t shape]} (first intersections)]
       (is (= 0 (count intersections))))))
 
 (deftest testing-find-all-intersections

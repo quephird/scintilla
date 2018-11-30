@@ -66,6 +66,15 @@
         tvals        (find-roots a b c)]
     (map #(make-intersection % shape) tvals)))
 
+(defmethod find-intersections :plane
+  [{:keys [matrix] :as shape}
+   {:keys [point direction] :as ray}]
+   (let [[_ py _ _] point
+         [_ dy _ _] direction]
+     (if (> ε (Math/abs dy))
+       []
+       [(make-intersection (- (/ py dy)) shape)])))
+
 (defn find-all-intersections
   "Returns the set of all intersections that the given ray
    makes with the set of objects in the given world."
