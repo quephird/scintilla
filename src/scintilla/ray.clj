@@ -35,21 +35,20 @@
   {:t t
    :shape shape})
 
-;; TODO: Remove fully qualified namespaces from all operator calls below
 (defn- find-roots
   "Helper function to determine the set of real roots to the quadratic equation:
    𝑎𝑥² + 𝑏𝑥 + 𝑐 = 𝟢"
   [a b c]
-  (let [discriminant (clojure.core/- (clojure.core/* b b) (clojure.core/* 4 a c))]
+  (let [discriminant (- (* b b) (* 4 a c))]
     (cond
       (> 0 discriminant)
         []
       (zero? discriminant)
-        [(clojure.core// b (clojure.core/* -2.0 a))]
+        [(/ b (* -2.0 a))]
       :else
         (let [√discriminant (Math/sqrt discriminant)]
-          [(clojure.core// (clojure.core/+ b √discriminant) (clojure.core/* -2.0 a))
-           (clojure.core// (clojure.core/- b √discriminant) (clojure.core/* -2.0 a))]))))
+          [(/ (+ b √discriminant) (* -2.0 a))
+           (/ (- b √discriminant) (* -2.0 a))]))))
 
 (defmulti find-intersections
   "Takes an abritrary shape and a ray and returns a list
