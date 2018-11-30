@@ -35,6 +35,7 @@
   {:t t
    :shape shape})
 
+;; TODO: Remove fully qualified namespaces from all operator calls below
 (defn- find-roots
   "Helper function to determine the set of real roots to the quadratic equation:
    𝑎𝑥² + 𝑏𝑥 + 𝑐 = 𝟢"
@@ -81,23 +82,6 @@
         (sort-by :t)
         (some (fn [i] (if (< 0 (:t i)) i)))))
 
-(defn make-prepared-hit
-  "Returns a map representing the object hit by the ray
-   with other pre-computed entities associated with it."
-  [hit ray]
-  (let [material       (get-in hit [:shape :material])
-        surface-point  (position ray (:t hit))
-        surface-normal (s/normal-for (:shape hit) surface-point)
-        eye-direction  (u/subtract (:direction ray))
-        inside         (> 0 (u/dot-product surface-normal eye-direction))]
-    (assoc hit
-      :surface-point  (u/plus surface-point (u/scalar-times surface-normal ε))
-      :surface-normal (if inside
-                          (u/subtract surface-normal)
-                          surface-normal)
-      :eye-direction  eye-direction
-      :inside         inside)))
-
 (defn ray-for
   "Computes the ray for the given camera and (x,y) coordinates of its canvas,
    in terms of the coordinate system correspondent with the inverse
@@ -111,3 +95,67 @@
         origin'             (m/tuple-times inverse-transform [0 0 0 1])
         direction'          (u/normalize (u/subtract point' origin'))]
     (make-ray origin' direction')))
+
+(defmulti local-normal-for (fn [shape _] (:shape-type shape)))
+
+(defmethod local-normal-for :sphere
+  [_ local-point]
+  (u/subtract local-point [0.0 0.0 0.0 1.0]))
+
+(defmethod local-normal-for :plane
+  [_ _]
+  [0 1 0 0])
+
+(defn normal-for
+  "This is the 'public' interface for computing the normal
+   vector for any arbitrary type of shape. It first converts
+   the world point to a local point, computes the normal in
+   that coordinate system by deferring the specialized
+   implementation for the shape, then transforms it back to the
+   world coordinate system."
+  [{:keys [matrix] :as shape} world-point]
+  (let [local-normal (as-> matrix $
+                           (m/inverse $)
+                           (m/tuple-times $ world-point)
+                           (local-normal-for shape $))]
+    (-> matrix
+        m/inverse
+        m/transpose
+        (m/tuple-times local-normal)
+        (assoc 3 0)  ;; TODO: This is a hack per the book; look for better way
+        u/normalize)))
+
+(defn reflected-vector-for
+  "Computes the vector that is the result of reflecting
+   the in-vector around the normal vector."
+  ;;
+  ;;                    normal
+  ;;                    vector
+  ;;                г      ^       ⟋
+  ;;                  ⟍    |    ⟋
+  ;;  reflected vector  ⟍  |  ⟋ incident vector
+  ;;                      ⟍|∟
+  ;;                ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+  [in-vector normal-vector]
+  (->> normal-vector
+       (u/dot-product in-vector)
+       (* 2.0)
+       (u/scalar-times normal-vector)
+       (u/subtract in-vector)))
+
+(defn make-prepared-hit
+  "Returns a map representing the object hit by the ray
+   with other pre-computed entities associated with it."
+  [hit ray]
+  (let [material       (get-in hit [:shape :material])
+        surface-point  (position ray (:t hit))
+        surface-normal (normal-for (:shape hit) surface-point)
+        eye-direction  (u/subtract (:direction ray))
+        inside?        (> 0 (u/dot-product surface-normal eye-direction))]
+    (assoc hit
+      :surface-point  (u/plus surface-point (u/scalar-times surface-normal ε))
+      :surface-normal (if inside?
+                          (u/subtract surface-normal)
+                          surface-normal)
+      :eye-direction  eye-direction
+      :inside         inside?)))

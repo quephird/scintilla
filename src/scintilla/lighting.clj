@@ -52,7 +52,7 @@
   (let [{:keys [shininess specular]} (:material shape)
         light-vector                 (u/normalize (u/subtract position surface-point))
         light-dot-normal             (u/dot-product light-vector surface-normal)
-        reflected-vector             (s/reflected-vector-for (u/subtract light-vector) surface-normal)
+        reflected-vector             (r/reflected-vector-for (u/subtract light-vector) surface-normal)
         reflect-dot-eye              (u/dot-product reflected-vector eye-direction)
         reflection-coefficient       (Math/pow reflect-dot-eye shininess)]
     (if (or (< light-dot-normal 0) (< reflection-coefficient 0))
