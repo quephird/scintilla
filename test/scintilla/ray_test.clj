@@ -70,7 +70,7 @@
           intersections     (find-intersections plane ray)
           {:keys [t shape]} (first intersections)]
       (is (= 1 (count intersections)))
-      (is (= 1 t))
+      (is (≈ 1 t))
       (is (= plane shape))))
   (testing "a ray intersecting an xz plane from below"
     (let [plane             (make-plane)
@@ -78,7 +78,7 @@
           intersections     (find-intersections plane ray)
           {:keys [t shape]} (first intersections)]
       (is (= 1 (count intersections)))
-      (is (= 1 t))
+      (is (≈ 1 t))
       (is (= plane shape))))
   (testing "a ray parallel to the xz plane"
     (let [plane             (make-plane)

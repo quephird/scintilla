@@ -58,7 +58,7 @@
 
 (defmethod find-intersections :sphere
   [{:keys [matrix] :as shape} ray]
-  (let [{:keys [point direction]} (transform ray (m/inverse matrix))
+  (let [{:keys [point direction] :as local-ray} (transform ray (m/inverse matrix))
         shape-to-ray (u/subtract point [0 0 0 1.0])
         a            (u/dot-product direction direction)
         b            (* 2.0 (u/dot-product direction shape-to-ray))
@@ -67,10 +67,10 @@
     (map #(make-intersection % shape) tvals)))
 
 (defmethod find-intersections :plane
-  [{:keys [matrix] :as shape}
-   {:keys [point direction] :as ray}]
-   (let [[_ py _ _] point
-         [_ dy _ _] direction]
+  [{:keys [matrix] :as shape} ray]
+  (let [{:keys [point direction] :as local-ray} (transform ray (m/inverse matrix))
+        [_ py _ _] point
+        [_ dy _ _] direction]
      (if (> ε (Math/abs dy))
        []
        [(make-intersection (- (/ py dy)) shape)])))
