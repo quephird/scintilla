@@ -17,9 +17,6 @@
   [{:keys [point direction] :as ray} t]
   (u/plus point (u/scalar-times direction t)))
 
-;; TODO: Think of how to either move this into the transformation
-;; namespace or move what's currently in there back into the matrix
-;; namespace.
 (defn transform
   "NOTA BENE: note that a translation matrix applied to a vector
    is an effective no-op, but that a scaling matrix is not, which
@@ -50,6 +47,7 @@
           [(/ (+ b √discriminant) (* -2.0 a))
            (/ (- b √discriminant) (* -2.0 a))]))))
 
+;; TODO: Change to intersections-for
 (defmulti find-intersections
   "Takes an abritrary shape and a ray and returns a list
    of either zero, one, or two points of intersection, sorted
@@ -155,8 +153,7 @@
   "Returns a map representing the object hit by the ray
    with other pre-computed entities associated with it."
   [hit ray]
-  (let [material       (get-in hit [:shape :material])
-        surface-point  (position ray (:t hit))
+  (let [surface-point  (position ray (:t hit))
         surface-normal (normal-for (:shape hit) surface-point)
         eye-direction  (u/subtract (:direction ray))
         inside?        (> 0 (u/dot-product surface-normal eye-direction))]

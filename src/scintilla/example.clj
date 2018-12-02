@@ -4,6 +4,7 @@
             [scintilla.materials :as a]
             [scintilla.matrix :as m]
             [scintilla.numeric :refer :all]
+            [scintilla.patterns :as p]
             [scintilla.rendering :as r]
             [scintilla.scene :as e]
             [scintilla.shapes :as s]
@@ -12,7 +13,7 @@
 (defn sphere-with-light
   []
   (let [transform      (t/scaling-matrix 0.5 0.5 0.5)
-        material       (a/make-material [1 0.2 1] 0.1 0.9 0.9 20)
+        material       (a/make-material [1 0.2 1] 0.1 0.9 0.9 20 nil)
         sphere         (s/make-sphere material transform)
         light          (l/make-light [-10 10 -10 1] [1 1 1])
         scene          (e/make-scene [sphere] light)
@@ -111,3 +112,28 @@
                                                     [0 1 0 0])
         camera         (c/make-camera 400 200 π⟋3 view-transform)]
     (r/render-to-file camera scene "three-spheres-on-plane.ppm")))
+
+(defn- make-sphere-with-stripes
+  []
+  (let [stripes   (p/make-stripe-pattern [1 0 0.5] [1 1 0])
+        material  (-> a/default-material
+                      (a/set-color nil)
+                      (a/set-diffuse 0.7)
+                      (a/set-specular 0.3)
+                      (a/set-pattern stripes))
+        transform (t/translation-matrix -0.5 1 0.5)]
+    (s/make-sphere material transform)))
+
+(defn sphere-with-stripes-on-plane
+  []
+  (let [floor-material (-> a/default-material
+                           (a/set-color [1 0.9 0.9])
+                           (a/set-specular 0.0))
+        floor          (s/make-plane floor-material)
+        sphere         (make-sphere-with-stripes)
+        scene          (e/make-scene [sphere floor] l/default-light)
+        view-transform (t/view-transform-matrix-for [0 1.5 -5 1]
+                                                    [0 1 0 1]
+                                                    [0 1 0 0])
+        camera         (c/make-camera 100 50 π⟋3 view-transform)]
+    (r/render-to-file camera scene "sphere-with-stripes-on-plane.ppm")))
