@@ -95,3 +95,19 @@
                                                     [0 1 0 0])
         camera         (c/make-camera 100 50 π⟋3 view-transform)]
     (r/render-to-file camera scene "three-spheres-in-corner.ppm")))
+
+(defn three-spheres-on-plane
+  []
+  (let [floor-material (-> a/default-material
+                           (a/set-color [1 0.9 0.9])
+                           (a/set-specular 0.0))
+        floor          (s/make-plane floor-material)
+        left-sphere    (make-left-sphere)
+        middle-sphere  (make-middle-sphere)
+        right-sphere   (make-right-sphere)
+        scene          (e/make-scene [left-sphere middle-sphere right-sphere floor] l/default-light)
+        view-transform (t/view-transform-matrix-for [0 1.5 -5 1]
+                                                    [0 1 0 1]
+                                                    [0 1 0 0])
+        camera         (c/make-camera 400 200 π⟋3 view-transform)]
+    (r/render-to-file camera scene "three-spheres-on-plane.ppm")))
