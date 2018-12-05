@@ -1,6 +1,7 @@
 (ns scintilla.shapes
   (:require [scintilla.materials :as a]
             [scintilla.matrix :refer [I₄] :as m]
+            [scintilla.patterns :as p]
             [scintilla.tuple :as u]))
 
 (defn make-shape
@@ -23,3 +24,14 @@
   "The default plane lies in the 𝑥𝑧 plane."
   [& args]
   (apply make-shape :plane args))
+
+(defn color-for
+  "This function either returns the simple color for the
+   entire hit shape or defers computation of the color to the
+   shape's pattern implementation itself if it exists
+   for the surface point in question."
+  [prepared-hit]
+  (let [{:keys [pattern color]} (get-in prepared-hit [:shape :material])]
+    (if (nil? pattern)
+      color
+      (p/color-for prepared-hit))))

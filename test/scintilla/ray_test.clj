@@ -95,7 +95,7 @@
 
 (deftest testing-find-all-intersections
   (testing "a ray that intersects a sphere at two points"
-    (let [material1     (a/make-material [0.8 1.0 0.6] 0.1 0.7 0.2 200)
+    (let [material1     (a/make-material [0.8 1.0 0.6] 0.1 0.7 0.2 200 nil)
           sphere1       (make-sphere material1)
           transform2    (t/scaling-matrix 0.5 0.5 0.5)
           sphere2       (make-sphere a/default-material transform2)

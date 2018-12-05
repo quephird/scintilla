@@ -31,17 +31,19 @@
 (defn ambient
   [{:keys [intensity] :as light}
    {:keys [shape] :as prepared-hit}]
-  (let [{:keys [color ambient]} (:material shape)
-        effective-color         (c/hadamard-product color intensity)]
+  (let [{:keys [ambient]} (:material shape)
+        color             (s/color-for prepared-hit)
+        effective-color   (c/hadamard-product color intensity)]
     (c/scalar-times effective-color ambient)))
 
 (defn diffuse
   [{:keys [intensity position] :as light}
    {:keys [shape surface-normal surface-point] :as prepared-hit}]
-  (let [{color :color diffuse :diffuse} (:material shape)
-        effective-color         (c/hadamard-product color intensity)
-        light-vector            (u/normalize (u/subtract position surface-point))
-        light-dot-normal        (u/dot-product light-vector surface-normal)]
+  (let [{diffuse :diffuse} (:material shape)
+        color              (s/color-for prepared-hit)
+        effective-color    (c/hadamard-product color intensity)
+        light-vector       (u/normalize (u/subtract position surface-point))
+        light-dot-normal   (u/dot-product light-vector surface-normal)]
     (if (< light-dot-normal 0)
         [0 0 0]
         (c/scalar-times effective-color (* diffuse light-dot-normal)))))
