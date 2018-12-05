@@ -114,7 +114,7 @@
                   (range dimension)))
           (range dimension))))
 
-(defn inverse
+(defn- inverse*
   "Returns the multiplicative inverse of the given matrix,
    or throws if the matrix has a determinant of zero."
   [matrix]
@@ -125,3 +125,5 @@
           cofactor-matrix
           transpose
           (scalar-divide d)))))
+
+(def inverse (memoize inverse*))
