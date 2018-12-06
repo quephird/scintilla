@@ -138,7 +138,7 @@
         camera         (c/make-camera 400 200 π⟋3 view-transform)]
     (r/render-to-file camera scene "sphere-with-stripes-on-plane.ppm")))
 
-(defn three-striped-spheres-on-plane
+(defn three-patterned-spheres-on-plane
   []
   (let [floor-material (-> a/default-material
                            (a/set-color [1 0.9 0.9])
@@ -154,18 +154,14 @@
         o-transform-1  (t/translation-matrix -2.25 1 1.0)
         sphere-1       (s/make-sphere material-1 o-transform-1)
 
-        scene          (e/make-scene [sphere-1 floor] l/default-light)
-
         p-transform-2  (m/matrix-times
-                         (t/scaling-matrix 0.33 0.33 0.33)
-                         (t/rotation-z-matrix (- π⟋3)))
-        stripes-2      (p/make-stripe-pattern [0 0 1] [0 1 0.5] p-transform-2)
+                         (t/rotation-x-matrix π⟋4)
+                         (t/rotation-y-matrix π⟋4))
+        gradient-2     (p/make-gradient-pattern [0 1 0.5] [0 0 1] p-transform-2)
         material-2     (-> a/default-material
-                            (a/set-pattern stripes-2))
+                            (a/set-pattern gradient-2))
         o-transform-2  (t/translation-matrix 0 1 1.5)
         sphere-2       (s/make-sphere material-2 o-transform-2)
-
-        scene          (e/make-scene [sphere-1 sphere-2 floor] l/default-light)
 
         p-transform-3  (->> (t/rotation-z-matrix (- π⟋3))
                             (m/matrix-times (t/rotation-x-matrix π⟋2))
@@ -176,10 +172,10 @@
         o-transform-3  (t/translation-matrix 2.25 1 2.0)
         sphere-3       (s/make-sphere material-3 o-transform-3)
 
-        scene          (e/make-scene [sphere-1 sphere-2 sphere-3 floor] l/default-light)
+        scene          (e/make-scene [sphere-2 floor] l/default-light)
 
         view-transform (t/view-transform-matrix-for [0 1.5 -5 1]
                                                     [0 1 0 1]
                                                     [0 1 0 0])
-        camera         (c/make-camera 800 400 π⟋3 view-transform)]
-    (r/render-to-file camera scene "three-striped-spheres-on-plane.ppm")))
+        camera         (c/make-camera 400 200 π⟋3 view-transform)]
+    (r/render-to-file camera scene "three-patterned-spheres-on-plane.ppm")))
