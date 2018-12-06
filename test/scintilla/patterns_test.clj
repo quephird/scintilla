@@ -69,3 +69,19 @@
             sphere        (s/make-sphere material obj-xform)
             prepared-hit  {:shape sphere :surface-point [1.5 0 0]}]
         (is (≈ white (color-for prepared-hit)))))))
+
+(deftest testing-color-for-gradient-pattern
+  (testing "gradient linearly interpolates colors"
+    (let [white         [1 1 1]
+          black         [0 0 0]
+          gradient      (make-gradient-pattern white black)
+          point-1       [0.0  0 0 1]
+          point-2       [0.25 0 0 1]
+          point-3       [0.5  0 0 1]
+          point-4       [0.75 0 0 1]
+          prepared-hits (map (fn [p]
+                               {:shape {:material {:pattern gradient}
+                                        :matrix I₄}
+                                :surface-point p}) [point-1 point-2 point-3 point-4])
+          expected-values [[1 1 1] [0.75 0.75 0.75] [0.5 0.5 0.5] [0.25 0.25 0.25]]]
+      (is (≈ expected-values (map #(color-for %) prepared-hits))))))
