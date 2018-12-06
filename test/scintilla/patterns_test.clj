@@ -70,6 +70,23 @@
             prepared-hit  {:shape sphere :surface-point [1.5 0 0]}]
         (is (≈ white (color-for prepared-hit)))))))
 
+(deftest testing-color-for-ring-pattern
+  (testing "ring should extend in both x and z"
+    (let [white         [1 1 1]
+          black         [0 0 0]
+          rings         (make-ring-pattern white black)
+          point-1       [0 0 0 1]
+          point-2       [1 0 0 1]
+          point-3       [0 0 1 1]
+          ;; the next point is slightly more than √2/2 away from origin
+          point-4       [0.708 0 0.708]
+          prepared-hits (map (fn [p]
+                               {:shape {:material {:pattern rings}
+                                        :matrix I₄}
+                                :surface-point p}) [point-1 point-2 point-3 point-4])
+          expected-values [white black black black]]
+      (is (≈ expected-values (map #(color-for %) prepared-hits))))))
+
 (deftest testing-color-for-gradient-pattern
   (testing "gradient linearly interpolates colors"
     (let [white         [1 1 1]

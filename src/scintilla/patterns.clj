@@ -11,6 +11,15 @@
     :color-1      color-1
     :color-2      color-2}))
 
+(defn make-ring-pattern
+  ([color-1 color-2]
+   (make-ring-pattern color-1 color-2 I₄))
+  ([color-1 color-2 transform]
+   {:pattern-type :ring
+    :transform    transform
+    :color-1      color-1
+    :color-2      color-2}))
+
 (defn make-gradient-pattern
   ([color-1 color-2]
    (make-gradient-pattern color-1 color-2 I₄))
@@ -38,6 +47,22 @@
         [x _ _ _]                 pattern-space-point
         even-stripe?              (-> x (mod 2.0) int zero?)]
     (if even-stripe? color-1 color-2)))
+
+(defmethod color-for :ring
+  [{:keys [surface-point] :as prepared-hit}]
+  (let [{:keys [color-1 color-2]} (get-in prepared-hit [:shape :material :pattern])
+        pattern-transform         (get-in prepared-hit [:shape :material :pattern :transform])
+        object-transform          (get-in prepared-hit [:shape :matrix])
+        pattern-space-point       (->> surface-point
+                                       (m/tuple-times (m/inverse object-transform))
+                                       (m/tuple-times (m/inverse pattern-transform)))
+        [x _ z _]                 pattern-space-point
+        even-ring?                (-> (+ (* x x) (* z z))
+                                      Math/sqrt
+                                      (mod 2.0)
+                                      int
+                                      zero?)]
+    (if even-ring? color-1 color-2)))
 
 (defmethod color-for :gradient
   [{:keys [surface-point] :as prepared-hit}]
