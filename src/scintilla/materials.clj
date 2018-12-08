@@ -1,15 +1,5 @@
 (ns scintilla.materials)
 
-(defn make-material
-  [{:keys [ambient color diffuse pattern reflective shininess specular] :as overrides}]
-  {:ambient    ambient
-   :color      color
-   :diffuse    diffuse
-   :pattern    pattern
-   :reflective reflective
-   :shininess  shininess
-   :specular   specular})
-
 (def default-material
   {:ambient 0.1
    :color [1 1 1]
@@ -18,6 +8,10 @@
    :reflective 0.0
    :shininess 200
    :specular 0.9})
+
+(defn make-material
+  [overrides]
+  (merge default-material overrides))
 
 (defn set-ambient
   [material ambient]

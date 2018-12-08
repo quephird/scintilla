@@ -54,6 +54,7 @@
    by increasing value of t."
   (fn [shape _] (:shape-type shape)))
 
+;; TODO: Need to put diagram below illustrating how and why this works.
 (defmethod find-intersections :sphere
   [{:keys [matrix] :as shape} ray]
   (let [{:keys [point direction] :as local-ray} (transform ray (m/inverse matrix))
