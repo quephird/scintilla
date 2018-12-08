@@ -1,17 +1,27 @@
 (ns scintilla.materials)
 
-;; TODO:: Improve this interface using named kwargs
 (defn make-material
-  [color ambient diffuse specular shininess pattern]
-  {:color     color
-   :ambient   ambient
-   :diffuse   diffuse
-   :specular  specular
-   :shininess shininess
-   :pattern   pattern})
+  [{:keys [ambient color diffuse pattern reflective shininess specular] :as overrides}]
+  {:ambient    ambient
+   :color      color
+   :diffuse    diffuse
+   :pattern    pattern
+   :reflective reflective
+   :shininess  shininess
+   :specular   specular})
 
 (def default-material
-  (make-material [1 1 1] 0.1 0.9 0.9 200 nil))
+  (make-material {:ambient 0.1
+                  :color [1 1 1]
+                  :diffuse 0.9
+                  :pattern nil
+                  :reflective 0.0
+                  :shininess 200
+                  :specular 0.9}))
+
+(defn set-ambient
+  [material ambient]
+  (assoc material :ambient ambient))
 
 (defn set-color
   [material color]
@@ -21,11 +31,19 @@
   [material diffuse]
   (assoc material :diffuse diffuse))
 
-(defn set-specular
-  [material specular]
-  (assoc material :specular specular))
-
 (defn set-pattern
   [material pattern]
   (assoc material :pattern pattern))
+
+(defn set-relective
+  [material reflective]
+  (assoc material :reflective reflective))
+
+(defn set-shininess
+  [material shininess]
+  (assoc material :shininess shininess))
+
+(defn set-specular
+  [material specular]
+  (assoc material :specular specular))
   
