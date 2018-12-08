@@ -11,13 +11,13 @@
    :specular   specular})
 
 (def default-material
-  (make-material {:ambient 0.1
-                  :color [1 1 1]
-                  :diffuse 0.9
-                  :pattern nil
-                  :reflective 0.0
-                  :shininess 200
-                  :specular 0.9}))
+  {:ambient 0.1
+   :color [1 1 1]
+   :diffuse 0.9
+   :pattern nil
+   :reflective 0.0
+   :shininess 200
+   :specular 0.9})
 
 (defn set-ambient
   [material ambient]
