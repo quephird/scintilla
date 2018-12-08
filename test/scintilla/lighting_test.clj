@@ -9,7 +9,12 @@
             [scintilla.transformation :as t]))
 
 (deftest testing-shadowed?
-  (let [material1     (a/make-material [0.8 1.0 0.6] 0.1 0.7 0.2 200 nil)
+  (let [material1     (a/make-material {:color [0.8 1.0 0.6]
+                                        :ambient 0.1
+                                        :diffuse 0.7
+                                        :specular 0.2
+                                        :shininess 200
+                                        :pattern nil})
         sphere1       (s/make-sphere material1)
         transform2    (t/scaling-matrix 0.5 0.5 0.5)
         sphere2       (s/make-sphere a/default-material transform2)
@@ -185,7 +190,12 @@
 
 (deftest testing-color-for
   (testing "the color when a ray misses"
-    (let [material1  (a/make-material [0.8 1.0 0.6] 0.1 0.7 0.2 200 nil)
+    (let [material1  (a/make-material {:color [0.8 1.0 0.6]
+                                       :ambient 0.1
+                                       :diffuse 0.7
+                                       :specular 0.2
+                                       :shininess 200
+                                       :pattern nil})
           sphere1    (s/make-sphere material1)
           transform2 (t/scaling-matrix 0.5 0.5 0.5)
           sphere2    (s/make-sphere a/default-material transform2)
@@ -193,7 +203,12 @@
           ray        (r/make-ray [0 0 -5 1] [0 1 0 0])]
       (is (≈ [0 0 0] (color-for world ray)))))
   (testing "the color when a ray hits"
-    (let [material1  (a/make-material [0.8 1.0 0.6] 0.1 0.7 0.2 200 nil)
+    (let [material1  (a/make-material {:color [0.8 1.0 0.6]
+                                       :ambient 0.1
+                                       :diffuse 0.7
+                                       :specular 0.2
+                                       :shininess 200
+                                       :pattern nil})
           sphere1    (s/make-sphere material1)
           transform2 (t/scaling-matrix 0.5 0.5 0.5)
           sphere2    (s/make-sphere a/default-material transform2)
@@ -201,9 +216,19 @@
           ray        (r/make-ray [0 0 -5 1] [0 0 1 0])]
       (is (≈ [0.38066 0.47583 0.2855] (color-for world ray)))))
   (testing "the color with an intersection behind the ray"
-    (let [material1  (a/make-material [0.8 1.0 0.6] 1.0 0.7 0.2 200 nil)
+    (let [material1  (a/make-material {:color [0.8 1.0 0.6]
+                                       :ambient 1.0
+                                       :diffuse 0.7
+                                       :specular 0.2
+                                       :shininess 200
+                                       :pattern nil})
           sphere1    (s/make-sphere material1)
-          material2  (a/make-material [1 1 1] 1.0 0.9 0.9 200 nil)
+          material2  (a/make-material {:color [1 1 1]
+                                       :ambient 1.0
+                                       :diffuse 0.9
+                                       :specular 0.9
+                                       :shininess 200
+                                       :pattern nil})
           transform2 (t/scaling-matrix 0.5 0.5 0.5)
           sphere2    (s/make-sphere material2 transform2)
           world      (e/add-objects (e/make-scene) [sphere1 sphere2])
