@@ -153,14 +153,16 @@
   "Returns a map representing the object hit by the ray
    with other pre-computed entities associated with it."
   [hit ray]
-  (let [surface-point  (position ray (:t hit))
-        surface-normal (normal-for (:shape hit) surface-point)
-        eye-direction  (u/subtract (:direction ray))
-        inside?        (> 0 (u/dot-product surface-normal eye-direction))]
+  (let [surface-point    (position ray (:t hit))
+        surface-normal   (normal-for (:shape hit) surface-point)
+        eye-direction    (u/subtract (:direction ray))
+        reflected-vector (reflected-vector-for (:direction ray) surface-normal)
+        inside?          (> 0 (u/dot-product surface-normal eye-direction))]
     (assoc hit
-      :surface-point  (u/plus surface-point (u/scalar-times surface-normal ε))
-      :surface-normal (if inside?
+      :surface-point    (u/plus surface-point (u/scalar-times surface-normal ε))
+      :surface-normal   (if inside?
                           (u/subtract surface-normal)
                           surface-normal)
-      :eye-direction  eye-direction
-      :inside         inside?)))
+      :eye-direction    eye-direction
+      :reflected-vector reflected-vector
+      :inside           inside?)))
