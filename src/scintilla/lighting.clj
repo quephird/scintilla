@@ -74,16 +74,32 @@
            (diffuse light prepared-hit)
            (specular light prepared-hit))))
 
+(def max-reflections 5)
+
+(declare reflected-lighting)
+(declare color-for)
+
+(defn reflected-lighting
+  [scene prepared-hit remaining-reflections]
+  (let [reflective (get-in prepared-hit [:shape :material :reflective])]
+    (if (zero? reflective)
+      [0 0 0]
+      (let [{:keys [surface-point reflected-vector]} prepared-hit
+            reflected-ray   (r/make-ray surface-point reflected-vector)
+            reflected-color (color-for scene reflected-ray (dec remaining-reflections))]
+        (c/scalar-times reflected-color reflective)))))
+
 (defn color-for
   "For the given world and ray from the camera to the canvas,
-   return the color correspondent to the hit object or simply
-   black if no object is hit."
-  [{:keys [light] :as scene} ray]
+   return the color correspondent to the hit object at the point
+   of intersection or simply black if no object is hit."
+  [{:keys [light] :as scene} ray remaining-reflections]
   (let [hit (-> scene
-               (r/find-all-intersections ray)
-               (r/find-hit))]
-  (if (nil? hit)
+                (r/find-all-intersections ray)
+                (r/find-hit))]
+    (if (nil? hit)
       [0 0 0]
-      (as-> hit $
-            (r/make-prepared-hit $ ray)
-            (lighting scene $)))))
+      (let [prepared-hit       (r/make-prepared-hit hit ray)
+            primary-lighting   (lighting scene prepared-hit)
+            secondary-lighting (reflected-lighting scene prepared-hit remaining-reflections)]
+        (c/add primary-lighting secondary-lighting)))))
