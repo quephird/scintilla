@@ -2,7 +2,8 @@
   (:require [scintilla.color :as c]
             [scintilla.ray :as r]
             [scintilla.shapes :as s]
-            [scintilla.tuple :as u]))
+            [scintilla.tuple :as u]
+            [clojure.pprint :refer :all]))
 
 (defn make-light
   [position intensity]
@@ -82,7 +83,7 @@
 (defn reflected-lighting
   [scene prepared-hit remaining-reflections]
   (let [reflective (get-in prepared-hit [:shape :material :reflective])]
-    (if (zero? reflective)
+    (if (or (zero? reflective) (zero? remaining-reflections))
       [0 0 0]
       (let [{:keys [surface-point reflected-vector]} prepared-hit
             reflected-ray   (r/make-ray surface-point reflected-vector)

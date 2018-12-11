@@ -1,8 +1,10 @@
 (ns scintilla.lighting-test
   (:require [clojure.test :refer :all]
-            [scintilla.materials :as a]
+            [scintilla.color :as c]
             [scintilla.lighting :refer :all]
-            [scintilla.numeric :refer [≈]]
+            [scintilla.materials :as a]
+            [scintilla.matrix :as m]
+            [scintilla.numeric :refer :all]
             [scintilla.ray :as r]
             [scintilla.scene :as e]
             [scintilla.shapes :as s]
@@ -238,7 +240,33 @@
           ray          (r/make-ray [0 0 -3 1] [0 -0.7071 0.7071 0])
           hit          (r/find-hit (r/find-all-intersections scene ray))
           prepared-hit (r/make-prepared-hit hit ray)]
-      (is (≈ [0.19032 0.2379 0.14274] (reflected-lighting scene prepared-hit max-reflections))))))
+      (is (≈ [0.19032 0.2379 0.14274] (reflected-lighting scene prepared-hit max-reflections)))))
+  (testing "the reflected color at the maximum recursive depth"
+    (let [material1    (a/make-material {:color [0.8 1.0 0.6]
+                                         :ambient 0.1
+                                         :diffuse 0.7
+                                         :specular 0.2
+                                         :shininess 200
+                                         :pattern nil})
+          sphere1      (s/make-sphere material1)
+
+          material2    (a/make-material {:color [1 1 1]
+                                         :ambient 1.0
+                                         :diffuse 0.9
+                                         :specular 0.9
+                                         :shininess 200
+                                         :pattern nil})
+          transform2   (t/scaling-matrix 0.5 0.5 0.5)
+          sphere2      (s/make-sphere material2 transform2)
+
+          material3    (a/make-material {:reflective 0.5})
+          transform3   (t/translation-matrix 0 -1 0)
+          plane        (s/make-plane material3 transform3)
+
+          scene        (e/add-objects (e/make-scene) [sphere1 sphere2 plane])
+          ray          (r/make-ray [0 0 -3 1] [0 -0.7071 0.7071 0])
+          hit          (r/find-hit (r/find-all-intersections scene ray))
+          prepared-hit (r/make-prepared-hit hit ray)])))
 
 (deftest testing-color-for
   (testing "the color when a ray misses"
@@ -319,11 +347,20 @@
           lower-plane     (s/make-plane lower-material lower-transform)
 
           upper-material  (a/make-material {:reflective 1})
-          upper-transform (t/translation-matrix 0 1 0)
-          upper-plane     (s/make-plane lower-material lower-transform)
+          ;; TODO: See why we need to flip the plane here when
+          ;;       the author notes this is unnecessary here:
+          ;;
+          ;;       https://pragprog.com/titles/jbtracer/errata?utf8=%E2%9C%93&what_to_show=2422#s83690
+          upper-transform (m/matrix-times
+                           (t/translation-matrix 0 1 0)
+                           (t/rotation-x-matrix π))
+          upper-plane     (s/make-plane lower-material upper-transform)
 
           light           (make-light [0 0 0 1] [1 1 1])
           scene           (e/make-scene [upper-plane lower-plane] light)
 
-          ray             (r/make-ray [0 0 0 1] [0 1 0 0])]
-      (is (≈ [0 0 0] (color-for scene ray max-reflections))))))
+          ray             (r/make-ray [0 0 0 1] [0 1 0 0])
+          color           (color-for scene ray max-reflections)]
+      ;; There is no need to test anything specific here other than
+      ;; observing that the computation halts predictably.
+      )))
