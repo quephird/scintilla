@@ -68,8 +68,8 @@
    object associated with the hit, or the sum of all three
    possible contributions to the color."
   [{:keys [light] :as scene}
-   {:keys [surface-point] :as prepared-hit}]
-  (if (shadowed? scene surface-point)
+   {:keys [over-point] :as prepared-hit}]
+  (if (shadowed? scene over-point)
     (ambient light prepared-hit)
     (c/add (ambient light prepared-hit)
            (diffuse light prepared-hit)

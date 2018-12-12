@@ -8,7 +8,8 @@
             [scintilla.ray :as r]
             [scintilla.scene :as e]
             [scintilla.shapes :as s]
-            [scintilla.transformation :as t]))
+            [scintilla.transformation :as t]
+            [scintilla.tuple :as u]))
 
 (deftest testing-shadowed?
   (let [material1     (a/make-material {:color [0.8 1.0 0.6]
@@ -79,11 +80,13 @@
           scene          (e/make-scene [sphere] light)
           surface-normal [0 0 -1 0]
           surface-point  [0 0 0 1]
+          over-point     (u/plus surface-point (u/scalar-times surface-normal ε))
           eye-direction  [0 0 -1 0]
-          prepared-hit   {:shape sphere
+          prepared-hit   {:shape          sphere
                           :surface-normal surface-normal
-                          :surface-point surface-point
-                          :eye-direction eye-direction}]
+                          :surface-point  surface-point
+                          :over-point     over-point
+                          :eye-direction  eye-direction}]
       (is (≈ [0.1 0.1 0.1] (ambient light prepared-hit)))
       (is (≈ [0.9 0.9 0.9] (diffuse light prepared-hit)))
       (is (≈ [0.9 0.9 0.9] (specular light prepared-hit)))
@@ -104,11 +107,13 @@
             scene          (e/make-scene [sphere] light)
             surface-normal [0 0 -1 0]
             surface-point  [0 0 0 1]
+            over-point     (u/plus surface-point (u/scalar-times surface-normal ε))
             eye-direction  [0 0.70711 -0.70711 0]
-            prepared-hit   {:shape sphere
+            prepared-hit   {:shape          sphere
                             :surface-normal surface-normal
-                            :surface-point surface-point
-                            :eye-direction eye-direction}]
+                            :surface-point  surface-point
+                            :over-point     over-point
+                            :eye-direction  eye-direction}]
         (is (≈ [0.1 0.1 0.1] (ambient light prepared-hit)))
         (is (≈ [0.9 0.9 0.9] (diffuse light prepared-hit)))
         (is (≈ [0.0 0.0 0.0] (specular light prepared-hit)))
@@ -129,11 +134,13 @@
             scene          (e/make-scene [sphere] light)
             surface-normal [0 0 -1 0]
             surface-point  [0 0 0 1]
+            over-point     (u/plus surface-point (u/scalar-times surface-normal ε))
             eye-direction  [0 0 -1 0]
-            prepared-hit   {:shape sphere
+            prepared-hit   {:shape          sphere
                             :surface-normal surface-normal
-                            :surface-point surface-point
-                            :eye-direction eye-direction}]
+                            :surface-point  surface-point
+                            :over-point     over-point
+                            :eye-direction  eye-direction}]
         (is (≈ [0.1 0.1 0.1] (ambient light prepared-hit)))
         (is (≈ [0.6364 0.6364 0.6364] (diffuse light prepared-hit)))
         (is (≈ [0.0 0.0 0.0] (specular light prepared-hit)))
@@ -155,11 +162,13 @@
             scene          (e/make-scene [sphere] light)
             surface-normal [0 0 -1 0]
             surface-point  [0 0 0 1]
+            over-point     (u/plus surface-point (u/scalar-times surface-normal ε))
             eye-direction  [0 (* -0.5 (Math/sqrt 2)) (* -0.5 (Math/sqrt 2)) 0]
-            prepared-hit   {:shape sphere
+            prepared-hit   {:shape          sphere
                             :surface-normal surface-normal
-                            :surface-point surface-point
-                            :eye-direction eye-direction}]
+                            :surface-point  surface-point
+                            :over-point     over-point
+                            :eye-direction  eye-direction}]
         (is (≈ [0.1 0.1 0.1] (ambient light prepared-hit)))
         (is (≈ [0.6364 0.6364 0.6364] (diffuse light prepared-hit)))
         (is (≈ [0.9 0.9 0.9] (specular light prepared-hit)))
@@ -180,11 +189,13 @@
             scene          (e/make-scene [sphere] light)
             surface-normal [0 0 -1 0]
             surface-point  [0 0 0 1]
+            over-point     (u/plus surface-point (u/scalar-times surface-normal ε))
             eye-direction  [0 0 -1 0]
-            prepared-hit   {:shape sphere
+            prepared-hit   {:shape          sphere
                             :surface-normal surface-normal
-                            :surface-point surface-point
-                            :eye-direction eye-direction}]
+                            :surface-point  surface-point
+                            :over-point     over-point
+                            :eye-direction  eye-direction}]
         (is (≈ [0.1 0.1 0.1] (ambient light prepared-hit)))
         (is (≈ [0.0 0.0 0.0] (diffuse light prepared-hit)))
         (is (≈ [0.0 0.0 0.0] (specular light prepared-hit)))
