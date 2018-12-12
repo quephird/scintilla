@@ -10,7 +10,7 @@
     (for [y (range pixel-height)]
       (into []
         (for [x (range pixel-width)]
-          (l/color-for scene (r/ray-for camera x y)))))))
+          (l/color-for scene (r/ray-for camera x y) l/max-reflections))))))
 
 (defn render-to-file
   "Renders the scene using the camera and saves the image to a file."

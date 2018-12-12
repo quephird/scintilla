@@ -2,7 +2,8 @@
   (:require [scintilla.color :as c]
             [scintilla.ray :as r]
             [scintilla.shapes :as s]
-            [scintilla.tuple :as u]))
+            [scintilla.tuple :as u]
+            [clojure.pprint :refer :all]))
 
 (defn make-light
   [position intensity]
@@ -67,23 +68,39 @@
    object associated with the hit, or the sum of all three
    possible contributions to the color."
   [{:keys [light] :as scene}
-   {:keys [surface-point] :as prepared-hit}]
-  (if (shadowed? scene surface-point)
+   {:keys [over-point] :as prepared-hit}]
+  (if (shadowed? scene over-point)
     (ambient light prepared-hit)
     (c/add (ambient light prepared-hit)
            (diffuse light prepared-hit)
            (specular light prepared-hit))))
 
+(def max-reflections 5)
+
+(declare reflected-lighting)
+(declare color-for)
+
+(defn reflected-lighting
+  [scene prepared-hit remaining-reflections]
+  (let [reflective (get-in prepared-hit [:shape :material :reflective])]
+    (if (or (zero? reflective) (zero? remaining-reflections))
+      [0 0 0]
+      (let [{:keys [surface-point reflected-vector]} prepared-hit
+            reflected-ray   (r/make-ray surface-point reflected-vector)
+            reflected-color (color-for scene reflected-ray (dec remaining-reflections))]
+        (c/scalar-times reflected-color reflective)))))
+
 (defn color-for
   "For the given world and ray from the camera to the canvas,
-   return the color correspondent to the hit object or simply
-   black if no object is hit."
-  [{:keys [light] :as scene} ray]
+   return the color correspondent to the hit object at the point
+   of intersection or simply black if no object is hit."
+  [{:keys [light] :as scene} ray remaining-reflections]
   (let [hit (-> scene
-               (r/find-all-intersections ray)
-               (r/find-hit))]
-  (if (nil? hit)
+                (r/find-all-intersections ray)
+                (r/find-hit))]
+    (if (nil? hit)
       [0 0 0]
-      (as-> hit $
-            (r/make-prepared-hit $ ray)
-            (lighting scene $)))))
+      (let [prepared-hit       (r/make-prepared-hit hit ray)
+            primary-lighting   (lighting scene prepared-hit)
+            secondary-lighting (reflected-lighting scene prepared-hit remaining-reflections)]
+        (c/add primary-lighting secondary-lighting)))))

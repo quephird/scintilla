@@ -13,7 +13,12 @@
 (defn sphere-with-light
   []
   (let [transform      (t/scaling-matrix 0.5 0.5 0.5)
-        material       (a/make-material [1 0.2 1] 0.1 0.9 0.9 20 nil)
+        material       (a/make-material {:ambient 0.1
+                                         :color [1 0.2 1]
+                                         :diffuse 0.9
+                                         :shininess 20
+                                         :specular 0.9
+                                         :pattern nil})
         sphere         (s/make-sphere material transform)
         light          (l/make-light [-10 10 -10 1] [1 1 1])
         scene          (e/make-scene [sphere] light)
