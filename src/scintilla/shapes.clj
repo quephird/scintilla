@@ -4,15 +4,19 @@
             [scintilla.patterns :as p]
             [scintilla.tuple :as u]))
 
+;; We need a way to uniquely identify shapes, but since
+;; we are using raw maps and not instantiating and referengin
+;; objects, we need an explicit strategy, and so we use UUIDs.
 (defn make-shape
   ([shape-type]
     (make-shape shape-type a/default-material))
   ([shape-type material]
     (make-shape shape-type material I₄))
   ([shape-type material transform]
-    {:shape-type shape-type
-     :material material
-     :matrix transform}))
+   {:id         (java.util.UUID/randomUUID)
+    :shape-type shape-type
+    :material   material
+    :matrix     transform}))
 
 (defn make-sphere
   "The default sphere is centered at the world origin
