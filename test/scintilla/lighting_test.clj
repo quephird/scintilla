@@ -203,81 +203,84 @@
 
 (deftest testing-reflected-lighting
   (testing "the reflected color for a non-reflective material"
-    (let [material1    (a/make-material {:color [0.8 1.0 0.6]
-                                         :ambient 0.1
-                                         :diffuse 0.7
-                                         :specular 0.2
-                                         :shininess 200
-                                         :pattern nil})
-          sphere1      (s/make-sphere material1)
+    (let [material1     (a/make-material {:color [0.8 1.0 0.6]
+                                          :ambient 0.1
+                                          :diffuse 0.7
+                                          :specular 0.2
+                                          :shininess 200
+                                          :pattern nil})
+          sphere1       (s/make-sphere material1)
 
-          material2    (a/make-material {:color [1 1 1]
-                                         :ambient 1.0
-                                         :diffuse 0.9
-                                         :specular 0.9
-                                         :shininess 200
-                                         :pattern nil})
-          transform2   (t/scaling-matrix 0.5 0.5 0.5)
-          sphere2      (s/make-sphere material2 transform2)
+          material2     (a/make-material {:color [1 1 1]
+                                          :ambient 1.0
+                                          :diffuse 0.9
+                                          :specular 0.9
+                                          :shininess 200
+                                          :pattern nil})
+          transform2    (t/scaling-matrix 0.5 0.5 0.5)
+          sphere2       (s/make-sphere material2 transform2)
 
-          scene        (e/add-objects (e/make-scene) [sphere1 sphere2])
-          ray          (r/make-ray [0 0 0 1] [0 0 1 0])
-          hit          (r/find-hit (r/find-all-intersections scene ray))
-          prepared-hit (r/make-prepared-hit hit ray)]
+          scene         (e/add-objects (e/make-scene) [sphere1 sphere2])
+          ray           (r/make-ray [0 0 0 1] [0 0 1 0])
+          intersections (r/find-all-intersections scene ray)
+          hit           (r/find-hit intersections)
+          prepared-hit  (r/make-prepared-hit hit ray intersections)]
       (is (≈ [0 0 0] (reflected-lighting scene prepared-hit max-reflections)))))
   (testing "the reflected color for a reflective material"
-    (let [material1    (a/make-material {:color [0.8 1.0 0.6]
-                                         :ambient 0.1
-                                         :diffuse 0.7
-                                         :specular 0.2
-                                         :shininess 200
-                                         :pattern nil})
-          sphere1      (s/make-sphere material1)
+    (let [material1     (a/make-material {:color [0.8 1.0 0.6]
+                                          :ambient 0.1
+                                          :diffuse 0.7
+                                          :specular 0.2
+                                          :shininess 200
+                                          :pattern nil})
+          sphere1       (s/make-sphere material1)
 
-          material2    (a/make-material {:color [1 1 1]
-                                         :ambient 1.0
-                                         :diffuse 0.9
-                                         :specular 0.9
-                                         :shininess 200
-                                         :pattern nil})
-          transform2   (t/scaling-matrix 0.5 0.5 0.5)
-          sphere2      (s/make-sphere material2 transform2)
+          material2     (a/make-material {:color [1 1 1]
+                                          :ambient 1.0
+                                          :diffuse 0.9
+                                          :specular 0.9
+                                          :shininess 200
+                                          :pattern nil})
+          transform2    (t/scaling-matrix 0.5 0.5 0.5)
+          sphere2       (s/make-sphere material2 transform2)
 
-          material3    (a/make-material {:reflective 0.5})
-          transform3   (t/translation-matrix 0 -1 0)
-          plane        (s/make-plane material3 transform3)
+          material3     (a/make-material {:reflective 0.5})
+          transform3    (t/translation-matrix 0 -1 0)
+          plane         (s/make-plane material3 transform3)
 
-          scene        (e/add-objects (e/make-scene) [sphere1 sphere2 plane])
-          ray          (r/make-ray [0 0 -3 1] [0 -0.7071 0.7071 0])
-          hit          (r/find-hit (r/find-all-intersections scene ray))
-          prepared-hit (r/make-prepared-hit hit ray)]
+          scene         (e/add-objects (e/make-scene) [sphere1 sphere2 plane])
+          ray           (r/make-ray [0 0 -3 1] [0 -0.7071 0.7071 0])
+          intersections (r/find-all-intersections scene ray)
+          hit           (r/find-hit intersections)
+          prepared-hit  (r/make-prepared-hit hit ray intersections)]
       (is (≈ [0.19032 0.2379 0.14274] (reflected-lighting scene prepared-hit max-reflections)))))
   (testing "the reflected color at the maximum recursive depth"
-    (let [material1    (a/make-material {:color [0.8 1.0 0.6]
-                                         :ambient 0.1
-                                         :diffuse 0.7
-                                         :specular 0.2
-                                         :shininess 200
-                                         :pattern nil})
-          sphere1      (s/make-sphere material1)
+    (let [material1     (a/make-material {:color [0.8 1.0 0.6]
+                                          :ambient 0.1
+                                          :diffuse 0.7
+                                          :specular 0.2
+                                          :shininess 200
+                                          :pattern nil})
+          sphere1       (s/make-sphere material1)
 
-          material2    (a/make-material {:color [1 1 1]
-                                         :ambient 1.0
-                                         :diffuse 0.9
-                                         :specular 0.9
-                                         :shininess 200
-                                         :pattern nil})
-          transform2   (t/scaling-matrix 0.5 0.5 0.5)
-          sphere2      (s/make-sphere material2 transform2)
+          material2     (a/make-material {:color [1 1 1]
+                                          :ambient 1.0
+                                          :diffuse 0.9
+                                          :specular 0.9
+                                          :shininess 200
+                                          :pattern nil})
+          transform2    (t/scaling-matrix 0.5 0.5 0.5)
+          sphere2       (s/make-sphere material2 transform2)
 
-          material3    (a/make-material {:reflective 0.5})
-          transform3   (t/translation-matrix 0 -1 0)
-          plane        (s/make-plane material3 transform3)
+          material3     (a/make-material {:reflective 0.5})
+          transform3    (t/translation-matrix 0 -1 0)
+          plane         (s/make-plane material3 transform3)
 
-          scene        (e/add-objects (e/make-scene) [sphere1 sphere2 plane])
-          ray          (r/make-ray [0 0 -3 1] [0 -0.7071 0.7071 0])
-          hit          (r/find-hit (r/find-all-intersections scene ray))
-          prepared-hit (r/make-prepared-hit hit ray)])))
+          scene         (e/add-objects (e/make-scene) [sphere1 sphere2 plane])
+          ray           (r/make-ray [0 0 -3 1] [0 -0.7071 0.7071 0])
+          intersections (r/find-all-intersections scene ray)
+          hit           (r/find-hit intersections)
+          prepared-hit  (r/make-prepared-hit hit ray intersections)])))
 
 (deftest testing-color-for
   (testing "the color when a ray misses"
@@ -326,31 +329,32 @@
           ray        (r/make-ray [0 0 0.75 1] [0 0 -1 0])]
       (is (≈ [1.0 1.0 1.0] (color-for world ray max-reflections)))))
   (testing "with a reflective material"
-    (let [material1    (a/make-material {:color [0.8 1.0 0.6]
-                                         :ambient 0.1
-                                         :diffuse 0.7
-                                         :specular 0.2
-                                         :shininess 200
-                                         :pattern nil})
-          sphere1      (s/make-sphere material1)
+    (let [material1     (a/make-material {:color [0.8 1.0 0.6]
+                                          :ambient 0.1
+                                          :diffuse 0.7
+                                          :specular 0.2
+                                          :shininess 200
+                                          :pattern nil})
+          sphere1       (s/make-sphere material1)
 
-          material2    (a/make-material {:color [1 1 1]
-                                         :ambient 1.0
-                                         :diffuse 0.9
-                                         :specular 0.9
-                                         :shininess 200
-                                         :pattern nil})
-          transform2   (t/scaling-matrix 0.5 0.5 0.5)
-          sphere2      (s/make-sphere material2 transform2)
+          material2     (a/make-material {:color [1 1 1]
+                                          :ambient 1.0
+                                          :diffuse 0.9
+                                          :specular 0.9
+                                          :shininess 200
+                                          :pattern nil})
+          transform2    (t/scaling-matrix 0.5 0.5 0.5)
+          sphere2       (s/make-sphere material2 transform2)
 
-          material3    (a/make-material {:reflective 0.5})
-          transform3   (t/translation-matrix 0 -1 0)
-          plane        (s/make-plane material3 transform3)
+          material3     (a/make-material {:reflective 0.5})
+          transform3    (t/translation-matrix 0 -1 0)
+          plane         (s/make-plane material3 transform3)
 
-          scene        (e/add-objects (e/make-scene) [sphere1 sphere2 plane])
-          ray          (r/make-ray [0 0 -3 1] [0 -0.7071 0.7071 0])
-          hit          (r/find-hit (r/find-all-intersections scene ray))
-          prepared-hit (r/make-prepared-hit hit ray)]
+          scene         (e/add-objects (e/make-scene) [sphere1 sphere2 plane])
+          ray           (r/make-ray [0 0 -3 1] [0 -0.7071 0.7071 0])
+          intersections (r/find-all-intersections scene ray)
+          hit           (r/find-hit intersections)
+          prepared-hit  (r/make-prepared-hit hit ray intersections)]
       (is (≈ [0.87677 0.92436 0.82918] (color-for scene ray max-reflections)))))
   (testing "recursion stops with mutually reflective surfaces"
     (let [lower-material  (a/make-material {:reflective 1})

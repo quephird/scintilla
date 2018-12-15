@@ -95,12 +95,11 @@
    return the color correspondent to the hit object at the point
    of intersection or simply black if no object is hit."
   [{:keys [light] :as scene} ray remaining-reflections]
-  (let [hit (-> scene
-                (r/find-all-intersections ray)
-                (r/find-hit))]
+  (let [intersections  (r/find-all-intersections scene ray)
+        hit            (r/find-hit intersections)]
     (if (nil? hit)
       [0 0 0]
-      (let [prepared-hit       (r/make-prepared-hit hit ray)
+      (let [prepared-hit       (r/make-prepared-hit hit ray intersections)
             primary-lighting   (lighting scene prepared-hit)
             secondary-lighting (reflected-lighting scene prepared-hit remaining-reflections)]
         (c/add primary-lighting secondary-lighting)))))
