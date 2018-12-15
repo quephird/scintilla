@@ -78,7 +78,10 @@
   "Returns the set of all intersections that the given ray
    makes with the set of objects in the given world."
   [{:keys [objects] :as world} ray]
-  (apply concat (map #(find-intersections % ray) objects)))
+  (->> objects
+       (map #(find-intersections % ray))
+       (apply concat)
+       (sort-by :t)))
 
 (defn find-hit
   "Takes a set of intersections and selects only the
@@ -150,17 +153,38 @@
        (u/scalar-times normal-vector)
        (u/subtract in-vector)))
 
+(defn derive-refractive-indices
+  [hit all-intersections]
+  (loop [n1          1.0
+         n2          1.0
+         encounters  []
+         [x & xs]    all-intersections]
+    (let [n1         (if (= (:t hit) (:t x))
+                       (if (empty? encounters)
+                         1.0
+                         (get-in (last encounters) [:material :refractive-index])))
+          encounters (if (some #{(:shape x)} encounters)
+                       (remove #{(:shape x)} encounters)
+                       (conj encounters (:shape x)))
+          n2         (if (empty? encounters)
+                       1.0
+                       (get-in (last encounters) [:material :refractive-index]))]
+      (if (= (:t hit) (:t x))
+        {:n1 n1 :n2 n2}
+        (recur n1 n2 encounters xs)))))
+
 (defn make-prepared-hit
   "Returns a map representing the object hit by the ray
    with other pre-computed entities associated with it."
-  [hit ray]
+  [hit ray all-intersections]
   (let [surface-point    (position ray (:t hit))
         surface-normal   (normal-for (:shape hit) surface-point)
         over-point       (u/plus surface-point (u/scalar-times surface-normal ε))
         under-point      (u/subtract surface-point (u/scalar-times surface-normal ε))
         eye-direction    (u/subtract (:direction ray))
         reflected-vector (reflected-vector-for (:direction ray) surface-normal)
-        inside?          (> 0 (u/dot-product surface-normal eye-direction))]
+        inside?          (> 0 (u/dot-product surface-normal eye-direction))
+        {:keys [n1 n2]}  (derive-refractive-indices hit all-intersections)]
     (assoc hit
            :surface-point    surface-point
            :over-point       over-point
@@ -170,4 +194,6 @@
                                surface-normal)
            :eye-direction    eye-direction
            :reflected-vector reflected-vector
-           :inside           inside?)))
+           :inside           inside?
+           :n1               n1
+           :n2               n2)))
