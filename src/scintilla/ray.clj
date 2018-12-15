@@ -153,7 +153,8 @@
        (u/scalar-times normal-vector)
        (u/subtract in-vector)))
 
-(defn derive-refractive-indices
+;; Need docstring and explanation of strategy
+(defn- derive-refractive-indices
   [hit all-intersections]
   (loop [n1          1.0
          n2          1.0

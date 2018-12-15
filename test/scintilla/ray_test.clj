@@ -234,8 +234,9 @@
   (testing "precomputing the state of an intersection"
     (let [ray            (make-ray [0 0 -5 1] [0 0 1 0])
           sphere         (s/make-sphere)
-          hit            (find-hit (find-intersections sphere ray))
-          prepared-hit   (make-prepared-hit hit ray)]
+          intersections  (find-intersections sphere ray)
+          hit            (find-hit intersections)
+          prepared-hit   (make-prepared-hit hit ray intersections)]
       (is (≈ [0 0 -1 1] (:surface-point prepared-hit)))
       (is (≈ [0 0 -1 0] (:surface-normal prepared-hit)))
       (is (≈ [0 0 -1 0] (:eye-direction prepared-hit)))
@@ -243,8 +244,9 @@
   (testing "precomputing the state of an intersection"
     (let [ray            (make-ray [0 0 0 1] [0 0 1 0])
           sphere         (s/make-sphere)
-          hit            (find-hit (find-intersections sphere ray))
-          prepared-hit   (make-prepared-hit hit ray)]
+          intersections  (find-intersections sphere ray)
+          hit            (find-hit intersections)
+          prepared-hit   (make-prepared-hit hit ray intersections)]
       (is (≈ [0 0 1 1]  (:surface-point prepared-hit)))
       (is (≈ [0 0 -1 0] (:surface-normal prepared-hit)))
       (is (≈ [0 0 -1 0] (:eye-direction prepared-hit)))
@@ -252,8 +254,9 @@
   (testing "precomputing the reflection vector"
     (let [plane          (s/make-plane)
           ray            (make-ray [0 1 -1 1] [0 -0.7071 0.7071 0])
-          hit            (find-hit (find-intersections plane ray))
-          prepared-hit   (make-prepared-hit hit ray)
+          intersections  (find-intersections plane ray)
+          hit            (find-hit intersections)
+          prepared-hit   (make-prepared-hit hit ray intersections)
           expected-value [0.0 0.7071 0.7071 0]]
       (is (≈ expected-value (:reflected-vector prepared-hit)))))
   (testing "finding refractive indices at various intersections"
@@ -285,12 +288,12 @@
           ray            (make-ray [0 0 -4 1] [0 0 1 0])
           intersections  (find-all-intersections scene ray)
 
-          expected-values [[1.0 1.5]
-                           [1.5 2.0]
-                           [2.0 2.5]
-                           [2.5 2.5]
-                           [2.5 1.5]
-                           [1.5 1.0]]]
+          expected-values [[1.0 1.5]   ;; n1 and n2 values for intersection 0
+                           [1.5 2.0]   ;; "  "   "  "      "   "            1
+                           [2.0 2.5]   ;; "  "   "  "      "   "            2
+                           [2.5 2.5]   ;; "  "   "  "      "   "            3
+                           [2.5 1.5]   ;; "  "   "  "      "   "            4
+                           [1.5 1.0]]] ;; "  "   "  "      "   "            5
       (is (= expected-values
              (->> intersections
                   (map #(make-prepared-hit % ray intersections))
