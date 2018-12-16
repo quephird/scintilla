@@ -64,7 +64,7 @@
       ;;
       (is (false? (shadowed? scene [-2 -2 2 1]))))))
 
-(deftest testing-lighting
+(deftest testing-color-from-direct-light
   (testing "lighting with the eye between the light and the surface"
     ;;
     ;;                            ______
@@ -91,7 +91,7 @@
       (is (≈ [0.1 0.1 0.1] (ambient light prepared-hit)))
       (is (≈ [0.9 0.9 0.9] (diffuse light prepared-hit)))
       (is (≈ [0.9 0.9 0.9] (specular light prepared-hit)))
-      (is (≈ [1.9 1.9 1.9] (lighting scene prepared-hit)))))
+      (is (≈ [1.9 1.9 1.9] (color-from-direct-light scene prepared-hit)))))
     (testing "lighting with the eye between light and surface, eye offset 45°"
       ;;
       ;;                    👁       _____
@@ -118,7 +118,7 @@
         (is (≈ [0.1 0.1 0.1] (ambient light prepared-hit)))
         (is (≈ [0.9 0.9 0.9] (diffuse light prepared-hit)))
         (is (≈ [0.0 0.0 0.0] (specular light prepared-hit)))
-        (is (≈ [1.0 1.0 1.0] (lighting scene prepared-hit)))))
+        (is (≈ [1.0 1.0 1.0] (color-from-direct-light scene prepared-hit)))))
     (testing "lighting with opposite surface, light offset 45°"
       ;;
       ;;                     🔆       _____
@@ -145,7 +145,7 @@
         (is (≈ [0.1 0.1 0.1] (ambient light prepared-hit)))
         (is (≈ [0.6364 0.6364 0.6364] (diffuse light prepared-hit)))
         (is (≈ [0.0 0.0 0.0] (specular light prepared-hit)))
-        (is (≈ [0.7364 0.7364 0.7364] (lighting scene prepared-hit)))))
+        (is (≈ [0.7364 0.7364 0.7364] (color-from-direct-light scene prepared-hit)))))
     (testing "lighting with eye in the path of the reflection vector"
       ;;
       ;;                     🔆       _____
@@ -173,7 +173,7 @@
         (is (≈ [0.1 0.1 0.1] (ambient light prepared-hit)))
         (is (≈ [0.6364 0.6364 0.6364] (diffuse light prepared-hit)))
         (is (≈ [0.9 0.9 0.9] (specular light prepared-hit)))
-        (is (≈ [1.6364 1.6364 1.6364] (lighting scene prepared-hit)))))
+        (is (≈ [1.6364 1.6364 1.6364] (color-from-direct-light scene prepared-hit)))))
     (testing "lighting with the light behind the surface"
       ;;
       ;;                             _____
@@ -200,9 +200,9 @@
         (is (≈ [0.1 0.1 0.1] (ambient light prepared-hit)))
         (is (≈ [0.0 0.0 0.0] (diffuse light prepared-hit)))
         (is (≈ [0.0 0.0 0.0] (specular light prepared-hit)))
-        (is (≈ [0.1 0.1 0.1] (lighting scene prepared-hit))))))
+        (is (≈ [0.1 0.1 0.1] (color-from-direct-light scene prepared-hit))))))
 
-(deftest testing-reflected-lighting
+(deftest testing-color-from-reflected-light
   (testing "the reflected color for a non-reflective material"
     (let [material1     (a/make-material {:color [0.8 1.0 0.6]
                                           :ambient 0.1
@@ -226,7 +226,9 @@
           intersections (r/find-all-intersections scene ray)
           hit           (r/find-hit intersections)
           prepared-hit  (r/make-prepared-hit hit ray intersections)]
-      (is (≈ [0 0 0] (reflected-lighting scene prepared-hit max-reflections)))))
+      (is (≈ [0 0 0] (color-from-reflected-light scene
+                                                 prepared-hit
+                                                 max-reflections)))))
   (testing "the reflected color for a reflective material"
     (let [material1     (a/make-material {:color [0.8 1.0 0.6]
                                           :ambient 0.1
@@ -254,7 +256,9 @@
           intersections (r/find-all-intersections scene ray)
           hit           (r/find-hit intersections)
           prepared-hit  (r/make-prepared-hit hit ray intersections)]
-      (is (≈ [0.19032 0.2379 0.14274] (reflected-lighting scene prepared-hit max-reflections)))))
+      (is (≈ [0.19032 0.2379 0.14274] (color-from-reflected-light scene
+                                                                  prepared-hit
+                                                                  max-reflections)))))
   (testing "the reflected color at the maximum recursive depth"
     (let [material1     (a/make-material {:color [0.8 1.0 0.6]
                                           :ambient 0.1
@@ -294,9 +298,9 @@
           sphere1    (s/make-sphere material1)
           transform2 (t/scaling-matrix 0.5 0.5 0.5)
           sphere2    (s/make-sphere a/default-material transform2)
-          world      (e/add-objects (e/make-scene) [sphere1 sphere2])
+          scene      (e/add-objects (e/make-scene) [sphere1 sphere2])
           ray        (r/make-ray [0 0 -5 1] [0 1 0 0])]
-      (is (≈ [0 0 0] (color-for world ray max-reflections)))))
+      (is (≈ [0 0 0] (color-for scene ray max-reflections)))))
   (testing "the color when a ray hits"
     (let [material1  (a/make-material {:color [0.8 1.0 0.6]
                                        :ambient 0.1
@@ -307,9 +311,9 @@
           sphere1    (s/make-sphere material1)
           transform2 (t/scaling-matrix 0.5 0.5 0.5)
           sphere2    (s/make-sphere a/default-material transform2)
-          world      (e/add-objects (e/make-scene) [sphere1 sphere2])
+          scene      (e/add-objects (e/make-scene) [sphere1 sphere2])
           ray        (r/make-ray [0 0 -5 1] [0 0 1 0])]
-      (is (≈ [0.38066 0.47583 0.2855] (color-for world ray max-reflections)))))
+      (is (≈ [0.38066 0.47583 0.2855] (color-for scene ray max-reflections)))))
   (testing "the color with an intersection behind the ray"
     (let [material1  (a/make-material {:color [0.8 1.0 0.6]
                                        :ambient 1.0
@@ -326,9 +330,9 @@
                                        :pattern nil})
           transform2 (t/scaling-matrix 0.5 0.5 0.5)
           sphere2    (s/make-sphere material2 transform2)
-          world      (e/add-objects (e/make-scene) [sphere1 sphere2])
+          scene      (e/add-objects (e/make-scene) [sphere1 sphere2])
           ray        (r/make-ray [0 0 0.75 1] [0 0 -1 0])]
-      (is (≈ [1.0 1.0 1.0] (color-for world ray max-reflections)))))
+      (is (≈ [1.0 1.0 1.0] (color-for scene ray max-reflections)))))
   (testing "with a reflective material"
     (let [material1     (a/make-material {:color [0.8 1.0 0.6]
                                           :ambient 0.1
@@ -363,10 +367,6 @@
           lower-plane     (s/make-plane lower-material lower-transform)
 
           upper-material  (a/make-material {:reflective 1})
-          ;; TODO: See why we need to flip the plane here when
-          ;;       the author notes this is unnecessary here:
-          ;;
-          ;;       https://pragprog.com/titles/jbtracer/errata?utf8=%E2%9C%93&what_to_show=2422#s83690
           upper-transform (t/translation-matrix 0 1 0)
           upper-plane     (s/make-plane lower-material upper-transform)
 
@@ -379,7 +379,7 @@
       ;; observing that the computation halts predictably.
       )))
 
-(deftest testing-refracted-lighting
+(deftest testing-color-from-refracted-light
   (testing "the refracted color with an opaque surface"
     (let [material1     (a/make-material {:color [0.8 1.0 0.6]
                                           :ambient 0.1
@@ -395,7 +395,9 @@
           intersections (r/find-all-intersections scene ray)
           hit           (r/find-hit intersections)
           prepared-hit  (r/make-prepared-hit hit ray intersections)]
-      (is (≈ [0 0 0] (refracted-lighting scene prepared-hit max-reflections)))))
+      (is (≈ [0 0 0] (color-from-refracted-light scene
+                                                 prepared-hit
+                                                 max-reflections)))))
   (testing "the refracted color at the maximum recursive depth"
     (let [material1     (a/make-material {:color [0.8 1.0 0.6]
                                           :ambient 0.1
@@ -413,7 +415,9 @@
           intersections (r/find-all-intersections scene ray)
           hit           (r/find-hit intersections)
           prepared-hit  (r/make-prepared-hit hit ray intersections)]
-      (is (≈ [0 0 0] (refracted-lighting scene prepared-hit 0)))))
+      (is (≈ [0 0 0] (color-from-refracted-light scene
+                                                 prepared-hit
+                                                 0)))))
   (testing "the refracted color from total internal reflection"
     (let [material1     (a/make-material {:color [0.8 1.0 0.6]
                                           :ambient 0.1
@@ -431,7 +435,9 @@
           intersections (r/find-all-intersections scene ray)
           second-hit    (second intersections)
           prepared-hit  (r/make-prepared-hit second-hit ray intersections)]
-      (is (≈ [0 0 0] (refracted-lighting scene prepared-hit max-reflections)))))
+      (is (≈ [0 0 0] (color-from-refracted-light scene
+                                                 prepared-hit
+                                                 max-reflections)))))
   (testing "the refracted color with a refracted ray"
     (let [material1     (a/make-material {:ambient 1.0
                                           :color   nil
@@ -448,4 +454,6 @@
           intersections (r/find-all-intersections scene ray)
           third-hit     (nth intersections 2)
           prepared-hit  (r/make-prepared-hit third-hit ray intersections)]
-      (is (≈ [0 0.99888 0.04725] (refracted-lighting scene prepared-hit max-reflections))))))
+      (is (≈ [0 0.99888 0.04725] (color-from-refracted-light scene
+                                                             prepared-hit
+                                                             max-reflections))))))

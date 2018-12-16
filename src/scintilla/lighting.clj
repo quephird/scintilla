@@ -62,7 +62,7 @@
         [0 0 0]
         (c/scalar-times intensity (* specular reflection-coefficient)))))
 
-(defn lighting
+(defn color-from-direct-light
   "Determines the color for the point associated with the hit
    and scene passed in; either it is the ambient color of the
    object associated with the hit, or the sum of all three
@@ -75,19 +75,13 @@
            (diffuse light prepared-hit)
            (specular light prepared-hit))))
 
-;; (defn- total-internal-reflection?
-;;   [{:keys [n1 n2 eye-direction surface-normal] :as prepared-hit}]
-;;   (let [cosθ₁  (u/dot-product eye-direction surface-normal)
-;;         sin²θ₂ (* (Math/pow (/ n1 n2) 2) (- 1.0 (Math/pow cosθ₁ 2)))]
-;;     (> sin²θ₂ 1.0)))
-
 (def max-reflections 5)
 
-(declare refracted-lighting)
-(declare reflected-lighting)
+(declare color-from-refracted-light)
+(declare color-from-reflected-light)
 (declare color-for)
 
-(defn refracted-lighting
+(defn color-from-refracted-light
   ;;
   ;;                      |     
   ;;           n₂         | θ₂ ⟋
@@ -113,17 +107,22 @@
                 refracted-direction (u/subtract (u/scalar-times surface-normal (- (* index-ratio cosθ₁) cosθ₂))
                                                 (u/scalar-times eye-direction index-ratio))
                 refracted-ray       (r/make-ray under-point refracted-direction)
-                refracted-color     (color-for scene refracted-ray (dec remaining-reflections))]
+                refracted-color     (color-for
+                                     scene
+                                     refracted-ray
+                                     (dec remaining-reflections))]
             (c/scalar-times refracted-color transparency)))))))
 
-(defn reflected-lighting
+(defn color-from-reflected-light
   [scene prepared-hit remaining-reflections]
   (let [reflective (get-in prepared-hit [:shape :material :reflective])]
     (if (or (zero? reflective) (zero? remaining-reflections))
       [0 0 0]
       (let [{:keys [surface-point reflected-vector]} prepared-hit
             reflected-ray   (r/make-ray surface-point reflected-vector)
-            reflected-color (color-for scene reflected-ray (dec remaining-reflections))]
+            reflected-color (color-for scene
+                                       reflected-ray
+                                       (dec remaining-reflections))]
         (c/scalar-times reflected-color reflective)))))
 
 (defn color-for
@@ -135,7 +134,17 @@
         hit            (r/find-hit intersections)]
     (if (nil? hit)
       [0 0 0]
-      (let [prepared-hit       (r/make-prepared-hit hit ray intersections)
-            primary-color      (lighting scene prepared-hit)
-            reflected-color    (reflected-lighting scene prepared-hit remaining-reflections)]
-        (c/add primary-color reflected-color)))))
+      (let [prepared-hit       (r/make-prepared-hit hit
+                                                    ray
+                                                    intersections)
+            direct-color       (color-from-direct-light scene
+                                                        prepared-hit)
+            reflected-color    (color-from-reflected-light scene
+                                                           prepared-hit
+                                                           remaining-reflections)
+            refracted-color    (color-from-refracted-light scene
+                                                           prepared-hit
+                                                           remaining-reflections)]
+        (c/add direct-color
+               reflected-color
+               refracted-color)))))
