@@ -290,6 +290,86 @@
                                                 prepared-hit
                                                 0))))))
 
+;; TODO: Think about ASCII diagrams for the test cases below
+(deftest testing-color-from-refracted-light
+  (testing "the refracted color with an opaque surface"
+    (let [material1     (a/make-material {:color [0.8 1.0 0.6]
+                                          :ambient 0.1
+                                          :diffuse 0.7
+                                          :specular 0.2
+                                          :shininess 200
+                                          :pattern nil})
+          sphere1       (s/make-sphere material1)
+          transform2    (t/scaling-matrix 0.5 0.5 0.5)
+          sphere2       (s/make-sphere a/default-material transform2)
+          scene         (e/add-objects (e/make-scene) [sphere1 sphere2])
+          ray           (r/make-ray [0 0 -5 1] [0 0 1 0])
+          intersections (r/find-all-intersections scene ray)
+          hit           (r/find-hit intersections)
+          prepared-hit  (r/make-prepared-hit hit ray intersections)]
+      (is (≈ [0 0 0] (color-from-refracted-light scene
+                                                 prepared-hit
+                                                 max-reflections)))))
+  (testing "the refracted color at the maximum recursive depth"
+    (let [material1     (a/make-material {:color [0.8 1.0 0.6]
+                                          :ambient 0.1
+                                          :diffuse 0.7
+                                          :specular 0.2
+                                          :shininess 200
+                                          :transparency 1.0
+                                          :refractive-index 1.5
+                                          :pattern nil})
+          sphere1       (s/make-sphere material1)
+          transform2    (t/scaling-matrix 0.5 0.5 0.5)
+          sphere2       (s/make-sphere a/default-material transform2)
+          scene         (e/add-objects (e/make-scene) [sphere1 sphere2])
+          ray           (r/make-ray [0 0 -5 1] [0 0 1 0])
+          intersections (r/find-all-intersections scene ray)
+          hit           (r/find-hit intersections)
+          prepared-hit  (r/make-prepared-hit hit ray intersections)]
+      (is (≈ [0 0 0] (color-from-refracted-light scene
+                                                 prepared-hit
+                                                 0)))))
+  (testing "the refracted color from total internal reflection"
+    (let [material1     (a/make-material {:color [0.8 1.0 0.6]
+                                          :ambient 0.1
+                                          :diffuse 0.7
+                                          :specular 0.2
+                                          :shininess 200
+                                          :transparency 1.0
+                                          :refractive-index 1.5
+                                          :pattern nil})
+          sphere1       (s/make-sphere material1)
+          transform2    (t/scaling-matrix 0.5 0.5 0.5)
+          sphere2       (s/make-sphere a/default-material transform2)
+          scene         (e/add-objects (e/make-scene) [sphere1 sphere2])
+          ray           (r/make-ray [0 0 0.7071 1] [0 1 0 0])
+          intersections (r/find-all-intersections scene ray)
+          second-hit    (second intersections)
+          prepared-hit  (r/make-prepared-hit second-hit ray intersections)]
+      (is (≈ [0 0 0] (color-from-refracted-light scene
+                                                 prepared-hit
+                                                 max-reflections)))))
+  (testing "the refracted color with a refracted ray"
+    (let [material1     (a/make-material {:ambient 1.0
+                                          :color   nil
+                                          :pattern p/test-pattern})
+          sphere1       (s/make-sphere material1)
+
+          material2     (a/make-material {:refractive-index 1.5
+                                          :transparency     1.0})
+          transform2    (t/scaling-matrix 0.5 0.5 0.5)
+          sphere2       (s/make-sphere material2 transform2)
+
+          scene         (e/add-objects (e/make-scene) [sphere1 sphere2])
+          ray           (r/make-ray [0 0 0.1 1] [0 1 0 0])
+          intersections (r/find-all-intersections scene ray)
+          third-hit     (nth intersections 2)
+          prepared-hit  (r/make-prepared-hit third-hit ray intersections)]
+      (is (≈ [0 0.99888 0.04725] (color-from-refracted-light scene
+                                                             prepared-hit
+                                                             max-reflections))))))
+
 (deftest testing-color-for
   (testing "the color when a ray misses"
     (let [material1  (a/make-material {:color [0.8 1.0 0.6]
@@ -382,81 +462,3 @@
       ;; observing that the computation halts predictably.
       )))
 
-(deftest testing-color-from-refracted-light
-  (testing "the refracted color with an opaque surface"
-    (let [material1     (a/make-material {:color [0.8 1.0 0.6]
-                                          :ambient 0.1
-                                          :diffuse 0.7
-                                          :specular 0.2
-                                          :shininess 200
-                                          :pattern nil})
-          sphere1       (s/make-sphere material1)
-          transform2    (t/scaling-matrix 0.5 0.5 0.5)
-          sphere2       (s/make-sphere a/default-material transform2)
-          scene         (e/add-objects (e/make-scene) [sphere1 sphere2])
-          ray           (r/make-ray [0 0 -5 1] [0 0 1 0])
-          intersections (r/find-all-intersections scene ray)
-          hit           (r/find-hit intersections)
-          prepared-hit  (r/make-prepared-hit hit ray intersections)]
-      (is (≈ [0 0 0] (color-from-refracted-light scene
-                                                 prepared-hit
-                                                 max-reflections)))))
-  (testing "the refracted color at the maximum recursive depth"
-    (let [material1     (a/make-material {:color [0.8 1.0 0.6]
-                                          :ambient 0.1
-                                          :diffuse 0.7
-                                          :specular 0.2
-                                          :shininess 200
-                                          :transparency 1.0
-                                          :refractive-index 1.5
-                                          :pattern nil})
-          sphere1       (s/make-sphere material1)
-          transform2    (t/scaling-matrix 0.5 0.5 0.5)
-          sphere2       (s/make-sphere a/default-material transform2)
-          scene         (e/add-objects (e/make-scene) [sphere1 sphere2])
-          ray           (r/make-ray [0 0 -5 1] [0 0 1 0])
-          intersections (r/find-all-intersections scene ray)
-          hit           (r/find-hit intersections)
-          prepared-hit  (r/make-prepared-hit hit ray intersections)]
-      (is (≈ [0 0 0] (color-from-refracted-light scene
-                                                 prepared-hit
-                                                 0)))))
-  (testing "the refracted color from total internal reflection"
-    (let [material1     (a/make-material {:color [0.8 1.0 0.6]
-                                          :ambient 0.1
-                                          :diffuse 0.7
-                                          :specular 0.2
-                                          :shininess 200
-                                          :transparency 1.0
-                                          :refractive-index 1.5
-                                          :pattern nil})
-          sphere1       (s/make-sphere material1)
-          transform2    (t/scaling-matrix 0.5 0.5 0.5)
-          sphere2       (s/make-sphere a/default-material transform2)
-          scene         (e/add-objects (e/make-scene) [sphere1 sphere2])
-          ray           (r/make-ray [0 0 0.7071 1] [0 1 0 0])
-          intersections (r/find-all-intersections scene ray)
-          second-hit    (second intersections)
-          prepared-hit  (r/make-prepared-hit second-hit ray intersections)]
-      (is (≈ [0 0 0] (color-from-refracted-light scene
-                                                 prepared-hit
-                                                 max-reflections)))))
-  (testing "the refracted color with a refracted ray"
-    (let [material1     (a/make-material {:ambient 1.0
-                                          :color   nil
-                                          :pattern p/test-pattern})
-          sphere1       (s/make-sphere material1)
-
-          material2     (a/make-material {:refractive-index 1.5
-                                          :transparency     1.0})
-          transform2    (t/scaling-matrix 0.5 0.5 0.5)
-          sphere2       (s/make-sphere material2 transform2)
-
-          scene         (e/add-objects (e/make-scene) [sphere1 sphere2])
-          ray           (r/make-ray [0 0 0.1 1] [0 1 0 0])
-          intersections (r/find-all-intersections scene ray)
-          third-hit     (nth intersections 2)
-          prepared-hit  (r/make-prepared-hit third-hit ray intersections)]
-      (is (≈ [0 0.99888 0.04725] (color-from-refracted-light scene
-                                                             prepared-hit
-                                                             max-reflections))))))

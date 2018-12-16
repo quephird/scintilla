@@ -77,10 +77,23 @@
 
 (def max-reflections 5)
 
-(declare color-from-refracted-light)
 (declare color-from-reflected-light)
+(declare color-from-refracted-light)
 (declare color-for)
 
+(defn color-from-reflected-light
+  [scene prepared-hit remaining-reflections]
+  (let [reflective (get-in prepared-hit [:shape :material :reflective])]
+    (if (or (zero? reflective) (zero? remaining-reflections))
+      [0 0 0]
+      (let [{:keys [surface-point reflected-vector]} prepared-hit
+            reflected-ray   (r/make-ray surface-point reflected-vector)
+            reflected-color (color-for scene
+                                       reflected-ray
+                                       (dec remaining-reflections))]
+        (c/scalar-times reflected-color reflective)))))
+
+;; TODO: Improve code below as well as add to diagram
 (defn color-from-refracted-light
   ;;
   ;;                      |     
@@ -112,18 +125,6 @@
                                      refracted-ray
                                      (dec remaining-reflections))]
             (c/scalar-times refracted-color transparency)))))))
-
-(defn color-from-reflected-light
-  [scene prepared-hit remaining-reflections]
-  (let [reflective (get-in prepared-hit [:shape :material :reflective])]
-    (if (or (zero? reflective) (zero? remaining-reflections))
-      [0 0 0]
-      (let [{:keys [surface-point reflected-vector]} prepared-hit
-            reflected-ray   (r/make-ray surface-point reflected-vector)
-            reflected-color (color-for scene
-                                       reflected-ray
-                                       (dec remaining-reflections))]
-        (c/scalar-times reflected-color reflective)))))
 
 (defn color-for
   "For the given world and ray from the camera to the canvas,
