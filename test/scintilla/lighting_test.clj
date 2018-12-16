@@ -285,7 +285,10 @@
           ray           (r/make-ray [0 0 -3 1] [0 -0.7071 0.7071 0])
           intersections (r/find-all-intersections scene ray)
           hit           (r/find-hit intersections)
-          prepared-hit  (r/make-prepared-hit hit ray intersections)])))
+          prepared-hit  (r/make-prepared-hit hit ray intersections)]
+      (is (≈ [0 0 0] (color-from-reflected-light scene
+                                                prepared-hit
+                                                0))))))
 
 (deftest testing-color-for
   (testing "the color when a ray misses"
