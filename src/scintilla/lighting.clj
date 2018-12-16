@@ -75,10 +75,46 @@
            (diffuse light prepared-hit)
            (specular light prepared-hit))))
 
+;; (defn- total-internal-reflection?
+;;   [{:keys [n1 n2 eye-direction surface-normal] :as prepared-hit}]
+;;   (let [cosθ₁  (u/dot-product eye-direction surface-normal)
+;;         sin²θ₂ (* (Math/pow (/ n1 n2) 2) (- 1.0 (Math/pow cosθ₁ 2)))]
+;;     (> sin²θ₂ 1.0)))
+
 (def max-reflections 5)
 
+(declare refracted-lighting)
 (declare reflected-lighting)
 (declare color-for)
+
+(defn refracted-lighting
+  ;;
+  ;;                      |     
+  ;;           n₂         | θ₂ ⟋
+  ;;                      |  ⟋
+  ;;         _____________|⟋_____________
+  ;;                     /|
+  ;;                    / |
+  ;;           n₁      /θ₁|
+  ;;                      |
+  ;;
+  [scene {:keys [t] :as prepared-hit} remaining-reflections]
+  (let [transparency (get-in prepared-hit [:shape :material :transparency])]
+    (if (or (zero? transparency)
+            (zero? remaining-reflections))
+      [0 0 0]
+      (let [{:keys [n1 n2 eye-direction surface-normal under-point]} prepared-hit
+            index-ratio  (/ n1 n2)
+            cosθ₁        (u/dot-product eye-direction surface-normal)
+            sin²θ₂       (* (Math/pow index-ratio 2) (- 1.0 (Math/pow cosθ₁ 2)))]
+        (if (> sin²θ₂ 1.0)
+          [0 0 0]
+          (let [cosθ₂               (Math/sqrt (- 1.0 sin²θ₂))
+                refracted-direction (u/subtract (u/scalar-times surface-normal (- (* index-ratio cosθ₁) cosθ₂))
+                                                (u/scalar-times eye-direction index-ratio))
+                refracted-ray       (r/make-ray under-point refracted-direction)
+                refracted-color     (color-for scene refracted-ray (dec remaining-reflections))]
+            (c/scalar-times refracted-color transparency)))))))
 
 (defn reflected-lighting
   [scene prepared-hit remaining-reflections]
@@ -100,6 +136,6 @@
     (if (nil? hit)
       [0 0 0]
       (let [prepared-hit       (r/make-prepared-hit hit ray intersections)
-            primary-lighting   (lighting scene prepared-hit)
-            secondary-lighting (reflected-lighting scene prepared-hit remaining-reflections)]
-        (c/add primary-lighting secondary-lighting)))))
+            primary-color      (lighting scene prepared-hit)
+            reflected-color    (reflected-lighting scene prepared-hit remaining-reflections)]
+        (c/add primary-color reflected-color)))))

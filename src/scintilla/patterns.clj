@@ -38,12 +38,20 @@
     :color-1      color-1
     :color-2      color-2}))
 
+(def test-pattern
+  {:pattern-type :test
+   :transform    I₄})
+
 (defmulti color-for
   "Each implementation computes the raw color of the
    pixel specified by the input prepared hit and the
    pattern type."
   (fn [prepared-hit]
     (get-in prepared-hit [:shape :material :pattern :pattern-type])))
+
+(defmethod color-for :test
+  [{[x y z _] :surface-point :as prepared-hit}]
+  [x y z])
 
 (defmethod color-for :stripe
   [{:keys [surface-point] :as prepared-hit}]

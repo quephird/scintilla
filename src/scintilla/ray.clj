@@ -77,7 +77,7 @@
 (defn find-all-intersections
   "Returns the set of all intersections that the given ray
    makes with the set of objects in the given world."
-  [{:keys [objects] :as world} ray]
+  [{:keys [objects] :as scene} ray]
   (->> objects
        (map #(find-intersections % ray))
        (apply concat)
@@ -179,20 +179,27 @@
    with other pre-computed entities associated with it."
   [hit ray all-intersections]
   (let [surface-point    (position ray (:t hit))
-        surface-normal   (normal-for (:shape hit) surface-point)
-        over-point       (u/plus surface-point (u/scalar-times surface-normal ε))
-        under-point      (u/subtract surface-point (u/scalar-times surface-normal ε))
+        surface-normal  (normal-for (:shape hit) surface-point)
         eye-direction    (u/subtract (:direction ray))
         reflected-vector (reflected-vector-for (:direction ray) surface-normal)
         inside?          (> 0 (u/dot-product surface-normal eye-direction))
+        ;; NOTA BENE: We "reset" the normal vector below if we are inside
+        ;;            the hit object; in order for proper simulation of light
+        ;;            we need to insure that the normal vector is always
+        ;;            pointing towards the camera. Note also that both
+        ;;            over-point and under-point need to be computed using
+        ;;            _this_ normal vector, _not_ the one originally derived.
+        surface-normal   (if inside?
+                           (u/subtract surface-normal)
+                           surface-normal)
+        over-point       (u/plus surface-point (u/scalar-times surface-normal ε))
+        under-point      (u/subtract surface-point (u/scalar-times surface-normal ε))
         {:keys [n1 n2]}  (derive-refractive-indices hit all-intersections)]
     (assoc hit
            :surface-point    surface-point
            :over-point       over-point
            :under-point      under-point
-           :surface-normal   (if inside?
-                               (u/subtract surface-normal)
-                               surface-normal)
+           :surface-normal   surface-normal
            :eye-direction    eye-direction
            :reflected-vector reflected-vector
            :inside           inside?
