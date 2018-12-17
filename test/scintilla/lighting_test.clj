@@ -221,11 +221,11 @@
           transform2    (t/scaling-matrix 0.5 0.5 0.5)
           sphere2       (s/make-sphere material2 transform2)
 
-          scene         (e/add-objects (e/make-scene) [sphere1 sphere2])
+          scene         (e/make-scene [sphere1 sphere2] default-light)
           ray           (r/make-ray [0 0 0 1] [0 0 1 0])
-          intersections (r/find-all-intersections scene ray)
-          hit           (r/find-hit intersections)
-          prepared-hit  (r/make-prepared-hit hit ray intersections)]
+          intersections (e/find-all-intersections scene ray)
+          hit           (e/find-hit intersections)
+          prepared-hit  (e/make-prepared-hit hit ray intersections)]
       (is (≈ [0 0 0] (color-from-reflected-light scene
                                                  prepared-hit
                                                  max-reflections)))))
@@ -251,11 +251,11 @@
           transform3    (t/translation-matrix 0 -1 0)
           plane         (s/make-plane material3 transform3)
 
-          scene         (e/add-objects (e/make-scene) [sphere1 sphere2 plane])
+          scene         (e/make-scene [sphere1 sphere2 plane] default-light)
           ray           (r/make-ray [0 0 -3 1] [0 -0.7071 0.7071 0])
-          intersections (r/find-all-intersections scene ray)
-          hit           (r/find-hit intersections)
-          prepared-hit  (r/make-prepared-hit hit ray intersections)]
+          intersections (e/find-all-intersections scene ray)
+          hit           (e/find-hit intersections)
+          prepared-hit  (e/make-prepared-hit hit ray intersections)]
       (is (≈ [0.19032 0.2379 0.14274] (color-from-reflected-light scene
                                                                   prepared-hit
                                                                   max-reflections)))))
@@ -281,11 +281,11 @@
           transform3    (t/translation-matrix 0 -1 0)
           plane         (s/make-plane material3 transform3)
 
-          scene         (e/add-objects (e/make-scene) [sphere1 sphere2 plane])
+          scene         (e/make-scene [sphere1 sphere2 plane] default-light)
           ray           (r/make-ray [0 0 -3 1] [0 -0.7071 0.7071 0])
-          intersections (r/find-all-intersections scene ray)
-          hit           (r/find-hit intersections)
-          prepared-hit  (r/make-prepared-hit hit ray intersections)]
+          intersections (e/find-all-intersections scene ray)
+          hit           (e/find-hit intersections)
+          prepared-hit  (e/make-prepared-hit hit ray intersections)]
       (is (≈ [0 0 0] (color-from-reflected-light scene
                                                 prepared-hit
                                                 0))))))
@@ -302,11 +302,11 @@
           sphere1       (s/make-sphere material1)
           transform2    (t/scaling-matrix 0.5 0.5 0.5)
           sphere2       (s/make-sphere a/default-material transform2)
-          scene         (e/add-objects (e/make-scene) [sphere1 sphere2])
+          scene         (e/make-scene [sphere1 sphere2] default-light)
           ray           (r/make-ray [0 0 -5 1] [0 0 1 0])
-          intersections (r/find-all-intersections scene ray)
-          hit           (r/find-hit intersections)
-          prepared-hit  (r/make-prepared-hit hit ray intersections)]
+          intersections (e/find-all-intersections scene ray)
+          hit           (e/find-hit intersections)
+          prepared-hit  (e/make-prepared-hit hit ray intersections)]
       (is (≈ [0 0 0] (color-from-refracted-light scene
                                                  prepared-hit
                                                  max-reflections)))))
@@ -322,11 +322,11 @@
           sphere1       (s/make-sphere material1)
           transform2    (t/scaling-matrix 0.5 0.5 0.5)
           sphere2       (s/make-sphere a/default-material transform2)
-          scene         (e/add-objects (e/make-scene) [sphere1 sphere2])
+          scene         (e/make-scene [sphere1 sphere2] default-light)
           ray           (r/make-ray [0 0 -5 1] [0 0 1 0])
-          intersections (r/find-all-intersections scene ray)
-          hit           (r/find-hit intersections)
-          prepared-hit  (r/make-prepared-hit hit ray intersections)]
+          intersections (e/find-all-intersections scene ray)
+          hit           (e/find-hit intersections)
+          prepared-hit  (e/make-prepared-hit hit ray intersections)]
       (is (≈ [0 0 0] (color-from-refracted-light scene
                                                  prepared-hit
                                                  0)))))
@@ -342,11 +342,11 @@
           sphere1       (s/make-sphere material1)
           transform2    (t/scaling-matrix 0.5 0.5 0.5)
           sphere2       (s/make-sphere a/default-material transform2)
-          scene         (e/add-objects (e/make-scene) [sphere1 sphere2])
+          scene         (e/make-scene [sphere1 sphere2] default-light)
           ray           (r/make-ray [0 0 0.7071 1] [0 1 0 0])
-          intersections (r/find-all-intersections scene ray)
+          intersections (e/find-all-intersections scene ray)
           second-hit    (second intersections)
-          prepared-hit  (r/make-prepared-hit second-hit ray intersections)]
+          prepared-hit  (e/make-prepared-hit second-hit ray intersections)]
       (is (≈ [0 0 0] (color-from-refracted-light scene
                                                  prepared-hit
                                                  max-reflections)))))
@@ -361,11 +361,11 @@
           transform2    (t/scaling-matrix 0.5 0.5 0.5)
           sphere2       (s/make-sphere material2 transform2)
 
-          scene         (e/add-objects (e/make-scene) [sphere1 sphere2])
+          scene         (e/make-scene [sphere1 sphere2] default-light)
           ray           (r/make-ray [0 0 0.1 1] [0 1 0 0])
-          intersections (r/find-all-intersections scene ray)
+          intersections (e/find-all-intersections scene ray)
           third-hit     (nth intersections 2)
-          prepared-hit  (r/make-prepared-hit third-hit ray intersections)]
+          prepared-hit  (e/make-prepared-hit third-hit ray intersections)]
       (is (≈ [0 0.99888 0.04725] (color-from-refracted-light scene
                                                              prepared-hit
                                                              max-reflections))))))
@@ -381,7 +381,7 @@
           sphere1    (s/make-sphere material1)
           transform2 (t/scaling-matrix 0.5 0.5 0.5)
           sphere2    (s/make-sphere a/default-material transform2)
-          scene      (e/add-objects (e/make-scene) [sphere1 sphere2])
+          scene      (e/make-scene [sphere1 sphere2] default-light)
           ray        (r/make-ray [0 0 -5 1] [0 1 0 0])]
       (is (≈ [0 0 0] (color-for scene ray max-reflections)))))
   (testing "the color when a ray hits"
@@ -394,7 +394,7 @@
           sphere1    (s/make-sphere material1)
           transform2 (t/scaling-matrix 0.5 0.5 0.5)
           sphere2    (s/make-sphere a/default-material transform2)
-          scene      (e/add-objects (e/make-scene) [sphere1 sphere2])
+          scene      (e/make-scene [sphere1 sphere2] default-light)
           ray        (r/make-ray [0 0 -5 1] [0 0 1 0])]
       (is (≈ [0.38066 0.47583 0.2855] (color-for scene ray max-reflections)))))
   (testing "the color with an intersection behind the ray"
@@ -413,7 +413,7 @@
                                        :pattern nil})
           transform2 (t/scaling-matrix 0.5 0.5 0.5)
           sphere2    (s/make-sphere material2 transform2)
-          scene      (e/add-objects (e/make-scene) [sphere1 sphere2])
+          scene      (e/make-scene [sphere1 sphere2] default-light)
           ray        (r/make-ray [0 0 0.75 1] [0 0 -1 0])]
       (is (≈ [1.0 1.0 1.0] (color-for scene ray max-reflections)))))
   (testing "with a reflective material"
@@ -438,11 +438,11 @@
           transform3    (t/translation-matrix 0 -1 0)
           plane         (s/make-plane material3 transform3)
 
-          scene         (e/add-objects (e/make-scene) [sphere1 sphere2 plane])
+          scene         (e/make-scene [sphere1 sphere2 plane] default-light)
           ray           (r/make-ray [0 0 -3 1] [0 -0.7071 0.7071 0])
-          intersections (r/find-all-intersections scene ray)
-          hit           (r/find-hit intersections)
-          prepared-hit  (r/make-prepared-hit hit ray intersections)]
+          intersections (e/find-all-intersections scene ray)
+          hit           (e/find-hit intersections)
+          prepared-hit  (e/make-prepared-hit hit ray intersections)]
       (is (≈ [0.87677 0.92436 0.82918] (color-for scene ray max-reflections)))))
   (testing "recursion stops with mutually reflective surfaces"
     (let [lower-material  (a/make-material {:reflective 1})
@@ -457,9 +457,9 @@
           scene           (e/make-scene [upper-plane lower-plane] light)
 
           ray             (r/make-ray [0 0 0 1] [0 1 0 0])
-          intersections   (r/find-all-intersections scene ray)
-          first-hit       (r/find-hit intersections)
-          prepared-hit    (r/make-prepared-hit first-hit ray intersections)
+          intersections   (e/find-all-intersections scene ray)
+          first-hit       (e/find-hit intersections)
+          prepared-hit    (e/make-prepared-hit first-hit ray intersections)
           color           (color-for scene ray max-reflections)]
       ;; There is no need to test anything specific here other than
       ;; observing that the computation halts predictably.
@@ -486,7 +486,7 @@
           transform4    (t/translation-matrix 0 -3.5 -0.5)
           ball          (s/make-sphere material4 transform4)
 
-          scene         (e/make-scene [sphere1 sphere2 floor ball])
+          scene         (e/make-scene [sphere1 sphere2 floor ball] default-light)
           ray           (r/make-ray [0 0 -3 1] [0 -0.7071 0.7071 0])
           ]
       (is (≈ [0.93642 0.68642 0.68642] (color-for scene ray max-reflections))))))

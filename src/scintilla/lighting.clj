@@ -1,6 +1,7 @@
 (ns scintilla.lighting
   (:require [scintilla.color :as c]
             [scintilla.ray :as r]
+            [scintilla.scene :as e]
             [scintilla.shapes :as s]
             [scintilla.tuple :as u]
             [clojure.pprint :refer :all]))
@@ -24,8 +25,8 @@
                              u/normalize
                              (r/make-ray point))
         light-hit       (->> light-ray
-                             (r/find-all-intersections scene)
-                             (r/find-hit))]
+                             (e/find-all-intersections scene)
+                             (e/find-hit))]
     (and (not (nil? light-hit))
          (< (:t light-hit) (u/magnitude light-direction)))))
 
@@ -131,11 +132,11 @@
    return the color correspondent to the hit object at the point
    of intersection or simply black if no object is hit."
   [{:keys [light] :as scene} ray remaining-reflections]
-  (let [intersections  (r/find-all-intersections scene ray)
-        hit            (r/find-hit intersections)]
+  (let [intersections  (e/find-all-intersections scene ray)
+        hit            (e/find-hit intersections)]
     (if (nil? hit)
       [0 0 0]
-      (let [prepared-hit       (r/make-prepared-hit hit
+      (let [prepared-hit       (e/make-prepared-hit hit
                                                     ray
                                                     intersections)
             direct-color       (color-from-direct-light scene
