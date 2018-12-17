@@ -29,6 +29,10 @@
   [& args]
   (apply make-shape :plane args))
 
+(defn equal?
+  [s1 s2]
+  (= (:reflective-index s1) (:reflective-index s1)))
+
 (defn color-for
   "This function either returns the simple color for the
    entire hit shape or defers computation of the color to the

@@ -48,6 +48,7 @@
            (/ (- b √discriminant) (* -2.0 a))]))))
 
 ;; TODO: Change to intersections-for
+;;       Move to scintilla.shapes
 (defmulti find-intersections
   "Takes an abritrary shape and a ray and returns a list
    of either zero, one, or two points of intersection, sorted
@@ -58,7 +59,7 @@
 (defmethod find-intersections :sphere
   [{:keys [matrix] :as shape} ray]
   (let [{:keys [point direction] :as local-ray} (transform ray (m/inverse matrix))
-        shape-to-ray (u/subtract point [0 0 0 1.0])
+        shape-to-ray (u/subtract point [0 0 0 1])
         a            (u/dot-product direction direction)
         b            (* 2.0 (u/dot-product direction shape-to-ray))
         c            (- (u/dot-product shape-to-ray shape-to-ray) 1.0)
@@ -74,11 +75,15 @@
        []
        [(make-intersection (- (/ py dy)) shape)])))
 
+;; TODO: Move to scintilla.scene
 (defn find-all-intersections
   "Returns the set of all intersections that the given ray
    makes with the set of objects in the given world."
-  [{:keys [objects] :as world} ray]
-  (apply concat (map #(find-intersections % ray) objects)))
+  [{:keys [objects] :as scene} ray]
+  (->> objects
+       (map #(find-intersections % ray))
+       (apply concat)
+       (sort-by :t)))
 
 (defn find-hit
   "Takes a set of intersections and selects only the
@@ -89,6 +94,7 @@
         (sort-by :t)
         (some (fn [i] (if (< 0 (:t i)) i)))))
 
+;; TODO: Move to scintilla.camera
 (defn ray-for
   "Computes the ray for the given camera and (x,y) coordinates of its canvas,
    in terms of the coordinate system correspondent with the inverse
@@ -103,6 +109,7 @@
         direction'          (u/normalize (u/subtract point' origin'))]
     (make-ray origin' direction')))
 
+;; TODO: Move to scintilla.shapes
 (defmulti local-normal-for (fn [shape _] (:shape-type shape)))
 
 (defmethod local-normal-for :sphere
@@ -150,24 +157,56 @@
        (u/scalar-times normal-vector)
        (u/subtract in-vector)))
 
+;; TODO: Need docstring and explanation of strategy
+;;       Also need to rename to refractive-indices-for
+(defn- derive-refractive-indices
+  [hit all-intersections]
+  (loop [n1          1.0
+         n2          1.0
+         encounters  []
+         [x & xs]    all-intersections]
+    (let [n1         (if (= (:t hit) (:t x))
+                       (if (empty? encounters)
+                         1.0
+                         (get-in (last encounters) [:material :refractive-index])))
+          encounters (if (some #{(:shape x)} encounters)
+                       (remove #{(:shape x)} encounters)
+                       (conj encounters (:shape x)))
+          n2         (if (empty? encounters)
+                       1.0
+                       (get-in (last encounters) [:material :refractive-index]))]
+      (if (= (:t hit) (:t x))
+        {:n1 n1 :n2 n2}
+        (recur n1 n2 encounters xs)))))
+
 (defn make-prepared-hit
   "Returns a map representing the object hit by the ray
    with other pre-computed entities associated with it."
-  [hit ray]
+  [hit ray all-intersections]
   (let [surface-point    (position ray (:t hit))
         surface-normal   (normal-for (:shape hit) surface-point)
-        over-point       (u/plus surface-point (u/scalar-times surface-normal ε))
-        under-point      (u/subtract surface-point (u/scalar-times surface-normal ε))
         eye-direction    (u/subtract (:direction ray))
         reflected-vector (reflected-vector-for (:direction ray) surface-normal)
-        inside?          (> 0 (u/dot-product surface-normal eye-direction))]
+        inside?          (> 0 (u/dot-product surface-normal eye-direction))
+        ;; NOTA BENE: We "reset" the normal vector below if we are inside
+        ;;            the hit object; in order for proper simulation of light
+        ;;            we need to insure that the normal vector is always
+        ;;            pointing towards the camera. Note also that both
+        ;;            over-point and under-point need to be computed using
+        ;;            _this_ normal vector, _not_ the one originally derived.
+        surface-normal   (if inside?
+                           (u/subtract surface-normal)
+                           surface-normal)
+        over-point       (u/plus surface-point (u/scalar-times surface-normal ε))
+        under-point      (u/subtract surface-point (u/scalar-times surface-normal ε))
+        {:keys [n1 n2]}  (derive-refractive-indices hit all-intersections)]
     (assoc hit
            :surface-point    surface-point
            :over-point       over-point
            :under-point      under-point
-           :surface-normal   (if inside?
-                               (u/subtract surface-normal)
-                               surface-normal)
+           :surface-normal   surface-normal
            :eye-direction    eye-direction
            :reflected-vector reflected-vector
-           :inside           inside?)))
+           :inside           inside?
+           :n1               n1
+           :n2               n2)))

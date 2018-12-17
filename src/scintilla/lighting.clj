@@ -62,7 +62,7 @@
         [0 0 0]
         (c/scalar-times intensity (* specular reflection-coefficient)))))
 
-(defn lighting
+(defn color-from-direct-light
   "Determines the color for the point associated with the hit
    and scene passed in; either it is the ambient color of the
    object associated with the hit, or the sum of all three
@@ -77,30 +77,75 @@
 
 (def max-reflections 5)
 
-(declare reflected-lighting)
+(declare color-from-reflected-light)
+(declare color-from-refracted-light)
 (declare color-for)
 
-(defn reflected-lighting
+(defn color-from-reflected-light
   [scene prepared-hit remaining-reflections]
   (let [reflective (get-in prepared-hit [:shape :material :reflective])]
     (if (or (zero? reflective) (zero? remaining-reflections))
       [0 0 0]
       (let [{:keys [surface-point reflected-vector]} prepared-hit
             reflected-ray   (r/make-ray surface-point reflected-vector)
-            reflected-color (color-for scene reflected-ray (dec remaining-reflections))]
+            reflected-color (color-for scene
+                                       reflected-ray
+                                       (dec remaining-reflections))]
         (c/scalar-times reflected-color reflective)))))
+
+;; TODO: Improve code below as well as add to diagram
+(defn color-from-refracted-light
+  ;;
+  ;;                      |     
+  ;;           n₂         | θ₂ ⟋
+  ;;                      |  ⟋
+  ;;         _____________|⟋_____________
+  ;;                     /|
+  ;;                    / |
+  ;;           n₁      /θ₁|
+  ;;                      |
+  ;;
+  [scene {:keys [t] :as prepared-hit} remaining-reflections]
+  (let [transparency (get-in prepared-hit [:shape :material :transparency])]
+    (if (or (zero? transparency)
+            (zero? remaining-reflections))
+      [0 0 0]
+      (let [{:keys [n1 n2 eye-direction surface-normal under-point]} prepared-hit
+            index-ratio  (/ n1 n2)
+            cosθ₁        (u/dot-product eye-direction surface-normal)
+            sin²θ₂       (* (Math/pow index-ratio 2) (- 1.0 (Math/pow cosθ₁ 2)))]
+        (if (> sin²θ₂ 1.0)
+          [0 0 0]
+          (let [cosθ₂               (Math/sqrt (- 1.0 sin²θ₂))
+                refracted-direction (u/subtract (u/scalar-times surface-normal (- (* index-ratio cosθ₁) cosθ₂))
+                                                (u/scalar-times eye-direction index-ratio))
+                refracted-ray       (r/make-ray under-point refracted-direction)
+                refracted-color     (color-for
+                                     scene
+                                     refracted-ray
+                                     (dec remaining-reflections))]
+            (c/scalar-times refracted-color transparency)))))))
 
 (defn color-for
   "For the given world and ray from the camera to the canvas,
    return the color correspondent to the hit object at the point
    of intersection or simply black if no object is hit."
   [{:keys [light] :as scene} ray remaining-reflections]
-  (let [hit (-> scene
-                (r/find-all-intersections ray)
-                (r/find-hit))]
+  (let [intersections  (r/find-all-intersections scene ray)
+        hit            (r/find-hit intersections)]
     (if (nil? hit)
       [0 0 0]
-      (let [prepared-hit       (r/make-prepared-hit hit ray)
-            primary-lighting   (lighting scene prepared-hit)
-            secondary-lighting (reflected-lighting scene prepared-hit remaining-reflections)]
-        (c/add primary-lighting secondary-lighting)))))
+      (let [prepared-hit       (r/make-prepared-hit hit
+                                                    ray
+                                                    intersections)
+            direct-color       (color-from-direct-light scene
+                                                        prepared-hit)
+            reflected-color    (color-from-reflected-light scene
+                                                           prepared-hit
+                                                           remaining-reflections)
+            refracted-color    (color-from-refracted-light scene
+                                                           prepared-hit
+                                                           remaining-reflections)]
+        (c/add direct-color
+               reflected-color
+               refracted-color)))))
