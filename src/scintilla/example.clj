@@ -99,7 +99,7 @@
         view-transform (t/view-transform-matrix-for [0 1.5 -5 1]
                                                     [0 1 0 1]
                                                     [0 1 0 0])
-        camera         (c/make-camera 100 50 π⟋3 view-transform)]
+        camera         (c/make-camera 400 200 π⟋3 view-transform)]
     (r/render-to-file camera scene "three-spheres-in-corner.ppm")))
 
 (defn three-spheres-on-plane
@@ -180,5 +180,31 @@
         view-transform (t/view-transform-matrix-for [0 1.5 -5 1]
                                                     [0 1 0 1]
                                                     [0 1 0 0])
-        camera         (c/make-camera 800 400 π⟋3 view-transform)]
+        camera         (c/make-camera 400 200 π⟋3 view-transform)]
     (r/render-to-file camera scene "three-patterned-spheres-on-plane.ppm")))
+
+(defn glassy-spheres-on-plane
+  []
+  (let [checkers       (p/make-checker-pattern [1 1 1] [0 0 0])
+        floor-material (a/make-material {:color   nil
+                                         :pattern checkers})
+        floor          (s/make-plane floor-material)
+
+        glass          (a/make-material {:ambient          0.1
+                                         :diffuse          0.1
+                                         :refective        0.1
+                                         :refractive-index 1.52
+                                         :specular         0.9
+                                         :transparency     1.0})
+        transform1      (t/translation-matrix -1.5 1 0.5)
+        glassy-sphere1  (s/make-sphere (a/set-color glass [0.3 0.1 0.6]) transform1)
+
+        transform2      (t/translation-matrix 1.5 1 0.5)
+        glassy-sphere2  (s/make-sphere (a/set-color glass [0.6 0.3 0.1]) transform2)
+
+        scene          (e/make-scene [glassy-sphere1 glassy-sphere2 floor])
+        view-transform (t/view-transform-matrix-for [0 1.5 -5 1]
+                                                    [0 1 0 1]
+                                                    [0 1 0 0])
+        camera         (c/make-camera 400 200 π⟋3 view-transform)]
+    (r/render-to-file camera scene "glassy-spheres-on-plane.ppm")))

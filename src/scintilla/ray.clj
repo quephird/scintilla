@@ -48,6 +48,7 @@
            (/ (- b √discriminant) (* -2.0 a))]))))
 
 ;; TODO: Change to intersections-for
+;;       Move to scintilla.shapes
 (defmulti find-intersections
   "Takes an abritrary shape and a ray and returns a list
    of either zero, one, or two points of intersection, sorted
@@ -74,6 +75,7 @@
        []
        [(make-intersection (- (/ py dy)) shape)])))
 
+;; TODO: Move to scintilla.scene
 (defn find-all-intersections
   "Returns the set of all intersections that the given ray
    makes with the set of objects in the given world."
@@ -92,6 +94,7 @@
         (sort-by :t)
         (some (fn [i] (if (< 0 (:t i)) i)))))
 
+;; TODO: Move to scintilla.camera
 (defn ray-for
   "Computes the ray for the given camera and (x,y) coordinates of its canvas,
    in terms of the coordinate system correspondent with the inverse
@@ -106,6 +109,7 @@
         direction'          (u/normalize (u/subtract point' origin'))]
     (make-ray origin' direction')))
 
+;; TODO: Move to scintilla.shapes
 (defmulti local-normal-for (fn [shape _] (:shape-type shape)))
 
 (defmethod local-normal-for :sphere
@@ -153,7 +157,8 @@
        (u/scalar-times normal-vector)
        (u/subtract in-vector)))
 
-;; Need docstring and explanation of strategy
+;; TODO: Need docstring and explanation of strategy
+;;       Also need to rename to refractive-indices-for
 (defn- derive-refractive-indices
   [hit all-intersections]
   (loop [n1          1.0

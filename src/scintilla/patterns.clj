@@ -82,11 +82,15 @@
     (if even-ring? color-1 color-2)))
 
 (defmethod color-for :checker
-  [{:keys [surface-point] :as prepared-hit}]
+  [{:keys [over-point] :as prepared-hit}]
+  ;; ACHTUNG: See this post on why we need to use over-point instead of surface-point
+  ;;          in order to avoid acne from this pattern:
+  ;;
+  ;;    http://forum.raytracerchallenge.com/post/34
   (let [{:keys [color-1 color-2]} (get-in prepared-hit [:shape :material :pattern])
         pattern-transform         (get-in prepared-hit [:shape :material :pattern :transform])
         object-transform          (get-in prepared-hit [:shape :matrix])
-        pattern-space-point       (->> surface-point
+        pattern-space-point       (->> over-point
                                        (m/tuple-times (m/inverse object-transform))
                                        (m/tuple-times (m/inverse pattern-transform)))
         [x y z _]                 pattern-space-point

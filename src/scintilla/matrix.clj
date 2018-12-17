@@ -2,10 +2,10 @@
 
 (def I₄
   "The 4X4 identity matrix."
-  [[1 0 0 0]
-   [0 1 0 0]
-   [0 0 1 0]
-   [0 0 0 1]])
+  [[1.0 0.0 0.0 0.0]
+   [0.0 1.0 0.0 0.0]
+   [0.0 0.0 1.0 0.0]
+   [0.0 0.0 0.0 1.0]])
 
 (defn transpose
   "Flips a square matrix over its diagonal."
