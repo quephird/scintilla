@@ -457,8 +457,37 @@
           scene           (e/make-scene [upper-plane lower-plane] light)
 
           ray             (r/make-ray [0 0 0 1] [0 1 0 0])
+          intersections   (r/find-all-intersections scene ray)
+          first-hit       (r/find-hit intersections)
+          prepared-hit    (r/make-prepared-hit first-hit ray intersections)
           color           (color-for scene ray max-reflections)]
       ;; There is no need to test anything specific here other than
       ;; observing that the computation halts predictably.
-      )))
+      ))
+  (testing "the color with a transparent material"
+    (let [material1     (a/make-material {:color [0.8 1.0 0.6]
+                                          :ambient 0.1
+                                          :diffuse 0.7
+                                          :specular 0.2
+                                          :shininess 200
+                                          :pattern nil})
+          sphere1       (s/make-sphere material1)
+
+          transform2    (t/scaling-matrix 0.5 0.5 0.5)
+          sphere2       (s/make-sphere a/default-material transform2)
+
+          material3     (a/make-material {:refractive-index 1.5
+                                          :transparency 0.5})
+          transform3    (t/translation-matrix 0 -1 0)
+          floor         (s/make-plane material3 transform3)
+
+          material4     (a/make-material {:ambient 0.5
+                                          :color   [1 0 0]})
+          transform4    (t/translation-matrix 0 -3.5 -0.5)
+          ball          (s/make-sphere material4 transform4)
+
+          scene         (e/make-scene [sphere1 sphere2 floor ball])
+          ray           (r/make-ray [0 0 -3 1] [0 -0.7071 0.7071 0])
+          ]
+      (is (≈ [0.93642 0.68642 0.68642] (color-for scene ray max-reflections))))))
 

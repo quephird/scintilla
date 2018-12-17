@@ -58,7 +58,7 @@
 (defmethod find-intersections :sphere
   [{:keys [matrix] :as shape} ray]
   (let [{:keys [point direction] :as local-ray} (transform ray (m/inverse matrix))
-        shape-to-ray (u/subtract point [0 0 0 1.0])
+        shape-to-ray (u/subtract point [0 0 0 1])
         a            (u/dot-product direction direction)
         b            (* 2.0 (u/dot-product direction shape-to-ray))
         c            (- (u/dot-product shape-to-ray shape-to-ray) 1.0)
@@ -179,7 +179,7 @@
    with other pre-computed entities associated with it."
   [hit ray all-intersections]
   (let [surface-point    (position ray (:t hit))
-        surface-normal  (normal-for (:shape hit) surface-point)
+        surface-normal   (normal-for (:shape hit) surface-point)
         eye-direction    (u/subtract (:direction ray))
         reflected-vector (reflected-vector-for (:direction ray) surface-normal)
         inside?          (> 0 (u/dot-product surface-normal eye-direction))
