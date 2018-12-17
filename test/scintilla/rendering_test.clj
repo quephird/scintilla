@@ -2,8 +2,8 @@
   (:require [clojure.test :refer :all]
             [scintilla.camera :as c]
             [scintilla.canvas :as v]
+            [scintilla.lighting :as l]
             [scintilla.materials :as a]
-            [scintilla.matrix :refer [I₄]]
             [scintilla.numeric :refer :all]
             [scintilla.rendering :refer :all]
             [scintilla.scene :as e]
@@ -21,7 +21,7 @@
           sphere1        (s/make-sphere material1)
           transform2     (t/scaling-matrix 0.5 0.5 0.5)
           sphere2        (s/make-sphere a/default-material transform2)
-          scene          (e/add-objects (e/make-scene) [sphere1 sphere2])
+          scene          (e/make-scene [sphere1 sphere2] l/default-light)
           from           [0 0 -5 1]
           to             [0 0 0 1]
           up             [0 1 0 0]

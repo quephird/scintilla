@@ -104,17 +104,17 @@
       (let [points          [[0 0 0] [0.99 0 0] [1.01 0 0]]
             expected-values  [white     white      black]
             prepared-hits (map (fn [p]
-                               {:shape {:material {:pattern checkers}
-                                        :matrix I₄}
-                                :surface-point p}) points)]
+                                 {:shape {:material {:pattern checkers}
+                                          :matrix I₄}
+                                  :over-point p}) points)]
         (is (≈ expected-values (map #(color-for %) prepared-hits)))))
     (testing "checkers should repeat in y"
       (let [points          [[0 0 0] [0 0.99 0] [0 1.01 0]]
             expected-values  [white     white      black]
             prepared-hits (map (fn [p]
-                               {:shape {:material {:pattern checkers}
-                                        :matrix I₄}
-                                :surface-point p}) points)]
+                                 {:shape {:material {:pattern checkers}
+                                          :matrix I₄}
+                                  :over-point p}) points)]
         (is (≈ expected-values (map #(color-for %) prepared-hits)))))
     (testing "checkers should repeat in z"
       (let [points          [[0 0 0] [0 0 0.99] [0 0 1.01]]
@@ -122,5 +122,5 @@
             prepared-hits (map (fn [p]
                                {:shape {:material {:pattern checkers}
                                         :matrix I₄}
-                                :surface-point p}) points)]
+                                :over-point p}) points)]
         (is (≈ expected-values (map #(color-for %) prepared-hits)))))))
