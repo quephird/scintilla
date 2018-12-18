@@ -202,7 +202,7 @@
         transform2      (t/translation-matrix 1.5 1 0.5)
         glassy-sphere2  (s/make-sphere (a/set-color glass [0.6 0.3 0.1]) transform2)
 
-        scene          (e/make-scene [glassy-sphere1 glassy-sphere2 floor])
+        scene          (e/make-scene [glassy-sphere1 glassy-sphere2 floor] l/default-light)
         view-transform (t/view-transform-matrix-for [0 1.5 -5 1]
                                                     [0 1 0 1]
                                                     [0 1 0 0])
