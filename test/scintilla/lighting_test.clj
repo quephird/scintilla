@@ -202,6 +202,42 @@
         (is (≈ [0.0 0.0 0.0] (specular light prepared-hit)))
         (is (≈ [0.1 0.1 0.1] (color-from-direct-light scene prepared-hit))))))
 
+(deftest testing-schlick-reflectance
+  (testing "the Schlick approximation under total internal reflection"
+    (let [glass         (a/make-material {:transparency 1.0
+                                          :refractive-index 1.5})
+          glassy-sphere (s/make-sphere glass)
+
+          scene         (e/make-scene [glassy-sphere] default-light)
+          ray           (r/make-ray [0 0 0.7071 1] [0 1 0 0])
+          intersections (e/find-all-intersections scene ray)
+          second-hit    (second intersections)
+          prepared-hit  (e/make-prepared-hit second-hit ray intersections)]
+      (is (≈ 1.0 (schlick-reflectance prepared-hit)))))
+  (testing "the Schlick approximation with a perpendicular viewing angle"
+    (let [glass         (a/make-material {:transparency 1.0
+                                          :refractive-index 1.5})
+          glassy-sphere (s/make-sphere glass)
+
+          scene         (e/make-scene [glassy-sphere] default-light)
+          ray           (r/make-ray [0 0 0 1] [0 1 0 0])
+          intersections (e/find-all-intersections scene ray)
+          second-hit    (second intersections)
+          prepared-hit  (e/make-prepared-hit second-hit ray intersections)]
+      (is (≈ 0.04 (schlick-reflectance prepared-hit)))))
+  (testing "the Schlick approximation with a small angle and n2 > n1"
+    (let [glass         (a/make-material {:transparency 1.0
+                                          :refractive-index 1.5})
+          glassy-sphere (s/make-sphere glass)
+
+          scene         (e/make-scene [glassy-sphere] default-light)
+          ray           (r/make-ray [0 0.99 -2 1] [0 0 1 0])
+          intersections (e/find-all-intersections scene ray)
+          first-hit     (first intersections)
+          prepared-hit  (e/make-prepared-hit first-hit ray intersections)]
+      (is (≈ 0.48881 (schlick-reflectance prepared-hit)))))
+  )
+
 (deftest testing-color-from-reflected-light
   (testing "the reflected color for a non-reflective material"
     (let [material1     (a/make-material {:color [0.8 1.0 0.6]

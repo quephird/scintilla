@@ -76,6 +76,25 @@
            (diffuse light prepared-hit)
            (specular light prepared-hit))))
 
+;; TODO: Need diagrams and docstrings
+(defn- schlick-reflectance-helper
+  [n1 n2 cos]
+  (let [R₀ (Math/pow (/ (- n1 n2) (+ n1 n2)) 2.0)]
+    (+ R₀ (* (- 1 R₀) (Math/pow (- 1 cos) 5)))))
+
+(defn schlick-reflectance
+  [{:keys [n1 n2 eye-direction surface-normal] :as prepared-hit}]
+  (let [cosθ₁        (u/dot-product eye-direction surface-normal)
+        sin²θ₂       (* (Math/pow (/ n1 n2) 2) (- 1.0 (Math/pow cosθ₁ 2)))
+        cosθ₂        (Math/sqrt (- 1.0 sin²θ₂))]
+    (cond
+      (and (> n1 n2) (> sin²θ₂ 1.0))
+        1.0
+      (> n1 n2)
+        (schlick-reflectance-helper n1 n2 cosθ₂)
+      (<= n1 n2)
+        (schlick-reflectance-helper n1 n2 cosθ₁))))
+
 (def max-reflections 5)
 
 (declare color-from-reflected-light)
