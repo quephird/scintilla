@@ -146,6 +146,7 @@
                                      (dec remaining-reflections))]
             (c/scalar-times refracted-color transparency)))))))
 
+;; TODO: Ugh... three lets and two ifs... this needs to be tidied up.
 (defn color-for
   "For the given world and ray from the camera to the canvas,
    return the color correspondent to the hit object at the point
@@ -158,6 +159,8 @@
       (let [prepared-hit       (e/make-prepared-hit hit
                                                     ray
                                                     intersections)
+            {:keys [reflective transparency]}
+                               (get-in prepared-hit [:shape :material])
             direct-color       (color-from-direct-light scene
                                                         prepared-hit)
             reflected-color    (color-from-reflected-light scene
@@ -166,6 +169,11 @@
             refracted-color    (color-from-refracted-light scene
                                                            prepared-hit
                                                            remaining-reflections)]
-        (c/add direct-color
-               reflected-color
-               refracted-color)))))
+        (if (or (zero? reflective) (zero? transparency))
+          (c/add direct-color
+                 reflected-color
+                 refracted-color)
+          (let [reflectance (schlick-reflectance prepared-hit)]
+            (c/add direct-color
+                   (c/scalar-times reflected-color reflectance)
+                   (c/scalar-times refracted-color (- 1 reflectance)))))))))
