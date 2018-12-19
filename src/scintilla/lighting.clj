@@ -76,6 +76,25 @@
            (diffuse light prepared-hit)
            (specular light prepared-hit))))
 
+;; TODO: Need diagrams and docstrings
+(defn- schlick-reflectance-helper
+  [n1 n2 cos]
+  (let [R₀ (Math/pow (/ (- n1 n2) (+ n1 n2)) 2.0)]
+    (+ R₀ (* (- 1 R₀) (Math/pow (- 1 cos) 5)))))
+
+(defn schlick-reflectance
+  [{:keys [n1 n2 eye-direction surface-normal] :as prepared-hit}]
+  (let [cosθ₁        (u/dot-product eye-direction surface-normal)
+        sin²θ₂       (* (Math/pow (/ n1 n2) 2) (- 1.0 (Math/pow cosθ₁ 2)))
+        cosθ₂        (Math/sqrt (- 1.0 sin²θ₂))]
+    (cond
+      (and (> n1 n2) (> sin²θ₂ 1.0))
+        1.0
+      (> n1 n2)
+        (schlick-reflectance-helper n1 n2 cosθ₂)
+      (<= n1 n2)
+        (schlick-reflectance-helper n1 n2 cosθ₁))))
+
 (def max-reflections 5)
 
 (declare color-from-reflected-light)
@@ -127,6 +146,7 @@
                                      (dec remaining-reflections))]
             (c/scalar-times refracted-color transparency)))))))
 
+;; TODO: Ugh... three lets and two ifs... this needs to be tidied up.
 (defn color-for
   "For the given world and ray from the camera to the canvas,
    return the color correspondent to the hit object at the point
@@ -139,6 +159,8 @@
       (let [prepared-hit       (e/make-prepared-hit hit
                                                     ray
                                                     intersections)
+            {:keys [reflective transparency]}
+                               (get-in prepared-hit [:shape :material])
             direct-color       (color-from-direct-light scene
                                                         prepared-hit)
             reflected-color    (color-from-reflected-light scene
@@ -147,6 +169,11 @@
             refracted-color    (color-from-refracted-light scene
                                                            prepared-hit
                                                            remaining-reflections)]
-        (c/add direct-color
-               reflected-color
-               refracted-color)))))
+        (if (or (zero? reflective) (zero? transparency))
+          (c/add direct-color
+                 reflected-color
+                 refracted-color)
+          (let [reflectance (schlick-reflectance prepared-hit)]
+            (c/add direct-color
+                   (c/scalar-times reflected-color reflectance)
+                   (c/scalar-times refracted-color (- 1 reflectance)))))))))

@@ -87,13 +87,16 @@
           expected-value [0.0 0.7071 0.7071 0]]
       (is (≈ expected-value (:reflected-vector prepared-hit)))))
   (testing "finding refractive indices at various intersections"
+    ;; This is a scene with three spheres, A, B, and C, with a
+    ;; ray that originates from the left of A and goes to the
+    ;; right, intersecting six times, with points number 0-5 below.
     ;;
     ;;                            ,-‾‾‾‾‾‾‾‾‾‾-,
     ;;                          ⟋       A       ⟍
     ;;                        ⟋   ______  ______  ⟍
     ;;                       /  ⟋   B   ⟋⟍   C   ⟍  \
-    ;;              ________|__/______ /__\_______\__|________
-    ;;                     0| 1\      2\  /3      /4 |5
+    ;;              ________|__/______ /___\_______\__|________
+    ;;                     0| 1\      2\   /3      /4 |5
     ;;                       \  ⟍       ⟍⟋       ⟋  /
     ;;                         ⟍  ‾‾‾‾‾‾  ‾‾‾‾‾‾  ⟋
     ;;                           ⟍              ⟋

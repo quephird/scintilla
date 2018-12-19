@@ -202,6 +202,43 @@
         (is (≈ [0.0 0.0 0.0] (specular light prepared-hit)))
         (is (≈ [0.1 0.1 0.1] (color-from-direct-light scene prepared-hit))))))
 
+;; TODO: Need diagrams
+(deftest testing-schlick-reflectance
+  (testing "the Schlick approximation under total internal reflection"
+    (let [glass         (a/make-material {:transparency 1.0
+                                          :refractive-index 1.5})
+          glassy-sphere (s/make-sphere glass)
+
+          scene         (e/make-scene [glassy-sphere] default-light)
+          ray           (r/make-ray [0 0 0.7071 1] [0 1 0 0])
+          intersections (e/find-all-intersections scene ray)
+          second-hit    (second intersections)
+          prepared-hit  (e/make-prepared-hit second-hit ray intersections)]
+      (is (≈ 1.0 (schlick-reflectance prepared-hit)))))
+  (testing "the Schlick approximation with a perpendicular viewing angle"
+    (let [glass         (a/make-material {:transparency 1.0
+                                          :refractive-index 1.5})
+          glassy-sphere (s/make-sphere glass)
+
+          scene         (e/make-scene [glassy-sphere] default-light)
+          ray           (r/make-ray [0 0 0 1] [0 1 0 0])
+          intersections (e/find-all-intersections scene ray)
+          second-hit    (second intersections)
+          prepared-hit  (e/make-prepared-hit second-hit ray intersections)]
+      (is (≈ 0.04 (schlick-reflectance prepared-hit)))))
+  (testing "the Schlick approximation with a small angle and n2 > n1"
+    (let [glass         (a/make-material {:transparency 1.0
+                                          :refractive-index 1.5})
+          glassy-sphere (s/make-sphere glass)
+
+          scene         (e/make-scene [glassy-sphere] default-light)
+          ray           (r/make-ray [0 0.99 -2 1] [0 0 1 0])
+          intersections (e/find-all-intersections scene ray)
+          first-hit     (first intersections)
+          prepared-hit  (e/make-prepared-hit first-hit ray intersections)]
+      (is (≈ 0.48881 (schlick-reflectance prepared-hit)))))
+  )
+
 (deftest testing-color-from-reflected-light
   (testing "the reflected color for a non-reflective material"
     (let [material1     (a/make-material {:color [0.8 1.0 0.6]
@@ -489,5 +526,33 @@
           scene         (e/make-scene [sphere1 sphere2 floor ball] default-light)
           ray           (r/make-ray [0 0 -3 1] [0 -0.7071 0.7071 0])
           ]
-      (is (≈ [0.93642 0.68642 0.68642] (color-for scene ray max-reflections))))))
+      (is (≈ [0.93642 0.68642 0.68642] (color-for scene ray max-reflections)))))
+
+  (testing "the color with reflective, transparent material"
+    (let [material1     (a/make-material {:color [0.8 1.0 0.6]
+                                          :ambient 0.1
+                                          :diffuse 0.7
+                                          :specular 0.2
+                                          :shininess 200
+                                          :pattern nil})
+          sphere1       (s/make-sphere material1)
+
+          transform2    (t/scaling-matrix 0.5 0.5 0.5)
+          sphere2       (s/make-sphere a/default-material transform2)
+
+          material3     (a/make-material {:reflective       0.5
+                                          :refractive-index 1.5
+                                          :transparency     0.5})
+          transform3    (t/translation-matrix 0 -1 0)
+          floor         (s/make-plane material3 transform3)
+
+          material4     (a/make-material {:ambient 0.5
+                                          :color   [1 0 0]})
+          transform4    (t/translation-matrix 0 -3.5 -0.5)
+          ball          (s/make-sphere material4 transform4)
+
+          scene         (e/make-scene [sphere1 sphere2 floor ball] default-light)
+          ray           (r/make-ray [0 0 -3 1] [0 -0.7071 0.7071 0])
+          ]
+      (is (≈ [0.93391 0.69643 0.69243] (color-for scene ray max-reflections))))))
 
