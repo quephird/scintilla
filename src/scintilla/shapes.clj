@@ -31,17 +31,6 @@
   [& args]
   (apply make-shape :plane args))
 
-(defn color-for
-  "This function either returns the simple color for the
-   entire hit shape or defers computation of the color to the
-   shape's pattern implementation itself if it exists
-   for the surface point in question."
-  [prepared-hit]
-  (let [{:keys [pattern color]} (get-in prepared-hit [:shape :material])]
-    (if (nil? pattern)
-      color
-      (p/color-for prepared-hit))))
-
 (defn- quadratic-roots-for
   "Helper function to determine the set of real roots to the quadratic equation:
    𝑎𝑥² + 𝑏𝑥 + 𝑐 = 𝟢"
@@ -63,15 +52,14 @@
   {:t t
    :shape shape})
 
-;; TODO: Change to intersections-for
-(defmulti find-intersections
+(defmulti intersections-for
   "Takes an abritrary shape and a ray and returns a list
    of either zero, one, or two points of intersection, sorted
    by increasing value of t."
   (fn [shape _] (:shape-type shape)))
 
 ;; TODO: Need to put diagram below illustrating how and why this works.
-(defmethod find-intersections :sphere
+(defmethod intersections-for :sphere
   [{:keys [matrix] :as shape} ray]
   (let [{:keys [point direction] :as local-ray} (r/transform ray (m/inverse matrix))
         shape-to-ray (u/subtract point [0 0 0 1])
@@ -81,7 +69,7 @@
         tvals        (quadratic-roots-for a b c)]
     (map #(make-intersection % shape) tvals)))
 
-(defmethod find-intersections :plane
+(defmethod intersections-for :plane
   [{:keys [matrix] :as shape} ray]
   (let [{:keys [point direction] :as local-ray} (r/transform ray (m/inverse matrix))
         [_ py _ _] point
@@ -118,3 +106,14 @@
         (m/tuple-times local-normal)
         (assoc 3 0)  ;; TODO: This is a hack per the book; look for better way
         u/normalize)))
+
+(defn color-for
+  "This function either returns the simple color for the
+   entire hit shape or defers computation of the color to the
+   shape's pattern implementation itself if it exists
+   for the surface point in question."
+  [prepared-hit]
+  (let [{:keys [pattern color]} (get-in prepared-hit [:shape :material])]
+    (if (nil? pattern)
+      color
+      (p/color-for prepared-hit))))

@@ -15,12 +15,12 @@
   [scene objects]
   (update-in scene [:objects] concat objects))
 
-(defn find-all-intersections
+(defn all-intersections-for
   "Returns the set of all intersections that the given ray
    makes with the set of objects in the given world."
   [{:keys [objects] :as scene} ray]
   (->> objects
-       (map #(s/find-intersections % ray))
+       (map #(s/intersections-for % ray))
        (apply concat)
        (sort-by :t)))
 

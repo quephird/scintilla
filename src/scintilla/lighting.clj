@@ -25,7 +25,7 @@
                              u/normalize
                              (r/make-ray point))
         light-hit       (->> light-ray
-                             (e/find-all-intersections scene)
+                             (e/all-intersections-for scene)
                              (e/find-hit))]
     (and (not (nil? light-hit))
          (< (:t light-hit) (u/magnitude light-direction)))))
@@ -152,7 +152,7 @@
    return the color correspondent to the hit object at the point
    of intersection or simply black if no object is hit."
   [{:keys [light] :as scene} ray remaining-reflections]
-  (let [intersections  (e/find-all-intersections scene ray)
+  (let [intersections  (e/all-intersections-for scene ray)
         hit            (e/find-hit intersections)]
     (if (nil? hit)
       [0 0 0]
