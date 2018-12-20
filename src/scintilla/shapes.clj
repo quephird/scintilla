@@ -26,6 +26,12 @@
   [& args]
   (apply make-shape :sphere args))
 
+(defn make-cube
+  "The default cube is centered at the world origin
+   and has half-length of 1."
+  [& args]
+  (apply make-shape :cube args))
+
 (defn make-plane
   "The default plane lies in the 𝑥𝑧 plane."
   [& args]
@@ -77,6 +83,30 @@
      (if (> ε (Math/abs dy))
        []
        [(make-intersection (- (/ py dy)) shape)])))
+
+;; TODO: Add diagram to illustrate how this works
+(defn- check-axis
+  "Helper function for computing minimum and maximum
+   values for t for each of the x, y, and z components of the
+   intersecting ray"
+  [pointᵢ directionᵢ]
+  (if (> (Math/abs directionᵢ) ε)
+    (let [t₁ (/ (- -1.0 pointᵢ) directionᵢ)
+          t₂ (/ (- 1.0 pointᵢ) directionᵢ)]
+      [(min t₁ t₂) (max t₁ t₂)])
+    (let [t₁ (* (- -1.0 pointᵢ) Double/MAX_VALUE)
+          t₂ (* (- 1.0 pointᵢ) Double/MAX_VALUE)]
+      [(min t₁ t₂) (max t₁ t₂)])))
+
+(defmethod intersections-for :cube
+  [{:keys [matrix] :as shape}
+   {:keys [point direction] :as ray}]
+   (let [[px py pz _] point
+         [dx dy dz _] direction
+         t-pairs      (map #(check-axis %1 %2) [px py pz] [dx dy dz])
+         t-min        (apply max (map first t-pairs))
+         t-max        (apply min (map second t-pairs))]
+     (map #(make-intersection % shape) [t-min t-max])))
 
 (defmulti local-normal-for (fn [shape _] (:shape-type shape)))
 

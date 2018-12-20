@@ -49,7 +49,37 @@
           intersections (intersections-for sphere ray)]
       (is (= 0 (count intersections))))))
 
-(deftest testing-find-intersections-for-plane
+(deftest testing-intersections-for-cube
+  (testing "rays intersecting the cube twice"
+    (let [cube       (make-cube)
+          points     [[ 5.0  0.5  0.0 1]
+                      [-5.0  0.5  0.0 1]
+                      [ 0.5  5.0  0.0 1]
+                      [ 0.5 -5.0  0.0 1]
+                      [ 0.5  0.0  5.0 1]
+                      [ 0.5  0.0 -5.0 1]
+                      [ 0.0  0.5  0.0 1]]
+          directions [[-1  0  0 0]
+                      [ 1  0  0 0]
+                      [ 0 -1  0 0]
+                      [ 0  1  0 0]
+                      [ 0  0 -1 0]
+                      [ 0  0  1 0]
+                      [ 0  0  1 0]]
+          rays       (map #(r/make-ray %1 %2) points directions)
+          expected-values [[4 6]
+                           [4 6]
+                           [4 6]
+                           [4 6]
+                           [4 6]
+                           [4 6]
+                           [-1 1]]
+          actual-values (->> rays
+                             (map #(intersections-for cube %))
+                             (map #(map :t %)))]
+      (is (≈ expected-values actual-values)))))
+
+(deftest testing-intersections-for-plane
   (testing "a ray intersecting an xz plane from above"
     (let [plane             (make-plane)
           ray               (r/make-ray [0 1 0 1] [0 -1 0 0])
