@@ -106,7 +106,9 @@
          t-pairs      (map #(check-axis %1 %2) [px py pz] [dx dy dz])
          t-min        (apply max (map first t-pairs))
          t-max        (apply min (map second t-pairs))]
-     (map #(make-intersection % shape) [t-min t-max])))
+     (if (> t-min t-max)
+       []
+       (map #(make-intersection % shape) [t-min t-max]))))
 
 (defmulti local-normal-for (fn [shape _] (:shape-type shape)))
 

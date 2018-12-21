@@ -30,10 +30,12 @@
 (extend clojure.lang.PersistentVector
   AlmostEqual
   {:≈ (fn [v1 v2]
+        (= (count v1) (count v2))
         (every? true? (map ≈ v1 v2)))})
 
 ; Compares each pair of elements from the two sets.
 (extend clojure.lang.PersistentHashSet
   AlmostEqual
-  {:≈ (fn [v1 v2]
-        (every? true? (map ≈ v1 v2)))})
+  {:≈ (fn [s1 s2]
+        (= (count s1) (count s2))
+        (every? true? (map ≈ s1 s2)))})

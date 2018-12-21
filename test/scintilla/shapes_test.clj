@@ -77,7 +77,33 @@
           actual-values (->> rays
                              (map #(intersections-for cube %))
                              (map #(map :t %)))]
-      (is (≈ expected-values actual-values)))))
+      (is (≈ expected-values actual-values))))
+  (testing "rays intersecting the cube twice"
+    (let [cube       (make-cube)
+          points     [[-2.0  0.0  0.0 1]
+                      [ 0.0 -2.0  0.0 1]
+                      [ 0.0  0.0 -2.0 1]
+                      [ 2.0  0.0  2.0 1]
+                      [ 0.0  2.0  2.0 1]
+                      [ 2.0  2.0  0.0 1]]
+          directions [[ 0.2673  0.5345  0.8018 0]
+                      [ 0.8018  0.2673  0.5345 0]
+                      [ 0.5345  0.8018  0.2673 0]
+                      [ 0.0     0.0    -1.0    0]
+                      [ 0.0    -1.0     0.0    0]
+                      [-1.0     0.0     0.0    0]]
+          rays       (map #(r/make-ray %1 %2) points directions)
+          expected-values [[]
+                           []
+                           []
+                           []
+                           []
+                           []]
+          actual-values (->> rays
+                             (map #(intersections-for cube %))
+                             (map #(map :t %)))]
+      (is (= expected-values actual-values))))
+  )
 
 (deftest testing-intersections-for-plane
   (testing "a ray intersecting an xz plane from above"
