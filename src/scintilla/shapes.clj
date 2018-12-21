@@ -110,6 +110,7 @@
        []
        (map #(make-intersection % shape) [t-min t-max]))))
 
+;; TODO: Need diagrams for below
 (defmulti local-normal-for (fn [shape _] (:shape-type shape)))
 
 (defmethod local-normal-for :sphere
@@ -119,6 +120,19 @@
 (defmethod local-normal-for :plane
   [_ _]
   [0 1 0 0])
+
+(defmethod local-normal-for :cube
+  [_ [x y z _ :as local-point]]
+  (let [max-coordinate (->> [x y z]
+                           (map #(Math/abs %))
+                           (apply max))]
+    (cond
+      (= max-coordinate (Math/abs x))
+        [x 0 0 0]
+      (= max-coordinate (Math/abs y))
+        [0 y 0 0]
+      (= max-coordinate (Math/abs z))
+        [0 0 z 0])))
 
 (defn normal-for
   "This is the 'public' interface for computing the normal
