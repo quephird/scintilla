@@ -211,7 +211,7 @@
 
           scene         (e/make-scene [glassy-sphere] default-light)
           ray           (r/make-ray [0 0 0.7071 1] [0 1 0 0])
-          intersections (e/find-all-intersections scene ray)
+          intersections (e/all-intersections-for scene ray)
           second-hit    (second intersections)
           prepared-hit  (e/make-prepared-hit second-hit ray intersections)]
       (is (≈ 1.0 (schlick-reflectance prepared-hit)))))
@@ -222,7 +222,7 @@
 
           scene         (e/make-scene [glassy-sphere] default-light)
           ray           (r/make-ray [0 0 0 1] [0 1 0 0])
-          intersections (e/find-all-intersections scene ray)
+          intersections (e/all-intersections-for scene ray)
           second-hit    (second intersections)
           prepared-hit  (e/make-prepared-hit second-hit ray intersections)]
       (is (≈ 0.04 (schlick-reflectance prepared-hit)))))
@@ -233,7 +233,7 @@
 
           scene         (e/make-scene [glassy-sphere] default-light)
           ray           (r/make-ray [0 0.99 -2 1] [0 0 1 0])
-          intersections (e/find-all-intersections scene ray)
+          intersections (e/all-intersections-for scene ray)
           first-hit     (first intersections)
           prepared-hit  (e/make-prepared-hit first-hit ray intersections)]
       (is (≈ 0.48881 (schlick-reflectance prepared-hit)))))
@@ -260,7 +260,7 @@
 
           scene         (e/make-scene [sphere1 sphere2] default-light)
           ray           (r/make-ray [0 0 0 1] [0 0 1 0])
-          intersections (e/find-all-intersections scene ray)
+          intersections (e/all-intersections-for scene ray)
           hit           (e/find-hit intersections)
           prepared-hit  (e/make-prepared-hit hit ray intersections)]
       (is (≈ [0 0 0] (color-from-reflected-light scene
@@ -290,7 +290,7 @@
 
           scene         (e/make-scene [sphere1 sphere2 plane] default-light)
           ray           (r/make-ray [0 0 -3 1] [0 -0.7071 0.7071 0])
-          intersections (e/find-all-intersections scene ray)
+          intersections (e/all-intersections-for scene ray)
           hit           (e/find-hit intersections)
           prepared-hit  (e/make-prepared-hit hit ray intersections)]
       (is (≈ [0.19032 0.2379 0.14274] (color-from-reflected-light scene
@@ -320,7 +320,7 @@
 
           scene         (e/make-scene [sphere1 sphere2 plane] default-light)
           ray           (r/make-ray [0 0 -3 1] [0 -0.7071 0.7071 0])
-          intersections (e/find-all-intersections scene ray)
+          intersections (e/all-intersections-for scene ray)
           hit           (e/find-hit intersections)
           prepared-hit  (e/make-prepared-hit hit ray intersections)]
       (is (≈ [0 0 0] (color-from-reflected-light scene
@@ -341,7 +341,7 @@
           sphere2       (s/make-sphere a/default-material transform2)
           scene         (e/make-scene [sphere1 sphere2] default-light)
           ray           (r/make-ray [0 0 -5 1] [0 0 1 0])
-          intersections (e/find-all-intersections scene ray)
+          intersections (e/all-intersections-for scene ray)
           hit           (e/find-hit intersections)
           prepared-hit  (e/make-prepared-hit hit ray intersections)]
       (is (≈ [0 0 0] (color-from-refracted-light scene
@@ -361,7 +361,7 @@
           sphere2       (s/make-sphere a/default-material transform2)
           scene         (e/make-scene [sphere1 sphere2] default-light)
           ray           (r/make-ray [0 0 -5 1] [0 0 1 0])
-          intersections (e/find-all-intersections scene ray)
+          intersections (e/all-intersections-for scene ray)
           hit           (e/find-hit intersections)
           prepared-hit  (e/make-prepared-hit hit ray intersections)]
       (is (≈ [0 0 0] (color-from-refracted-light scene
@@ -381,7 +381,7 @@
           sphere2       (s/make-sphere a/default-material transform2)
           scene         (e/make-scene [sphere1 sphere2] default-light)
           ray           (r/make-ray [0 0 0.7071 1] [0 1 0 0])
-          intersections (e/find-all-intersections scene ray)
+          intersections (e/all-intersections-for scene ray)
           second-hit    (second intersections)
           prepared-hit  (e/make-prepared-hit second-hit ray intersections)]
       (is (≈ [0 0 0] (color-from-refracted-light scene
@@ -400,7 +400,7 @@
 
           scene         (e/make-scene [sphere1 sphere2] default-light)
           ray           (r/make-ray [0 0 0.1 1] [0 1 0 0])
-          intersections (e/find-all-intersections scene ray)
+          intersections (e/all-intersections-for scene ray)
           third-hit     (nth intersections 2)
           prepared-hit  (e/make-prepared-hit third-hit ray intersections)]
       (is (≈ [0 0.99888 0.04725] (color-from-refracted-light scene
@@ -477,7 +477,7 @@
 
           scene         (e/make-scene [sphere1 sphere2 plane] default-light)
           ray           (r/make-ray [0 0 -3 1] [0 -0.7071 0.7071 0])
-          intersections (e/find-all-intersections scene ray)
+          intersections (e/all-intersections-for scene ray)
           hit           (e/find-hit intersections)
           prepared-hit  (e/make-prepared-hit hit ray intersections)]
       (is (≈ [0.87677 0.92436 0.82918] (color-for scene ray max-reflections)))))
@@ -494,7 +494,7 @@
           scene           (e/make-scene [upper-plane lower-plane] light)
 
           ray             (r/make-ray [0 0 0 1] [0 1 0 0])
-          intersections   (e/find-all-intersections scene ray)
+          intersections   (e/all-intersections-for scene ray)
           first-hit       (e/find-hit intersections)
           prepared-hit    (e/make-prepared-hit first-hit ray intersections)
           color           (color-for scene ray max-reflections)]
@@ -527,7 +527,6 @@
           ray           (r/make-ray [0 0 -3 1] [0 -0.7071 0.7071 0])
           ]
       (is (≈ [0.93642 0.68642 0.68642] (color-for scene ray max-reflections)))))
-
   (testing "the color with reflective, transparent material"
     (let [material1     (a/make-material {:color [0.8 1.0 0.6]
                                           :ambient 0.1

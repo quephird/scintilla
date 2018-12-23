@@ -19,9 +19,9 @@
           sphere1       (s/make-sphere material1)
           transform2    (t/scaling-matrix 0.5 0.5 0.5)
           sphere2       (s/make-sphere a/default-material transform2)
-          world         (make-scene [sphere1 sphere2] l/default-light)
+          scene         (make-scene [sphere1 sphere2] l/default-light)
           ray           (r/make-ray [0 0 -5 1] [0 0 1 0])
-          intersections (find-all-intersections world ray)]
+          intersections (all-intersections-for scene ray)]
       (is (= 4 (count intersections)))
       (is (≈ [4.0 4.5 5.5 6.0] (set (mapv :t intersections)))))))
 
@@ -61,7 +61,7 @@
   (testing "precomputing the state of an intersection"
     (let [ray            (r/make-ray [0 0 -5 1] [0 0 1 0])
           sphere         (s/make-sphere)
-          intersections  (s/find-intersections sphere ray)
+          intersections  (s/intersections-for sphere ray)
           hit            (find-hit intersections)
           prepared-hit   (make-prepared-hit hit ray intersections)]
       (is (≈ [0 0 -1 1] (:surface-point prepared-hit)))
@@ -71,7 +71,7 @@
   (testing "precomputing the state of an intersection"
     (let [ray            (r/make-ray [0 0 0 1] [0 0 1 0])
           sphere         (s/make-sphere)
-          intersections  (s/find-intersections sphere ray)
+          intersections  (s/intersections-for sphere ray)
           hit            (find-hit intersections)
           prepared-hit   (make-prepared-hit hit ray intersections)]
       (is (≈ [0 0 1 1]  (:surface-point prepared-hit)))
@@ -81,7 +81,7 @@
   (testing "precomputing the reflection vector"
     (let [plane          (s/make-plane)
           ray            (r/make-ray [0 1 -1 1] [0 -0.7071 0.7071 0])
-          intersections  (s/find-intersections plane ray)
+          intersections  (s/intersections-for plane ray)
           hit            (find-hit intersections)
           prepared-hit   (make-prepared-hit hit ray intersections)
           expected-value [0.0 0.7071 0.7071 0]]
@@ -116,7 +116,7 @@
 
           scene          (make-scene [sphere-a sphere-b sphere-c] l/default-light)
           ray            (r/make-ray [0 0 -4 1] [0 0 1 0])
-          intersections  (find-all-intersections scene ray)
+          intersections  (all-intersections-for scene ray)
 
           expected-values [[1.0 1.5]   ;; n1 and n2 values for intersection 0
                            [1.5 2.0]   ;; "  "   "  "      "   "            1

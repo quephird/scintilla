@@ -5,55 +5,55 @@
             [scintilla.shapes :refer :all]
             [scintilla.transformation :as t]))
 
-(deftest testing-find-intersections-for-sphere
+(deftest testing-intersections-for-sphere
   (testing "a ray that intersects a sphere at two points"
     (let [ray    (r/make-ray [0 0 -5 1] [0 0 1 0])
           sphere (make-sphere [1.0 0.0 0.0])
-          points (find-intersections sphere ray)]
+          points (intersections-for sphere ray)]
       (is (= 2 (count points)))
       (is (≈ [4.0 6.0] (mapv :t points)))))
   (testing "a ray that intersects a sphere at one point"
     (let [ray    (r/make-ray [0 1 -5 1] [0 0 1 0])
           sphere (make-sphere [1.0 0.0 0.0])
-          points (find-intersections sphere ray)]
+          points (intersections-for sphere ray)]
       (is (= 1 (count points)))
       (is (≈ [5.0] (mapv :t points)))))
   (testing "a ray that intersects a sphere at one point"
     (let [ray    (r/make-ray [0 2 -5 1] [0 0 1 0])
           sphere (make-sphere [1.0 0.0 0.0])
-          points (find-intersections sphere ray)]
+          points (intersections-for sphere ray)]
       (is (= 0 (count points)))))
   (testing "a ray that originates from within a sphere"
     (let [ray    (r/make-ray [0 0 0 1] [0 0 1 0])
           sphere (make-sphere [1.0 0.0 0.0])
-          points (find-intersections sphere ray)]
+          points (intersections-for sphere ray)]
       (is (= 2 (count points)))
       (is (≈ [-1.0 1.0] (mapv :t points)))))
   (testing "a ray that originates in front of a sphere"
     (let [ray    (r/make-ray [0 0 5 1] [0 0 1 0])
           sphere (make-sphere [1.0 0.0 0.0])
-          points (find-intersections sphere ray)]
+          points (intersections-for sphere ray)]
       (is (= 2 (count points)))
       (is (≈ [-6.0 -4.0] (mapv :t points)))))
   (testing "intersecting a scaled sphere with a ray"
     (let [ray           (r/make-ray [0 0 -5 1] [0 0 1 0])
           S             (t/scaling-matrix 2 2 2)
           sphere        (make-sphere [1.0 0.0 0.0] S)
-          intersections (find-intersections sphere ray)]
+          intersections (intersections-for sphere ray)]
       (is (= 2 (count intersections)))
       (is (≈ [3.0 7.0] (mapv :t intersections)))))
   (testing "intersecting a translated sphere with a ray"
     (let [ray           (r/make-ray [0 0 -5 1] [0 0 1 0])
           T             (t/translation-matrix 5 0 0)
           sphere        (make-sphere [1.0 0.0 0.0] T)
-          intersections (find-intersections sphere ray)]
+          intersections (intersections-for sphere ray)]
       (is (= 0 (count intersections))))))
 
-(deftest testing-find-intersections-for-plane
+(deftest testing-intersections-for-plane
   (testing "a ray intersecting an xz plane from above"
     (let [plane             (make-plane)
           ray               (r/make-ray [0 1 0 1] [0 -1 0 0])
-          intersections     (find-intersections plane ray)
+          intersections     (intersections-for plane ray)
           {:keys [t shape]} (first intersections)]
       (is (= 1 (count intersections)))
       (is (≈ 1 t))
@@ -61,7 +61,7 @@
   (testing "a ray intersecting an xz plane from below"
     (let [plane             (make-plane)
           ray               (r/make-ray [0 -1 0 1] [0 1 0 0])
-          intersections     (find-intersections plane ray)
+          intersections     (intersections-for plane ray)
           {:keys [t shape]} (first intersections)]
       (is (= 1 (count intersections)))
       (is (≈ 1 t))
@@ -69,15 +69,70 @@
   (testing "a ray parallel to the xz plane"
     (let [plane             (make-plane)
           ray               (r/make-ray [0 10 0 1] [0 0 1 0])
-          intersections     (find-intersections plane ray)
+          intersections     (intersections-for plane ray)
           {:keys [t shape]} (first intersections)]
       (is (= 0 (count intersections)))))
   (testing "a ray that lies in the xz plane"
     (let [plane             (make-plane)
           ray               (r/make-ray [0 0 0 1] [0 0 1 0])
-          intersections     (find-intersections plane ray)
+          intersections     (intersections-for plane ray)
           {:keys [t shape]} (first intersections)]
       (is (= 0 (count intersections))))))
+
+(deftest testing-intersections-for-cube
+  (testing "rays intersecting the cube twice"
+    (let [cube       (make-cube)
+          points     [[ 5.0  0.5  0.0 1]
+                      [-5.0  0.5  0.0 1]
+                      [ 0.5  5.0  0.0 1]
+                      [ 0.5 -5.0  0.0 1]
+                      [ 0.5  0.0  5.0 1]
+                      [ 0.5  0.0 -5.0 1]
+                      [ 0.0  0.5  0.0 1]]
+          directions [[-1  0  0 0]
+                      [ 1  0  0 0]
+                      [ 0 -1  0 0]
+                      [ 0  1  0 0]
+                      [ 0  0 -1 0]
+                      [ 0  0  1 0]
+                      [ 0  0  1 0]]
+          rays       (map #(r/make-ray %1 %2) points directions)
+          expected-values [[4 6]
+                           [4 6]
+                           [4 6]
+                           [4 6]
+                           [4 6]
+                           [4 6]
+                           [-1 1]]
+          actual-values (->> rays
+                             (map #(intersections-for cube %))
+                             (map #(map :t %)))]
+      (is (≈ expected-values actual-values))))
+  (testing "rays intersecting the cube twice"
+    (let [cube       (make-cube)
+          points     [[-2.0  0.0  0.0 1]
+                      [ 0.0 -2.0  0.0 1]
+                      [ 0.0  0.0 -2.0 1]
+                      [ 2.0  0.0  2.0 1]
+                      [ 0.0  2.0  2.0 1]
+                      [ 2.0  2.0  0.0 1]]
+          directions [[ 0.2673  0.5345  0.8018 0]
+                      [ 0.8018  0.2673  0.5345 0]
+                      [ 0.5345  0.8018  0.2673 0]
+                      [ 0.0     0.0    -1.0    0]
+                      [ 0.0    -1.0     0.0    0]
+                      [-1.0     0.0     0.0    0]]
+          rays       (map #(r/make-ray %1 %2) points directions)
+          expected-values [[]
+                           []
+                           []
+                           []
+                           []
+                           []]
+          actual-values (->> rays
+                             (map #(intersections-for cube %))
+                             (map #(map :t %)))]
+      (is (= expected-values actual-values)))))
 
 (deftest testing-normal-for-sphere
   (testing "the normal on a sphere at a point on the x axis"
@@ -120,3 +175,24 @@
           points         [[0 0 0 1] [10 0 -10 1] [-5 0 150 1]]
           expected-value [0 1 0 0]]
       (is (every? #(≈ expected-value %) (map #(normal-for plane %) points))))))
+
+(deftest testing-normal-for-cube
+  (testing "points on various faces of a default cube"
+    (let [cube   (make-cube)
+          points [[ 1    0.5  -0.8]
+                  [-1   -0.2   0.9]
+                  [-0.4  1    -0.1]
+                  [ 0.3 -1    -0.7]
+                  [-0.6  0.3   1]
+                  [ 0.4  0.4  -1]
+                  [ 1    1     1]
+                  [-1   -1    -1]]
+          expected-values [[ 1  0  0]
+                           [-1  0  0]
+                           [ 0  1  0]
+                           [ 0 -1  0]
+                           [ 0  0  1]
+                           [ 0  0 -1]
+                           [ 1  0  0]
+                           [-1  0  0]]]
+      (is (≈ expected-values (map #(normal-for cube %) points))))))
