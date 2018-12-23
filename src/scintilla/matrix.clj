@@ -18,12 +18,14 @@
 (defn matrix-times
   "Multiplies an l ⨯ m matrix by an m ⨯ n matrix,
    yielding an l ⨯ n matrix."
-  [matrix1 matrix2]
-  (mapv (fn [row1]
-          (mapv (fn [column2]
-                  (reduce + 0 (map * row1 column2)))
-                (transpose matrix2)))
-        matrix1))
+  ([matrix1 matrix2]
+   (mapv (fn [row1]
+           (mapv (fn [column2]
+                   (reduce + 0 (map * row1 column2)))
+                 (transpose matrix2)))
+         matrix1))
+  ([matrix1 matrix2 & matrices]
+   (matrix-times matrix1 (apply matrix-times (cons matrix2 matrices)))))
 
 (defn tuple-times
   "Multiplies an m ⨯ n matrix to a 1 ⨯ m tuple,

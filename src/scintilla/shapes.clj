@@ -84,13 +84,13 @@
        []
        [(make-intersection (- (/ py dy)) shape)])))
 
-;; TODO: Add diagram to illustrate how this works
 (defn- check-axis
   "Helper function for computing minimum and maximum
    values for t for each of the x, y, and z components of the
    intersecting ray"
   [pointᵢ directionᵢ]
-  (if (> (Math/abs directionᵢ) ε)
+  ;; This is done to avoid division-by-zero errors
+  (if (>= (Math/abs directionᵢ) ε)
     (let [t₁ (/ (- -1.0 pointᵢ) directionᵢ)
           t₂ (/ (- 1.0 pointᵢ) directionᵢ)]
       [(min t₁ t₂) (max t₁ t₂)])
@@ -99,13 +99,45 @@
       [(min t₁ t₂) (max t₁ t₂)])))
 
 (defmethod intersections-for :cube
-  [{:keys [matrix] :as shape}
-   {:keys [point direction] :as ray}]
-   (let [[px py pz _] point
-         [dx dy dz _] direction
-         t-pairs      (map #(check-axis %1 %2) [px py pz] [dx dy dz])
-         t-min        (apply max (map first t-pairs))
-         t-max        (apply min (map second t-pairs))]
+  ;; This uses a trick by computing the possible values of t
+  ;; by examining each coordinate first. Note that the default
+  ;; cube is always centered at the origin with all vertices one
+  ;; unit away. Considering a 2D square first, which is highlighted
+  ;; below, and a ray with its origin at (-3, -2) and direction (1,1),
+  ;; we see the following: 
+  ;;
+  ;;              │    ┊    │⟋
+  ;;              │    ┊   ⟋│
+  ;;        (-1,1)│  i₂┊ ⟋  │(1,1)
+  ;;       ───────╆━━━━⟋━━━━╅──────
+  ;;              ┃ ⟋  ┊    ┃
+  ;;       ┈┈┈┈┈┈┈⟋┈┈┈┈┼┈┈ ┈╂┈┈┈┈┈
+  ;;            ⟋ ┃i₁  ┊    ┃
+  ;;       ───⟋───╄━━━━┿━━━━╃──────
+  ;;        ⟋ (-1,-1)  ┊    │(1,-1)
+  ;;              │    ┊    │
+  ;;              │    ┊    │
+  ;;
+  ;; From the algorithm below we see that the t values for each axis are:
+  ;;
+  ;; x                y
+  ;; (-1 - -3)/1 = 2  (-1 - -2)/1 = 1
+  ;; (1 - -3)/1 = 4   (1 - -2)/1  = 3
+  ;; => ts = (2,4)     => ts = (1,3)
+  ;;
+  ;; Taking the max of the min's of each pair of ts we get 2,
+  ;; and taking the min of the max's of each pair of ts we get 3,
+  ;; which yields i₁ to be at (-3,-2) + 2*(1,1) = (-1,0),
+  ;; and i₂ to be at (-3,-2) + 3*(1,1) = (0,1), which is exactly
+  ;; what we expected!
+  ;;
+  [{:keys [matrix] :as shape} ray]
+  (let [{:keys [point direction] :as local-ray} (r/transform ray (m/inverse matrix))
+        [px py pz _] point
+        [dx dy dz _] direction
+        t-pairs      (map #(check-axis %1 %2) [px py pz] [dx dy dz])
+        t-min        (apply max (map first t-pairs))
+        t-max        (apply min (map second t-pairs))]
      (if (> t-min t-max)
        []
        (map #(make-intersection % shape) [t-min t-max]))))

@@ -208,3 +208,24 @@
                                                     [0 1 0 0])
         camera         (c/make-camera 400 200 π⟋3 view-transform)]
     (r/render-to-file camera scene "glassy-spheres-on-plane.ppm")))
+
+(defn cube-with-light
+  []
+  (let [checkers       (p/make-checker-pattern [1 0.5 0] [0.5 0 1])
+        transform      (m/matrix-times
+                        (t/rotation-x-matrix (- π⟋6))
+                        (t/rotation-y-matrix π⟋4))
+        material       (a/make-material {:ambient 0.1
+                                         :color nil
+                                         :diffuse 0.9
+                                         :shininess 20
+                                         :specular 0.9
+                                         :pattern checkers})
+        cube           (s/make-cube material transform)
+        light          (l/make-light [-10 10 -10 1] [1 1 1])
+        scene          (e/make-scene [cube] light)
+        view-transform (t/view-transform-matrix-for [0 0 -5 1]
+                                                    [0 0 0 1]
+                                                    [0 1 0 0])
+        camera         (c/make-camera 400 400 π⟋3 view-transform)]
+    (r/render-to-file camera scene "cube-with-light.ppm")))
