@@ -16,9 +16,10 @@
                                           :specular 0.2
                                           :shininess 200
                                           :pattern nil})
-          sphere1       (s/make-sphere material1)
+          sphere1       (s/make-sphere {:material material1})
           transform2    (t/scaling-matrix 0.5 0.5 0.5)
-          sphere2       (s/make-sphere a/default-material transform2)
+          sphere2       (s/make-sphere {:material a/default-material
+                                        :transform transform2})
           scene         (make-scene [sphere1 sphere2] l/default-light)
           ray           (r/make-ray [0 0 -5 1] [0 0 1 0])
           intersections (all-intersections-for scene ray)]
@@ -27,28 +28,28 @@
 
 (deftest testing-find-hit
   (testing "when all intersections have positive t"
-    (let [s  (s/make-sphere [1.0 0.0 0.0])
+    (let [s  (s/make-sphere)
           i1 (s/make-intersection 1 s)
           i2 (s/make-intersection 2 s)
           intersections [i2 i1]
           hit (find-hit intersections)]
       (is (= hit i1))))
   (testing "when some intersections have negative t"
-    (let [s  (s/make-sphere [1.0 0.0 0.0])
+    (let [s  (s/make-sphere)
           i1 (s/make-intersection -1 s)
           i2 (s/make-intersection 1 s)
           intersections [i2 i1]
           hit (find-hit intersections)]
       (is (= hit i2))))
   (testing "when all intersections have negative t"
-    (let [s  (s/make-sphere [1.0 0.0 0.0])
+    (let [s  (s/make-sphere)
           i1 (s/make-intersection -2 s)
           i2 (s/make-intersection -1 s)
           intersections [i2 i1]
           hit (find-hit intersections)]
       (is (nil? hit))))
   (testing "hit is intersection with lowest non-negative t"
-    (let [s  (s/make-sphere [1.0 0.0 0.0])
+    (let [s  (s/make-sphere)
           i1 (s/make-intersection 5 s)
           i2 (s/make-intersection 7 s)
           i3 (s/make-intersection -3 s)
@@ -104,15 +105,18 @@
     ;;
     (let [material-a     (a/make-material {:refractive-index 1.5})
           transform-a    (t/scaling-matrix 2 2 2)
-          sphere-a       (s/make-sphere material-a transform-a)
+          sphere-a       (s/make-sphere {:material material-a
+                                         :transform transform-a})
 
           material-b     (a/make-material {:refractive-index 2.0})
           transform-b    (t/translation-matrix 0 0 -0.25)
-          sphere-b       (s/make-sphere material-b transform-b)
+          sphere-b       (s/make-sphere {:material material-b
+                                         :transform transform-b})
 
           material-c     (a/make-material {:refractive-index 2.5})
           transform-c    (t/translation-matrix 0 0 0.25)
-          sphere-c       (s/make-sphere material-c transform-c)
+          sphere-c       (s/make-sphere {:material material-c
+                                         :transform transform-c})
 
           scene          (make-scene [sphere-a sphere-b sphere-c] l/default-light)
           ray            (r/make-ray [0 0 -4 1] [0 0 1 0])

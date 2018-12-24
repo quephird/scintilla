@@ -6,36 +6,36 @@
             [scintilla.ray :as r]
             [scintilla.tuple :as u]))
 
-;; We need a way to uniquely identify shapes, but since
-;; we are using raw maps and not instantiating and referengin
-;; objects, we need an explicit strategy, and so we use UUIDs.
-(defn make-shape
-  ([shape-type]
-    (make-shape shape-type a/default-material))
-  ([shape-type material]
-    (make-shape shape-type material I₄))
-  ([shape-type material transform]
-   {:id         (java.util.UUID/randomUUID)
-    :shape-type shape-type
-    :material   material
-    :matrix     transform}))
+(def default-options
+  {:material   a/default-material
+   :transform  I₄
+   :capped?    false
+   :infinite?  false})
 
+(defn make-shape
+  [shape-type options]
+  (merge {:shape-type shape-type}
+         default-options
+         options))
+
+;; NOTA BENE: All shape constructors expect a map of options
+;;            as their sole argument.
 (defn make-sphere
   "The default sphere is centered at the world origin
    and has radius 1."
-  [& args]
-  (apply make-shape :sphere args))
+  [& options]
+  (make-shape :sphere (into {} options)))
 
 (defn make-cube
   "The default cube is centered at the world origin
    and has half-length of 1."
-  [& args]
-  (apply make-shape :cube args))
+  [& options]
+  (make-shape :cube (into {} options)))
 
 (defn make-plane
   "The default plane lies in the 𝑥𝑧 plane."
-  [& args]
-  (apply make-shape :plane args))
+  [& options]
+  (make-shape :plane (into {} options)))
 
 (defn- quadratic-roots-for
   "Helper function to determine the set of real roots to the quadratic equation:
@@ -66,8 +66,8 @@
 
 ;; TODO: Need to put diagram below illustrating how and why this works.
 (defmethod intersections-for :sphere
-  [{:keys [matrix] :as shape} ray]
-  (let [{:keys [point direction] :as local-ray} (r/transform ray (m/inverse matrix))
+  [{:keys [transform] :as shape} ray]
+  (let [{:keys [point direction] :as local-ray} (r/transform ray (m/inverse transform))
         shape-to-ray (u/subtract point [0 0 0 1])
         a            (u/dot-product direction direction)
         b            (* 2.0 (u/dot-product direction shape-to-ray))
@@ -76,8 +76,8 @@
     (map #(make-intersection % shape) tvals)))
 
 (defmethod intersections-for :plane
-  [{:keys [matrix] :as shape} ray]
-  (let [{:keys [point direction] :as local-ray} (r/transform ray (m/inverse matrix))
+  [{:keys [transform] :as shape} ray]
+  (let [{:keys [point direction] :as local-ray} (r/transform ray (m/inverse transform))
         [_ py _ _] point
         [_ dy _ _] direction]
      (if (> ε (Math/abs dy))
@@ -131,8 +131,8 @@
   ;; and i₂ to be at (-3,-2) + 3*(1,1) = (0,1), which is exactly
   ;; what we expected!
   ;;
-  [{:keys [matrix] :as shape} ray]
-  (let [{:keys [point direction] :as local-ray} (r/transform ray (m/inverse matrix))
+  [{:keys [transform] :as shape} ray]
+  (let [{:keys [point direction] :as local-ray} (r/transform ray (m/inverse transform))
         [px py pz _] point
         [dx dy dz _] direction
         t-pairs      (map #(check-axis %1 %2) [px py pz] [dx dy dz])
@@ -173,12 +173,12 @@
    that coordinate system by deferring the specialized
    implementation for the shape, then transforms it back to the
    world coordinate system."
-  [{:keys [matrix] :as shape} world-point]
-  (let [local-normal (as-> matrix $
+  [{:keys [transform] :as shape} world-point]
+  (let [local-normal (as-> transform $
                            (m/inverse $)
                            (m/tuple-times $ world-point)
                            (local-normal-for shape $))]
-    (-> matrix
+    (-> transform
         m/inverse
         m/transpose
         (m/tuple-times local-normal)

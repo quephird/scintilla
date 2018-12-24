@@ -19,9 +19,11 @@
                                         :specular 0.2
                                         :shininess 200
                                         :pattern nil})
-        sphere1       (s/make-sphere material1)
+        sphere1       (s/make-sphere {:material material1})
+
         transform2    (t/scaling-matrix 0.5 0.5 0.5)
-        sphere2       (s/make-sphere a/default-material transform2)
+        sphere2       (s/make-sphere {:material a/default-material
+                                      :transform transform2})
         light         (make-light [-10 10 -10 1] [1 1 1])
         scene         (e/make-scene [sphere1 sphere2] light)]
     (testing "when nothing is collinear with point and light"
@@ -76,7 +78,8 @@
     ;;
     (let [material       a/default-material
           transform      (t/translation-matrix 0 0 1)
-          sphere         (s/make-sphere material transform)
+          sphere         (s/make-sphere {:material material
+                                         :transform transform})
           light          (make-light [0 0 -10 1] [1 1 1])
           scene          (e/make-scene [sphere] light)
           surface-normal [0 0 -1 0]
@@ -103,7 +106,8 @@
       ;;
       (let [material       a/default-material
             transform      (t/translation-matrix 0 0 1)
-            sphere         (s/make-sphere material transform)
+            sphere         (s/make-sphere {:material material
+                                           :transform transform})
             light          (make-light [0 0 -10 1] [1 1 1])
             scene          (e/make-scene [sphere] light)
             surface-normal [0 0 -1 0]
@@ -130,7 +134,8 @@
       ;;
       (let [material       a/default-material
             transform      (t/translation-matrix 0 0 1)
-            sphere         (s/make-sphere material transform)
+            sphere         (s/make-sphere {:material material
+                                           :transform transform})
             light          (make-light [0 10 -10 1] [1 1 1])
             scene          (e/make-scene [sphere] light)
             surface-normal [0 0 -1 0]
@@ -158,7 +163,8 @@
       ;;
       (let [material       a/default-material
             transform      (t/translation-matrix 0 0 1)
-            sphere         (s/make-sphere material transform)
+            sphere         (s/make-sphere {:material material
+                                           :transform transform})
             light          (make-light [0 10 -10 1] [1 1 1])
             scene          (e/make-scene [sphere] light)
             surface-normal [0 0 -1 0]
@@ -185,7 +191,8 @@
       ;;
       (let [material       a/default-material
             transform      (t/translation-matrix 0 0 1)
-            sphere         (s/make-sphere material transform)
+            sphere         (s/make-sphere {:material material
+                                           :transform transform})
             light          (make-light [0 0 10 1] [1 1 1])
             scene          (e/make-scene [sphere] light)
             surface-normal [0 0 -1 0]
@@ -207,7 +214,7 @@
   (testing "the Schlick approximation under total internal reflection"
     (let [glass         (a/make-material {:transparency 1.0
                                           :refractive-index 1.5})
-          glassy-sphere (s/make-sphere glass)
+          glassy-sphere (s/make-sphere {:material glass})
 
           scene         (e/make-scene [glassy-sphere] default-light)
           ray           (r/make-ray [0 0 0.7071 1] [0 1 0 0])
@@ -218,7 +225,7 @@
   (testing "the Schlick approximation with a perpendicular viewing angle"
     (let [glass         (a/make-material {:transparency 1.0
                                           :refractive-index 1.5})
-          glassy-sphere (s/make-sphere glass)
+          glassy-sphere (s/make-sphere {:material glass})
 
           scene         (e/make-scene [glassy-sphere] default-light)
           ray           (r/make-ray [0 0 0 1] [0 1 0 0])
@@ -229,7 +236,7 @@
   (testing "the Schlick approximation with a small angle and n2 > n1"
     (let [glass         (a/make-material {:transparency 1.0
                                           :refractive-index 1.5})
-          glassy-sphere (s/make-sphere glass)
+          glassy-sphere (s/make-sphere {:material glass})
 
           scene         (e/make-scene [glassy-sphere] default-light)
           ray           (r/make-ray [0 0.99 -2 1] [0 0 1 0])
@@ -247,7 +254,7 @@
                                           :specular 0.2
                                           :shininess 200
                                           :pattern nil})
-          sphere1       (s/make-sphere material1)
+          sphere1       (s/make-sphere {:material material1})
 
           material2     (a/make-material {:color [1 1 1]
                                           :ambient 1.0
@@ -256,7 +263,8 @@
                                           :shininess 200
                                           :pattern nil})
           transform2    (t/scaling-matrix 0.5 0.5 0.5)
-          sphere2       (s/make-sphere material2 transform2)
+          sphere2       (s/make-sphere {:material material2
+                                        :transform transform2})
 
           scene         (e/make-scene [sphere1 sphere2] default-light)
           ray           (r/make-ray [0 0 0 1] [0 0 1 0])
@@ -273,7 +281,7 @@
                                           :specular 0.2
                                           :shininess 200
                                           :pattern nil})
-          sphere1       (s/make-sphere material1)
+          sphere1       (s/make-sphere {:material material1})
 
           material2     (a/make-material {:color [1 1 1]
                                           :ambient 1.0
@@ -282,11 +290,13 @@
                                           :shininess 200
                                           :pattern nil})
           transform2    (t/scaling-matrix 0.5 0.5 0.5)
-          sphere2       (s/make-sphere material2 transform2)
+          sphere2       (s/make-sphere {:material material2
+                                        :transform transform2})
 
           material3     (a/make-material {:reflective 0.5})
           transform3    (t/translation-matrix 0 -1 0)
-          plane         (s/make-plane material3 transform3)
+          plane         (s/make-plane {:material material3
+                                       :transform transform3})
 
           scene         (e/make-scene [sphere1 sphere2 plane] default-light)
           ray           (r/make-ray [0 0 -3 1] [0 -0.7071 0.7071 0])
@@ -303,7 +313,7 @@
                                           :specular 0.2
                                           :shininess 200
                                           :pattern nil})
-          sphere1       (s/make-sphere material1)
+          sphere1       (s/make-sphere {:material material1})
 
           material2     (a/make-material {:color [1 1 1]
                                           :ambient 1.0
@@ -312,11 +322,13 @@
                                           :shininess 200
                                           :pattern nil})
           transform2    (t/scaling-matrix 0.5 0.5 0.5)
-          sphere2       (s/make-sphere material2 transform2)
+          sphere2       (s/make-sphere {:material material2
+                                        :transform transform2})
 
           material3     (a/make-material {:reflective 0.5})
           transform3    (t/translation-matrix 0 -1 0)
-          plane         (s/make-plane material3 transform3)
+          plane         (s/make-plane {:material material3
+                                       :transform transform3})
 
           scene         (e/make-scene [sphere1 sphere2 plane] default-light)
           ray           (r/make-ray [0 0 -3 1] [0 -0.7071 0.7071 0])
@@ -336,9 +348,10 @@
                                           :specular 0.2
                                           :shininess 200
                                           :pattern nil})
-          sphere1       (s/make-sphere material1)
+          sphere1       (s/make-sphere {:material material1})
           transform2    (t/scaling-matrix 0.5 0.5 0.5)
-          sphere2       (s/make-sphere a/default-material transform2)
+          sphere2       (s/make-sphere {:material a/default-material
+                                        :transform transform2})
           scene         (e/make-scene [sphere1 sphere2] default-light)
           ray           (r/make-ray [0 0 -5 1] [0 0 1 0])
           intersections (e/all-intersections-for scene ray)
@@ -356,9 +369,10 @@
                                           :transparency 1.0
                                           :refractive-index 1.5
                                           :pattern nil})
-          sphere1       (s/make-sphere material1)
+          sphere1       (s/make-sphere {:material material1})
           transform2    (t/scaling-matrix 0.5 0.5 0.5)
-          sphere2       (s/make-sphere a/default-material transform2)
+          sphere2       (s/make-sphere {:material a/default-material
+                                        :transform transform2})
           scene         (e/make-scene [sphere1 sphere2] default-light)
           ray           (r/make-ray [0 0 -5 1] [0 0 1 0])
           intersections (e/all-intersections-for scene ray)
@@ -376,9 +390,10 @@
                                           :transparency 1.0
                                           :refractive-index 1.5
                                           :pattern nil})
-          sphere1       (s/make-sphere material1)
+          sphere1       (s/make-sphere {:material material1})
           transform2    (t/scaling-matrix 0.5 0.5 0.5)
-          sphere2       (s/make-sphere a/default-material transform2)
+          sphere2       (s/make-sphere {:material a/default-material
+                                        :transform transform2})
           scene         (e/make-scene [sphere1 sphere2] default-light)
           ray           (r/make-ray [0 0 0.7071 1] [0 1 0 0])
           intersections (e/all-intersections-for scene ray)
@@ -391,12 +406,13 @@
     (let [material1     (a/make-material {:ambient 1.0
                                           :color   nil
                                           :pattern p/test-pattern})
-          sphere1       (s/make-sphere material1)
+          sphere1       (s/make-sphere {:material material1})
 
           material2     (a/make-material {:refractive-index 1.5
                                           :transparency     1.0})
           transform2    (t/scaling-matrix 0.5 0.5 0.5)
-          sphere2       (s/make-sphere material2 transform2)
+          sphere2       (s/make-sphere {:material material2
+                                        :transform transform2})
 
           scene         (e/make-scene [sphere1 sphere2] default-light)
           ray           (r/make-ray [0 0 0.1 1] [0 1 0 0])
@@ -415,9 +431,10 @@
                                        :specular 0.2
                                        :shininess 200
                                        :pattern nil})
-          sphere1    (s/make-sphere material1)
+          sphere1    (s/make-sphere {:material material1})
           transform2 (t/scaling-matrix 0.5 0.5 0.5)
-          sphere2    (s/make-sphere a/default-material transform2)
+          sphere2    (s/make-sphere {:material a/default-material
+                                     :transform transform2})
           scene      (e/make-scene [sphere1 sphere2] default-light)
           ray        (r/make-ray [0 0 -5 1] [0 1 0 0])]
       (is (≈ [0 0 0] (color-for scene ray max-reflections)))))
@@ -428,9 +445,10 @@
                                        :specular 0.2
                                        :shininess 200
                                        :pattern nil})
-          sphere1    (s/make-sphere material1)
+          sphere1    (s/make-sphere {:material material1})
           transform2 (t/scaling-matrix 0.5 0.5 0.5)
-          sphere2    (s/make-sphere a/default-material transform2)
+          sphere2    (s/make-sphere {:material a/default-material
+                                     :transform transform2})
           scene      (e/make-scene [sphere1 sphere2] default-light)
           ray        (r/make-ray [0 0 -5 1] [0 0 1 0])]
       (is (≈ [0.38066 0.47583 0.2855] (color-for scene ray max-reflections)))))
@@ -441,7 +459,8 @@
                                        :specular 0.2
                                        :shininess 200
                                        :pattern nil})
-          sphere1    (s/make-sphere material1)
+          sphere1    (s/make-sphere {:material material1})
+
           material2  (a/make-material {:color [1 1 1]
                                        :ambient 1.0
                                        :diffuse 0.9
@@ -449,7 +468,9 @@
                                        :shininess 200
                                        :pattern nil})
           transform2 (t/scaling-matrix 0.5 0.5 0.5)
-          sphere2    (s/make-sphere material2 transform2)
+          sphere2    (s/make-sphere {:material material2
+                                     :transform transform2})
+
           scene      (e/make-scene [sphere1 sphere2] default-light)
           ray        (r/make-ray [0 0 0.75 1] [0 0 -1 0])]
       (is (≈ [1.0 1.0 1.0] (color-for scene ray max-reflections)))))
@@ -460,7 +481,7 @@
                                           :specular 0.2
                                           :shininess 200
                                           :pattern nil})
-          sphere1       (s/make-sphere material1)
+          sphere1       (s/make-sphere {:material material1})
 
           material2     (a/make-material {:color [1 1 1]
                                           :ambient 1.0
@@ -469,11 +490,13 @@
                                           :shininess 200
                                           :pattern nil})
           transform2    (t/scaling-matrix 0.5 0.5 0.5)
-          sphere2       (s/make-sphere material2 transform2)
+          sphere2       (s/make-sphere {:material material2
+                                        :transform transform2})
 
           material3     (a/make-material {:reflective 0.5})
           transform3    (t/translation-matrix 0 -1 0)
-          plane         (s/make-plane material3 transform3)
+          plane         (s/make-plane {:material material3
+                                       :transform transform3})
 
           scene         (e/make-scene [sphere1 sphere2 plane] default-light)
           ray           (r/make-ray [0 0 -3 1] [0 -0.7071 0.7071 0])
@@ -484,11 +507,13 @@
   (testing "recursion stops with mutually reflective surfaces"
     (let [lower-material  (a/make-material {:reflective 1})
           lower-transform (t/translation-matrix 0 -1 0)
-          lower-plane     (s/make-plane lower-material lower-transform)
+          lower-plane     (s/make-plane {:material lower-material
+                                         :transform lower-transform})
 
           upper-material  (a/make-material {:reflective 1})
           upper-transform (t/translation-matrix 0 1 0)
-          upper-plane     (s/make-plane lower-material upper-transform)
+          upper-plane     (s/make-plane {:material lower-material
+                                         :transform upper-transform})
 
           light           (make-light [0 0 0 1] [1 1 1])
           scene           (e/make-scene [upper-plane lower-plane] light)
@@ -508,24 +533,26 @@
                                           :specular 0.2
                                           :shininess 200
                                           :pattern nil})
-          sphere1       (s/make-sphere material1)
+          sphere1       (s/make-sphere {:material material1})
 
           transform2    (t/scaling-matrix 0.5 0.5 0.5)
-          sphere2       (s/make-sphere a/default-material transform2)
+          sphere2       (s/make-sphere {:material a/default-material
+                                        :transform transform2})
 
           material3     (a/make-material {:refractive-index 1.5
                                           :transparency 0.5})
           transform3    (t/translation-matrix 0 -1 0)
-          floor         (s/make-plane material3 transform3)
+          floor         (s/make-plane {:material material3
+                                       :transform transform3})
 
           material4     (a/make-material {:ambient 0.5
                                           :color   [1 0 0]})
           transform4    (t/translation-matrix 0 -3.5 -0.5)
-          ball          (s/make-sphere material4 transform4)
+          ball          (s/make-sphere {:material material4
+                                        :transform transform4})
 
           scene         (e/make-scene [sphere1 sphere2 floor ball] default-light)
-          ray           (r/make-ray [0 0 -3 1] [0 -0.7071 0.7071 0])
-          ]
+          ray           (r/make-ray [0 0 -3 1] [0 -0.7071 0.7071 0])]
       (is (≈ [0.93642 0.68642 0.68642] (color-for scene ray max-reflections)))))
   (testing "the color with reflective, transparent material"
     (let [material1     (a/make-material {:color [0.8 1.0 0.6]
@@ -534,24 +561,26 @@
                                           :specular 0.2
                                           :shininess 200
                                           :pattern nil})
-          sphere1       (s/make-sphere material1)
+          sphere1       (s/make-sphere {:material material1})
 
           transform2    (t/scaling-matrix 0.5 0.5 0.5)
-          sphere2       (s/make-sphere a/default-material transform2)
+          sphere2       (s/make-sphere {:material a/default-material
+                                        :transform transform2})
 
           material3     (a/make-material {:reflective       0.5
                                           :refractive-index 1.5
                                           :transparency     0.5})
           transform3    (t/translation-matrix 0 -1 0)
-          floor         (s/make-plane material3 transform3)
+          floor         (s/make-plane {:material material3
+                                       :transform transform3})
 
           material4     (a/make-material {:ambient 0.5
                                           :color   [1 0 0]})
           transform4    (t/translation-matrix 0 -3.5 -0.5)
-          ball          (s/make-sphere material4 transform4)
+          ball          (s/make-sphere {:material material4
+                                        :transform transform4})
 
           scene         (e/make-scene [sphere1 sphere2 floor ball] default-light)
-          ray           (r/make-ray [0 0 -3 1] [0 -0.7071 0.7071 0])
-          ]
+          ray           (r/make-ray [0 0 -3 1] [0 -0.7071 0.7071 0])]
       (is (≈ [0.93391 0.69643 0.69243] (color-for scene ray max-reflections))))))
 

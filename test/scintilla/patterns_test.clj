@@ -18,7 +18,7 @@
             point-3       [0 2 0 1]
             prepared-hits (map (fn [p]
                                  {:shape {:material {:pattern stripes}
-                                          :matrix I₄}
+                                          :transform I₄}
                                   :surface-point p}) [point-1 point-2 point-3])]
         (is (≈ [white white white] (map #(color-for %) prepared-hits)))))
     (testing "A stripe pattern is constant in z"
@@ -27,7 +27,7 @@
             point-3       [0 0 2 1]
             prepared-hits (map (fn [p]
                                  {:shape {:material {:pattern stripes}
-                                          :matrix I₄}
+                                          :transform I₄}
                                   :surface-point p}) [point-1 point-2 point-3])]
         (is (≈ [white white white] (map #(color-for %) prepared-hits)))))
     (testing "A stripe pattern alternates along the x axis, one unit at a time"
@@ -40,7 +40,7 @@
             all-points    [point-1 point-2 point-3 point-4 point-5 point-6]
             prepared-hits (map (fn [p]
                                  {:shape {:material {:pattern stripes}
-                                          :matrix I₄}
+                                          :transform I₄}
                                   :surface-point p}) all-points)]
         (is (≈ [white white black black black white]
                (map #(color-for %) prepared-hits)))))))
@@ -50,14 +50,15 @@
     (let [transform     (t/scaling-matrix 2 2 2)
           stripes       (make-stripe-pattern white black)
           material      (a/set-pattern a/default-material stripes)
-          sphere        (s/make-sphere material transform)
+          sphere        (s/make-sphere {:material material
+                                        :transform transform})
           prepared-hit  {:shape sphere :surface-point [1.5 0 0]}]
       (is (≈ white (color-for prepared-hit)))))
   (testing "stripes with an pattern transformation"
     (let [transform     (t/scaling-matrix 2 2 2)
           stripes       (make-stripe-pattern white black transform)
           material      (a/set-pattern a/default-material stripes)
-          sphere        (s/make-sphere material)
+          sphere        (s/make-sphere {:material material})
           prepared-hit  {:shape sphere :surface-point [1.5 0 0]}]
       (is (≈ white (color-for prepared-hit)))))
   (testing "stripes with obejct and pattern transformations"
@@ -65,7 +66,8 @@
           stripes       (make-stripe-pattern white black pat-xform)
           material      (a/set-pattern a/default-material stripes)
           obj-xform     (t/scaling-matrix 2 2 2)
-          sphere        (s/make-sphere material obj-xform)
+          sphere        (s/make-sphere {:material material
+                                        :transform obj-xform})
           prepared-hit  {:shape sphere :surface-point [1.5 0 0]}]
       (is (≈ white (color-for prepared-hit))))))
 
@@ -79,7 +81,7 @@
           point-4       [0.708 0 0.708]
           prepared-hits (map (fn [p]
                                {:shape {:material {:pattern rings}
-                                        :matrix I₄}
+                                        :transform I₄}
                                 :surface-point p}) [point-1 point-2 point-3 point-4])
           expected-values [white black black black]]
       (is (≈ expected-values (map #(color-for %) prepared-hits))))))
@@ -93,7 +95,7 @@
           point-4       [0.75 0 0 1]
           prepared-hits (map (fn [p]
                                {:shape {:material {:pattern gradient}
-                                        :matrix I₄}
+                                        :transform I₄}
                                 :surface-point p}) [point-1 point-2 point-3 point-4])
           expected-values [[1 1 1] [0.75 0.75 0.75] [0.5 0.5 0.5] [0.25 0.25 0.25]]]
       (is (≈ expected-values (map #(color-for %) prepared-hits))))))
@@ -105,7 +107,7 @@
             expected-values  [white     white      black]
             prepared-hits (map (fn [p]
                                  {:shape {:material {:pattern checkers}
-                                          :matrix I₄}
+                                          :transform I₄}
                                   :over-point p}) points)]
         (is (≈ expected-values (map #(color-for %) prepared-hits)))))
     (testing "checkers should repeat in y"
@@ -113,7 +115,7 @@
             expected-values  [white     white      black]
             prepared-hits (map (fn [p]
                                  {:shape {:material {:pattern checkers}
-                                          :matrix I₄}
+                                          :transform I₄}
                                   :over-point p}) points)]
         (is (≈ expected-values (map #(color-for %) prepared-hits)))))
     (testing "checkers should repeat in z"
@@ -121,6 +123,6 @@
             expected-values  [white     white      black]
             prepared-hits (map (fn [p]
                                {:shape {:material {:pattern checkers}
-                                        :matrix I₄}
+                                        :transform I₄}
                                 :over-point p}) points)]
         (is (≈ expected-values (map #(color-for %) prepared-hits)))))))

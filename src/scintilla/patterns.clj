@@ -57,7 +57,7 @@
   [{:keys [surface-point] :as prepared-hit}]
   (let [{:keys [color-1 color-2]} (get-in prepared-hit [:shape :material :pattern])
         pattern-transform         (get-in prepared-hit [:shape :material :pattern :transform])
-        object-transform          (get-in prepared-hit [:shape :matrix])
+        object-transform          (get-in prepared-hit [:shape :transform])
         pattern-space-point       (->> surface-point
                                        (m/tuple-times (m/inverse object-transform))
                                        (m/tuple-times (m/inverse pattern-transform)))
@@ -69,7 +69,7 @@
   [{:keys [surface-point] :as prepared-hit}]
   (let [{:keys [color-1 color-2]} (get-in prepared-hit [:shape :material :pattern])
         pattern-transform         (get-in prepared-hit [:shape :material :pattern :transform])
-        object-transform          (get-in prepared-hit [:shape :matrix])
+        object-transform          (get-in prepared-hit [:shape :transform])
         pattern-space-point       (->> surface-point
                                        (m/tuple-times (m/inverse object-transform))
                                        (m/tuple-times (m/inverse pattern-transform)))
@@ -89,7 +89,7 @@
   ;;    http://forum.raytracerchallenge.com/post/34
   (let [{:keys [color-1 color-2]} (get-in prepared-hit [:shape :material :pattern])
         pattern-transform         (get-in prepared-hit [:shape :material :pattern :transform])
-        object-transform          (get-in prepared-hit [:shape :matrix])
+        object-transform          (get-in prepared-hit [:shape :transform])
         pattern-space-point       (->> over-point
                                        (m/tuple-times (m/inverse object-transform))
                                        (m/tuple-times (m/inverse pattern-transform)))
@@ -103,7 +103,7 @@
   [{:keys [surface-point] :as prepared-hit}]
   (let [{:keys [color-1 color-2]} (get-in prepared-hit [:shape :material :pattern])
         pattern-transform         (get-in prepared-hit [:shape :material :pattern :transform])
-        object-transform          (get-in prepared-hit [:shape :matrix])
+        object-transform          (get-in prepared-hit [:shape :transform])
         pattern-space-point       (->> surface-point
                                        (m/tuple-times (m/inverse object-transform))
                                        (m/tuple-times (m/inverse pattern-transform)))
