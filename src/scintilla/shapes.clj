@@ -9,8 +9,8 @@
 (def default-options
   {:material   a/default-material
    :transform  I₄
-   :capped?    false
-   :infinite?  true})
+   :minimum    (- Double/MAX_VALUE)
+   :maximum    Double/MAX_VALUE})
 
 (defn make-shape
   [shape-type options]
@@ -91,7 +91,7 @@
        [(make-intersection (- (/ py dy)) shape)])))
 
 (defmethod intersections-for :cylinder
-  [{:keys [transform] :as shape} ray]
+  [{:keys [transform minimum maximum] :as shape} ray]
   (let [{:keys [point direction] :as local-ray} (r/transform ray (m/inverse transform))
         {[px _ pz _] :point
          [dx _ dz _] :direction} local-ray
@@ -101,8 +101,11 @@
       []
       (let [b     (* 2 (+ (* px dx) (* pz dz)))
             c     (+ (* px px) (* pz pz) -1)
-            tvals (quadratic-roots-for a b c)]
-        (map #(make-intersection % shape) tvals)))))
+            roots (quadratic-roots-for a b c)
+            ts    (filter (fn [root]
+                            (let [[_ y _ _ :as p] (r/position ray root)]
+                              (< minimum y maximum))) roots)]
+        (map #(make-intersection % shape) ts)))))
 
 (defn- check-axis
   "Helper function for computing minimum and maximum

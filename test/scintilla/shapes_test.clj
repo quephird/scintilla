@@ -135,13 +135,33 @@
       (is (every? empty? (map #(intersections-for cylinder %) rays)))))
   (testing "ray strikes a cylinder"
     (let [cylinder        (make-cylinder)
-          points          [[1 0 -5 1] [0 0 -5 1] [0.5 0 -5]]
+          points          [[1 0 -5 1] [0 0 -5 1] [0.5 0 -5 1]]
           directions      [[0 0 1 0] [0 0 1 0] [0.1 1 1 0]]
           rays            (map #(r/make-ray %1 (u/normalize %2)) points directions)
           expected-values [[5] [4 6] [6.80798 7.08872]]]
       (is (≈ expected-values (->> rays
                                (map #(intersections-for cylinder %))
-                               (map #(map :t %))))))))
+                               (map #(map :t %)))))))
+  (testing "Intersecting a constrained cylinder"
+    (let [cylinder        (make-cylinder {:minimum 1
+                                          :maximum 2})
+          points          [[0 1.5 0 1]
+                           [0 3 -5 1]
+                           [0 0 -5 1]
+                           [0 2 -5 1]
+                           [0 1 -5 1]
+                           [0 1.5 -2 1]]
+          directions      [[0.1 1 0 0]
+                           [0 0 1 0]
+                           [0 0 1 0]
+                           [0 0 1 0]
+                           [0 0 1 0]
+                           [0 0 1 0]]
+          rays            (map #(r/make-ray %1 (u/normalize %2)) points directions)
+          expected-counts [0 0 0 0 0 2]]
+      (is (≈ expected-counts (->> rays
+                                  (map #(intersections-for cylinder %))
+                                  (map count)))))))
 
 (deftest testing-normal-for-sphere
   (testing "the normal on a sphere at a point on the x axis"
