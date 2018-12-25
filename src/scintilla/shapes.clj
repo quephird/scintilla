@@ -1,7 +1,7 @@
 (ns scintilla.shapes
   (:require [scintilla.materials :as a]
             [scintilla.matrix :refer [I₄] :as m]
-            [scintilla.numeric :refer [ε]]
+            [scintilla.numeric :refer [ε ≈]]
             [scintilla.patterns :as p]
             [scintilla.ray :as r]
             [scintilla.tuple :as u]))
@@ -10,7 +10,7 @@
   {:material   a/default-material
    :transform  I₄
    :capped?    false
-   :infinite?  false})
+   :infinite?  true})
 
 (defn make-shape
   [shape-type options]
@@ -36,6 +36,12 @@
   "The default plane lies in the 𝑥𝑧 plane."
   [& options]
   (make-shape :plane (into {} options)))
+
+(defn make-cylinder
+  "The default cylinder is centered at the world origin,
+   has radius 1, and has infinite length along the y-axis."
+  [& options]
+  (make-shape :cylinder (into {} options)))
 
 (defn- quadratic-roots-for
   "Helper function to determine the set of real roots to the quadratic equation:
@@ -83,6 +89,20 @@
      (if (> ε (Math/abs dy))
        []
        [(make-intersection (- (/ py dy)) shape)])))
+
+(defmethod intersections-for :cylinder
+  [{:keys [transform] :as shape} ray]
+  (let [{:keys [point direction] :as local-ray} (r/transform ray (m/inverse transform))
+        {[px _ pz _] :point
+         [dx _ dz _] :direction} local-ray
+         a                       (+ (* dx dx) (* dz dz))]
+    (if (≈ 0.0 a)
+      ;; this means the ray is parallel to the y axis
+      []
+      (let [b     (* 2 (+ (* px dx) (* pz dz)))
+            c     (+ (* px px) (* pz pz) -1)
+            tvals (quadratic-roots-for a b c)]
+        (map #(make-intersection % shape) tvals)))))
 
 (defn- check-axis
   "Helper function for computing minimum and maximum

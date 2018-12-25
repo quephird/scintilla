@@ -3,7 +3,8 @@
             [scintilla.numeric :refer [≈]]
             [scintilla.ray :as r]
             [scintilla.shapes :refer :all]
-            [scintilla.transformation :as t]))
+            [scintilla.transformation :as t]
+            [scintilla.tuple :as u]))
 
 (deftest testing-intersections-for-sphere
   (testing "a ray that intersects a sphere at two points"
@@ -108,7 +109,7 @@
                              (map #(intersections-for cube %))
                              (map #(map :t %)))]
       (is (≈ expected-values actual-values))))
-  (testing "rays intersecting the cube twice"
+  (testing "rays missing the cube"
     (let [cube       (make-cube)
           points     [[-2.0  0.0  0.0 1]
                       [ 0.0 -2.0  0.0 1]
@@ -122,17 +123,16 @@
                       [ 0.0     0.0    -1.0    0]
                       [ 0.0    -1.0     0.0    0]
                       [-1.0     0.0     0.0    0]]
-          rays       (map #(r/make-ray %1 %2) points directions)
-          expected-values [[]
-                           []
-                           []
-                           []
-                           []
-                           []]
-          actual-values (->> rays
-                             (map #(intersections-for cube %))
-                             (map #(map :t %)))]
-      (is (= expected-values actual-values)))))
+          rays       (map #(r/make-ray %1 %2) points directions)]
+      (is (every? empty? (map #(intersections-for cube %) rays))))))
+
+(deftest testing-intersections-for-cylinder
+  (testing "rays missing a cylinder"
+    (let [cylinder   (make-cylinder)
+          points     [[1 0 0 1] [0 0 0 1] [0 0 -5 0]]
+          directions [[0 1 0 0] [0 1 0 0] [1 1 1 0]]
+          rays       (map #(r/make-ray %1 (u/normalize %2)) points directions)]
+      (is (every? empty? (map #(intersections-for cylinder %) rays))))))
 
 (deftest testing-normal-for-sphere
   (testing "the normal on a sphere at a point on the x axis"
