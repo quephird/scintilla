@@ -186,6 +186,10 @@
       (= max-coordinate (Math/abs z))
         [0 0 z 0])))
 
+(defmethod local-normal-for :cylinder
+  [_ [x _ z _ :as local-point]]
+  [x 0 z 0])
+
 (defn normal-for
   "This is the 'public' interface for computing the normal
    vector for any arbitrary type of shape. It first converts

@@ -132,7 +132,16 @@
           points     [[1 0 0 1] [0 0 0 1] [0 0 -5 0]]
           directions [[0 1 0 0] [0 1 0 0] [1 1 1 0]]
           rays       (map #(r/make-ray %1 (u/normalize %2)) points directions)]
-      (is (every? empty? (map #(intersections-for cylinder %) rays))))))
+      (is (every? empty? (map #(intersections-for cylinder %) rays)))))
+  (testing "ray strikes a cylinder"
+    (let [cylinder        (make-cylinder)
+          points          [[1 0 -5 1] [0 0 -5 1] [0.5 0 -5]]
+          directions      [[0 0 1 0] [0 0 1 0] [0.1 1 1 0]]
+          rays            (map #(r/make-ray %1 (u/normalize %2)) points directions)
+          expected-values [[5] [4 6] [6.80798 7.08872]]]
+      (is (≈ expected-values (->> rays
+                               (map #(intersections-for cylinder %))
+                               (map #(map :t %))))))))
 
 (deftest testing-normal-for-sphere
   (testing "the normal on a sphere at a point on the x axis"
@@ -196,3 +205,10 @@
                            [ 1  0  0]
                            [-1  0  0]]]
       (is (≈ expected-values (map #(normal-for cube %) points))))))
+
+(deftest testing-normal-for-cylinder
+  (testing "Normal vector on a cylinder"
+    (let [cylinder        (make-cylinder)
+          points          [[1 0 0 1] [0 5 -1 1] [0 -2 1 1] [-1 1 0 1]]
+          expected-values [[1 0 0 0] [0 0 -1 0] [0 0 1 0] [-1 0 0 0]]]
+      (is (≈ expected-values (map #(normal-for cylinder %) points))))))
