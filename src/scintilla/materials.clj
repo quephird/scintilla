@@ -15,6 +15,7 @@
   [overrides]
   (merge default-material overrides))
 
+;; TODO: Get rid of these; they're not useful anymore
 (defn set-ambient
   [material ambient]
   (assoc material :ambient ambient))

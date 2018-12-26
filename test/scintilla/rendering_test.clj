@@ -18,9 +18,10 @@
                                            :specular 0.2
                                            :shininess 200
                                            :pattern nil})
-          sphere1        (s/make-sphere material1)
+          sphere1        (s/make-sphere {:material material1})
           transform2     (t/scaling-matrix 0.5 0.5 0.5)
-          sphere2        (s/make-sphere a/default-material transform2)
+          sphere2        (s/make-sphere {:material a/default-material
+                                         :transform transform2})
           scene          (e/make-scene [sphere1 sphere2] l/default-light)
           from           [0 0 -5 1]
           to             [0 0 0 1]
