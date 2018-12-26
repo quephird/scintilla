@@ -229,3 +229,30 @@
                                                     [0 1 0 0])
         camera         (c/make-camera 400 400 π⟋3 view-transform)]
     (r/render-to-file camera scene "cube-with-light.ppm")))
+
+(defn cylinder-with-plane
+  []
+  (let [checkers        (p/make-checker-pattern [1 1 1] [0 0 0])
+        floor-material  (a/make-material {:color   nil
+                                          :pattern checkers})
+        floor-transform (t/translation-matrix 0 -1.5 0)
+        floor           (s/make-plane {:material floor-material
+                                       :transform floor-transform})
+
+        transform      (t/scaling-matrix 1.5 3 1.5)
+        material       (a/make-material {:color [0 0 1]
+                                         :shininess 20})
+        cylinder       (s/make-cylinder {:material material
+                                         :maximum 1.0
+                                         :minimum -1.0
+                                         :capped? true
+                                         :transform transform})
+
+        light          (l/make-light [-5 2 -5 1] [1 1 1])
+        scene          (e/make-scene [cylinder floor] light)
+
+        view-transform (t/view-transform-matrix-for [0 2 -8 1]
+                                                    [0 0 0 1]
+                                                    [0 1 0 0])
+        camera         (c/make-camera 400 400 π⟋3 view-transform)]
+    (r/render-to-file camera scene "cylinder-with-light.ppm")))

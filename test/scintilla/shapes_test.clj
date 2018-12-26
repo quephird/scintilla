@@ -246,8 +246,25 @@
       (is (≈ expected-values (map #(normal-for cube %) points))))))
 
 (deftest testing-normal-for-cylinder
-  (testing "Normal vector on a cylinder"
+  (testing "normal vector on the cylinder wall"
     (let [cylinder        (make-cylinder)
           points          [[1 0 0 1] [0 5 -1 1] [0 -2 1 1] [-1 1 0 1]]
           expected-values [[1 0 0 0] [0 0 -1 0] [0 0 1 0] [-1 0 0 0]]]
+      (is (≈ expected-values (map #(normal-for cylinder %) points)))))
+  (testing "normal vector on the cylinder's caps"
+    (let [cylinder        (make-cylinder {:minimum 1
+                                          :maximum 2
+                                          :capped? true})
+          points          [[0 1 0 1]
+                           [0.5 1 0 1]
+                           [0 1 0.5 1]
+                           [0 2 0 1]
+                           [0.5 2 0 1]
+                           [0 2 0.5 1]]
+          expected-values [[0 -1 0 0]
+                           [0 -1 0 0]
+                           [0 -1 0 0]
+                           [0 1 0 0]
+                           [0 1 0 0]
+                           [0 1 0 0]]]
       (is (≈ expected-values (map #(normal-for cylinder %) points))))))

@@ -206,8 +206,16 @@
         [0 0 z 0])))
 
 (defmethod local-normal-for :cylinder
-  [_ [x _ z _ :as local-point]]
-  [x 0 z 0])
+  [{:keys [minimum maximum] :as shape}
+   [x y z _ :as local-point]]
+  (let [distance-squared (+ (* x x) (* z z))]
+    (cond
+      (and (< distance-squared 1) (>= y (- maximum ε)))
+        [0 1 0 0]
+      (and (< distance-squared 1) (<= y (+ minimum ε)))
+        [0 -1 0 0]
+      :else
+        [x 0 z 0])))
 
 (defn normal-for
   "This is the 'public' interface for computing the normal
