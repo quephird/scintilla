@@ -10,7 +10,8 @@
   {:material   a/default-material
    :transform  I₄
    :minimum    (- Double/MAX_VALUE)
-   :maximum    Double/MAX_VALUE})
+   :maximum    Double/MAX_VALUE
+   :capped?    false})
 
 (defn make-shape
   [shape-type options]
@@ -90,22 +91,37 @@
        []
        [(make-intersection (- (/ py dy)) shape)])))
 
+(defn- inside-cap?
+  [{[px _ pz _] :point [dx _ dz _] :direction :as ray} t]
+  (>= 1 (+ (Math/pow (+ px (* t dx)) 2.0) (Math/pow (+ pz (* t dz)) 2.0))))
+
+(defn- intersections-for-cylinder-caps
+  [{:keys [capped? minimum maximum] :as cylinder}
+   {[px py pz _] :point [dx dy dz _] :direction :as ray}]
+  (if (or (not capped?) (≈ 0.0 dy))
+    []
+    (->> [minimum maximum]
+         (map #(/ (- % py) dy))
+         (filter #(inside-cap? ray %))
+         (map #(make-intersection % cylinder)))))
+
+(defn- intersections-for-cylinder-wall
+  [{:keys [transform minimum maximum] :as shape}
+   {[px _ pz _] :point [dx _ dz _] :direction :as ray}]
+   (let [a     (+ (* dx dx) (* dz dz))
+         b     (* 2 (+ (* px dx) (* pz dz)))
+         c     (+ (* px px) (* pz pz) -1)
+         roots (quadratic-roots-for a b c)
+         ts    (filter (fn [root]
+                         (let [[_ y _ _ :as p] (r/position ray root)]
+                           (< minimum y maximum))) roots)]
+     (map #(make-intersection % shape) ts)))
+
 (defmethod intersections-for :cylinder
   [{:keys [transform minimum maximum] :as shape} ray]
-  (let [{:keys [point direction] :as local-ray} (r/transform ray (m/inverse transform))
-        {[px _ pz _] :point
-         [dx _ dz _] :direction} local-ray
-         a                       (+ (* dx dx) (* dz dz))]
-    (if (≈ 0.0 a)
-      ;; this means the ray is parallel to the y axis
-      []
-      (let [b     (* 2 (+ (* px dx) (* pz dz)))
-            c     (+ (* px px) (* pz pz) -1)
-            roots (quadratic-roots-for a b c)
-            ts    (filter (fn [root]
-                            (let [[_ y _ _ :as p] (r/position ray root)]
-                              (< minimum y maximum))) roots)]
-        (map #(make-intersection % shape) ts)))))
+  (let [{:keys [point direction] :as local-ray} (r/transform ray (m/inverse transform))]
+    (concat (intersections-for-cylinder-wall shape local-ray)
+            (intersections-for-cylinder-caps shape local-ray))))
 
 (defn- check-axis
   "Helper function for computing minimum and maximum

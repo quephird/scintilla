@@ -142,7 +142,7 @@
       (is (≈ expected-values (->> rays
                                (map #(intersections-for cylinder %))
                                (map #(map :t %)))))))
-  (testing "Intersecting a constrained cylinder"
+  (testing "intersecting a constrained cylinder"
     (let [cylinder        (make-cylinder {:minimum 1
                                           :maximum 2})
           points          [[0 1.5 0 1]
@@ -159,6 +159,25 @@
                            [0 0 1 0]]
           rays            (map #(r/make-ray %1 (u/normalize %2)) points directions)
           expected-counts [0 0 0 0 0 2]]
+      (is (≈ expected-counts (->> rays
+                                  (map #(intersections-for cylinder %))
+                                  (map count))))))
+  (testing "intersecting the caps of a closed cylinder"
+    (let [cylinder        (make-cylinder {:minimum 1
+                                          :maximum 2
+                                          :capped? true})
+          points          [[0 3 0 1]
+                           [0 3 -2 1]
+                           [0 4 -2 1]
+                           [0 0 -2 1]
+                           [0 -1 -2 1]]
+          directions      [[0 -1 0 0]
+                           [0 -1 2 0]
+                           [0 -1 1 0]
+                           [0 1 2 0]
+                           [0 1 1 0]]
+          rays            (map #(r/make-ray %1 (u/normalize %2)) points directions)
+          expected-counts [2 2 2 2 2]]
       (is (≈ expected-counts (->> rays
                                   (map #(intersections-for cylinder %))
                                   (map count)))))))
