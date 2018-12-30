@@ -143,6 +143,26 @@
         camera         (c/make-camera 400 200 π⟋3 view-transform)]
     (r/render-to-file camera scene "sphere-with-stripes-on-plane.ppm")))
 
+(defn sphere-with-gradient-on-plane
+  []
+  (let [floor-material (a/make-material {:color [1 0.9 0.9]
+                                         :specular 0.0})
+        floor          (s/make-plane {:material floor-material})
+
+        p-transform    (t/rotation-y-matrix (+ π⟋6))
+        gradient       (p/make-gradient-pattern [1 0.5 0] [0 0 1] p-transform)
+        o-material     (a/make-material {:pattern gradient})
+        o-transform    (t/translation-matrix 0 1 1.5)
+        sphere         (s/make-sphere {:material o-material
+                                       :transform o-transform})
+
+        scene          (e/make-scene [sphere floor] l/default-light)
+        view-transform (t/view-transform-matrix-for [0 1.5 -5 1]
+                                                    [0 1 0 1]
+                                                    [0 1 0 0])
+        camera         (c/make-camera 400 200 π⟋3 view-transform)]
+    (r/render-to-file camera scene "sphere-with-gradient-on-plane.ppm")))
+
 (defn three-patterned-spheres-on-plane
   []
   (let [transform      (t/rotation-y-matrix π⟋6)

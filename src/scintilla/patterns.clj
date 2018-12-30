@@ -108,4 +108,4 @@
                                        (m/tuple-times (m/inverse object-transform))
                                        (m/tuple-times (m/inverse pattern-transform)))
         [x _ _ _]                 pattern-space-point]
-    (c/add color-1 color-2 (c/scalar-times (c/subtract color-2 color-1) x))))
+    (c/add color-1 (c/scalar-times (c/subtract color-2 color-1) x))))
