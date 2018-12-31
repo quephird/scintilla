@@ -299,3 +299,12 @@
                            [0 1 0 0]
                            [0 1 0 0]]]
       (is (≈ expected-values (map #(normal-for cylinder %) points))))))
+
+(deftest testing-normal-for-cone
+  (testing "normal vector on a cone"
+    (let [cone            (make-cone)
+          points          [[1 1 1 1]
+                           [-1 -1 0 1]]
+          expected-values [[0.5 -0.70711 0.5 0]
+                           [-0.70711 0.70711 0 0]]]
+      (is (≈ expected-values (map #(normal-for cone %) points))))))

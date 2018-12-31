@@ -266,6 +266,20 @@
       :else
         [x 0 z 0])))
 
+(defmethod local-normal-for :cone
+  [{:keys [minimum maximum] :as shape}
+   [x y z _ :as local-point]]
+  (let [distance-squared (+ (* x x) (* z z))]
+    (cond
+      (and (< distance-squared 1) (>= y (- maximum ε)))
+        [0 1 0 0]
+      (and (< distance-squared 1) (<= y (+ minimum ε)))
+        [0 -1 0 0]
+      (> y 0)
+        [x (- (Math/sqrt distance-squared)) z 0]
+      :else
+        [x (Math/sqrt distance-squared) z 0])))
+
 (defn normal-for
   "This is the 'public' interface for computing the normal
    vector for any arbitrary type of shape. It first converts
