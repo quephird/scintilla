@@ -44,6 +44,12 @@
   [& options]
   (make-shape :cylinder (into {} options)))
 
+(defn make-cone
+  "The default cylinder is centered at the world origin,
+   has radius 1, and has infinite length along the y-axis."
+  [& options]
+  (make-shape :cone (into {} options)))
+
 (defn- quadratic-roots-for
   "Helper function to determine the set of real roots to the quadratic equation:
    𝑎𝑥² + 𝑏𝑥 + 𝑐 = 𝟢"
@@ -92,8 +98,13 @@
        [(make-intersection (- (/ py dy)) shape)])))
 
 (defn- inside-cap?
-  [{[px _ pz _] :point [dx _ dz _] :direction :as ray} t]
-  (>= 1 (+ (Math/pow (+ px (* t dx)) 2.0) (Math/pow (+ pz (* t dz)) 2.0))))
+  "This function is shared for both cones and cyinders,
+   and determines whether the point at the end of the ray
+   passed in, and after traveling distance t, is inside
+   the cap with radius r."
+  [ray t r]
+  (let [[x _ z _] (r/position ray t)]
+    (>= (* r r) (+ (* x x) (* z z)))))
 
 (defn- intersections-for-cylinder-caps
   [{:keys [capped? minimum maximum] :as cylinder}
@@ -102,7 +113,7 @@
     []
     (->> [minimum maximum]
          (map #(/ (- % py) dy))
-         (filter #(inside-cap? ray %))
+         (filter #(inside-cap? ray % 1.0))
          (map #(make-intersection % cylinder)))))
 
 (defn- intersections-for-cylinder-wall
@@ -122,6 +133,44 @@
   (let [{:keys [point direction] :as local-ray} (r/transform ray (m/inverse transform))]
     (concat (intersections-for-cylinder-wall shape local-ray)
             (intersections-for-cylinder-caps shape local-ray))))
+
+(defn- intersections-for-cone-caps
+  [{:keys [capped? minimum maximum] :as cone}
+   {[_ py _ _] :point [_ dy _ _] :direction :as ray}]
+  (if (or (not capped?) (≈ 0.0 dy))
+    []
+    (let [candidate-ts    (map #(/ (- % py) dy) [minimum maximum])
+          ;; Compute t values based on min and max y values
+          radii           (map #(Math/abs %) [minimum maximum])
+          args            (map #(vector ray %1 %2) candidate-ts radii)
+          ;; Tuple up the ray with each radius and position
+          filtered-tuples (filter #(apply inside-cap? %) args)
+          ;; Filter out the ones not inside the caps for each y value
+          ts              (map second filtered-tuples)]
+      (map #(make-intersection % cone) ts))))
+
+(defn- intersections-for-cone-wall
+  [{:keys [transform minimum maximum] :as shape}
+   {[px py pz _] :point [dx dy dz _] :direction :as ray}]
+   (let [a     (+ (* dx dx) (* -1.0 dy dy) (* dz dz))
+         b     (* 2 (+ (* px dx) (* -1.0 py dy) (* pz dz)))
+         c     (+ (* px px) (* -1.0 py py) (* pz pz))
+         ts    (cond
+                 (and (zero? a) (zero? b))
+                   []
+                 (zero? a)
+                   [(/ c (* -2.0 b))]
+                 :else
+                   (filter (fn [root]
+                             (let [[_ y _ _ :as p] (r/position ray root)]
+                               (< minimum y maximum))) (quadratic-roots-for a b c)))]
+     (map #(make-intersection % shape) ts)))
+
+(defmethod intersections-for :cone
+  [{:keys [transform minimum maximum] :as shape} ray]
+  (let [{:keys [point direction] :as local-ray} (r/transform ray (m/inverse transform))]
+    (concat (intersections-for-cone-wall shape local-ray)
+            (intersections-for-cone-caps shape local-ray))))
 
 (defn- check-axis
   "Helper function for computing minimum and maximum
