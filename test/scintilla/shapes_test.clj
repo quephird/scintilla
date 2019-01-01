@@ -140,8 +140,8 @@
           rays            (map #(r/make-ray %1 (u/normalize %2)) points directions)
           expected-values [[5] [4 6] [6.80798 7.08872]]]
       (is (≈ expected-values (->> rays
-                               (map #(intersections-for cylinder %))
-                               (map #(map :t %)))))))
+                                  (map #(intersections-for cylinder %))
+                                  (map #(map :t %)))))))
   (testing "intersecting a constrained cylinder"
     (let [cylinder        (make-cylinder {:minimum 1
                                           :maximum 2})
@@ -180,6 +180,37 @@
           expected-counts [2 2 2 2 2]]
       (is (≈ expected-counts (->> rays
                                   (map #(intersections-for cylinder %))
+                                  (map count)))))))
+
+(deftest testing-intersections-for-cone
+  (testing "ray intersecting a cone"
+    (let [cone            (make-cone)
+          points          [[0 0 -5 1] [0 0 -5 1] [1 1 -5 0]]
+          directions      [[0 0 1 0] [1 1 1 0] [-0.5 -1 1 0]]
+          rays            (map #(r/make-ray %1 (u/normalize %2)) points directions)
+          expected-values [[5] [8.66025] [4.55006 49.44994]]
+          actual-values (->> rays
+                             (map #(intersections-for cone %))
+                             (map #(map :t %)))]
+      (is (≈ expected-values actual-values))))
+  (testing "rays intersecting a cone with a ray parallel to one of its halves"
+    (let [cone            (make-cone)
+          point           [0 0 -1 1]
+          direction       [0 1 1 0]
+          ray             (r/make-ray point (u/normalize direction))]
+      (is (≈ [0.35355] (->> ray
+                            (intersections-for cone)
+                            (map :t))))))
+  (testing "rays intersecting a cone and its caps"
+    (let [cone            (make-cone {:capped? true
+                                      :minimum -0.5
+                                      :maximum 0.5})
+          points          [[0 0 -5 1] [0 0 -0.25 1] [0 0 -0.25 1]]
+          directions      [[0 1 0 0] [0 1 1 0] [0 1 0 0]]
+          rays            (map #(r/make-ray %1 (u/normalize %2)) points directions)
+          expected-values [0 2 4]]
+      (is (≈ expected-values (->> rays
+                                  (map #(intersections-for cone %))
                                   (map count)))))))
 
 (deftest testing-normal-for-sphere
@@ -268,3 +299,12 @@
                            [0 1 0 0]
                            [0 1 0 0]]]
       (is (≈ expected-values (map #(normal-for cylinder %) points))))))
+
+(deftest testing-normal-for-cone
+  (testing "normal vector on a cone"
+    (let [cone            (make-cone)
+          points          [[1 1 1 1]
+                           [-1 -1 0 1]]
+          expected-values [[0.5 -0.70711 0.5 0]
+                           [-0.70711 0.70711 0 0]]]
+      (is (≈ expected-values (map #(normal-for cone %) points))))))

@@ -100,6 +100,8 @@
     (if even-square? color-1 color-2)))
 
 (defmethod color-for :gradient
+  ;; Note that the gradient is along the x-axis of pattern space
+  ;; and is scaled from 0 to 1.
   [{:keys [surface-point] :as prepared-hit}]
   (let [{:keys [color-1 color-2]} (get-in prepared-hit [:shape :material :pattern])
         pattern-transform         (get-in prepared-hit [:shape :material :pattern :transform])
