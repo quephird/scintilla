@@ -250,7 +250,7 @@
         camera         (c/make-camera 400 400 π⟋3 view-transform)]
     (r/render-to-file camera scene "cube-with-light.ppm")))
 
-(defn cylinder-with-plane
+(defn cylinder-on-plane
   []
   (let [checkers        (p/make-checker-pattern [1 1 1] [0 0 0])
         floor-material  (a/make-material {:color   nil
@@ -275,4 +275,33 @@
                                                     [0 0 0 1]
                                                     [0 1 0 0])
         camera         (c/make-camera 400 400 π⟋3 view-transform)]
-    (r/render-to-file camera scene "cylinder-with-light.ppm")))
+    (r/render-to-file camera scene "cylinder-on-plane.ppm")))
+
+(defn cone-on-plane
+  []
+  (let [checkers        (p/make-checker-pattern [1 1 1] [0 0 0])
+        floor-material  (a/make-material {:color   nil
+                                          :pattern checkers})
+        floor-transform (t/translation-matrix 0 -0.5 0)
+        floor           (s/make-plane {:material floor-material
+                                       :transform floor-transform})
+
+        transform      (m/matrix-times
+                        (t/translation-matrix 0 2.5 0)
+                        (t/scaling-matrix 1 3 1))
+        material       (a/make-material {:color [1 0.8 0]
+                                         :shininess 20})
+        cone           (s/make-cone {:material material
+                                     :maximum 0.0
+                                     :minimum -1.0
+                                     :capped? true
+                                     :transform transform})
+
+        light          (l/make-light [-5 5 -5 1] [1 1 1])
+        scene          (e/make-scene [cone floor] light)
+
+        view-transform (t/view-transform-matrix-for [0 2 -5 1]
+                                                    [0 0 0 1]
+                                                    [0 1 0 0])
+        camera         (c/make-camera 400 400 π⟋3 view-transform)]
+    (r/render-to-file camera scene "cone-on-plane.ppm")))
