@@ -8,19 +8,33 @@
 
 (defn make-scene
   [objects light]
-  {:objects objects
-   :light light})
+  {:objects     objects
+   :light       light})
 
 (defn add-objects
   [scene objects]
   (update-in scene [:objects] concat objects))
 
+(defmulti intersections-for
+  (fn [object _] (:object-type object)))
+
+(defmethod intersections-for :group
+  [{:keys [objects transform] :as group} ray]
+  (let [local-ray (r/transform ray (m/inverse transform))]
+    (->> objects
+         (map #(intersections-for % local-ray))
+         (apply concat))))
+
+(defmethod intersections-for :shape
+  [shape ray]
+  (s/intersections-for shape ray))
+
 (defn all-intersections-for
   "Returns the set of all intersections that the given ray
-   makes with the set of objects in the given world."
+   makes with the set of objects in the given scene."
   [{:keys [objects] :as scene} ray]
   (->> objects
-       (map #(s/intersections-for % ray))
+       (map #(intersections-for % ray))
        (apply concat)
        (sort-by :t)))
 

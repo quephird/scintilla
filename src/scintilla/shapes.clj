@@ -11,11 +11,13 @@
    :transform  I₄
    :minimum    (- Double/MAX_VALUE)
    :maximum    Double/MAX_VALUE
-   :capped?    false})
+   :capped?    false
+   :parent     nil})
 
 (defn make-shape
   [shape-type options]
-  (merge {:shape-type shape-type}
+  (merge {:object-type :shape
+          :shape-type shape-type}
          default-options
          options))
 
