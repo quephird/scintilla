@@ -69,7 +69,7 @@
           ray               (r/make-ray [10 0 -10 1] [0 0 1 0])
           scene             (make-scene [transformed-group] l/default-light)
           intersections     (all-intersections-for scene ray)]
-      (is (= 2 (count intersections))))))
+      (is (= 3 (count intersections))))))
 
 (deftest testing-find-hit
   (testing "when all intersections have positive t"
