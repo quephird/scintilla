@@ -7,12 +7,12 @@
             [scintilla.tuple :as u]))
 
 (def default-options
-  {:material   a/default-material
-   :transform  I₄
-   :minimum    (- Double/MAX_VALUE)
-   :maximum    Double/MAX_VALUE
-   :capped?    false
-   :parent     nil})
+  {:material        a/default-material
+   :transform       I₄
+   :minimum         (- Double/MAX_VALUE)
+   :maximum         Double/MAX_VALUE
+   :capped?         false
+   :group-transform I₄})
 
 (defn make-shape
   [shape-type options]

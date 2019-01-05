@@ -34,13 +34,15 @@
           scene       (make-scene [empty-group] l/default-light)]
       (is (= [] (all-intersections-for scene ray)))))
   (testing "a non-empty group"
-    (let [sphere-1        (s/make-sphere)
+    (let [sphere-1        (s/make-sphere {:name "sphere 1"})
 
           transform-2     (t/translation-matrix 0 0 -3)
-          sphere-2        (s/make-sphere {:transform transform-2})
+          sphere-2        (s/make-sphere {:transform transform-2
+                                          :name "sphere 2"})
 
           transform-3     (t/translation-matrix 5 0 0)
-          sphere-3        (s/make-sphere {:transform transform-3})
+          sphere-3        (s/make-sphere {:transform transform-3
+                                          :name "sphere 3"})
 
           three-spheres   (-> (g/make-group)
                               (g/add-children [sphere-1 sphere-2 sphere-3]))
@@ -48,16 +50,15 @@
           ray             (r/make-ray [0 0 -5 1] [0 0 1 0])
           scene           (make-scene [three-spheres] l/default-light)
           intersections   (all-intersections-for scene ray)
-          expected-values [sphere-2 sphere-2 sphere-1 sphere-1]]
-      ;; ACHTUNG!!! We're nilling out he parent attribute for each
-      ;; of the shape maps because we can no longer naively compare
-      ;; them to the original shape maps _before_ they were added to
-      ;; the group. I _really_ want to avoid having to manage ID's
-      ;; because up until now I still haven't needed them for the
-      ;; actual functionality of the ray tracer itself.
+          expected-values ["sphere 2" "sphere 2" "sphere 1" "sphere 1"]]
+      ;; NOTA BENE: We cannot simply compare the original shapes with
+      ;; the ones after they've been added to the group because their
+      ;; :group-transform attributes will have been updated. We don't
+      ;; have object references or IDs to rely on so we use :name attributes
+      ;; just to be able to track objects for this test.
       (is (= expected-values (->> (all-intersections-for three-spheres ray)
                                   (map :shape)
-                                  (map #(assoc-in % [:parent] nil)))))))
+                                  (map :name))))))
   (testing "a transformed group"
     (let [transform-o       (t/translation-matrix 5 0 0)
           sphere            (s/make-sphere {:transform transform-o})
@@ -69,7 +70,7 @@
           ray               (r/make-ray [10 0 -10 1] [0 0 1 0])
           scene             (make-scene [transformed-group] l/default-light)
           intersections     (all-intersections-for scene ray)]
-      (is (= 3 (count intersections))))))
+      (is (= 2 (count intersections))))))
 
 (deftest testing-find-hit
   (testing "when all intersections have positive t"
