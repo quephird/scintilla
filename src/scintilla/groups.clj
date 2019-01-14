@@ -1,30 +1,48 @@
 (ns scintilla.groups
   (:require [scintilla.matrix :refer [I₄] :as m]))
 
+(declare transform-child)
+(declare transform-group)
+
+(defmulti transform-child
+  (fn [{:keys [object-type] :as object} _]
+    object-type))
+
+(defmethod transform-child :shape
+  [shape new-transform]
+  (update-in shape [:transform] (fn [old-transform]
+                                    (m/matrix-times new-transform old-transform))))
+
+(defmethod transform-child :group
+  [group new-transform]
+  (transform-group group new-transform))
+
+(defn transform-group
+  [{:keys [children] :as group} transform]
+  (let [transformed-children (map #(transform-child % transform) children)]
+    (assoc-in group [:children] transformed-children)))
+
 (defn make-group
-  ([]
-   (make-group I₄))
-  ([transform]
-   {:object-type :group
-    :objects     []
-    :transform   transform
-    :group-transform I₄}))
-
-(defmulti update-group-transform
-  (fn [child-object _] (:object-type child-object)))
-
-(defmethod update-group-transform :group
-  [{:keys [objects] :as child-group} group]
-  (let [new-grandchildren (map #(update-group-transform % group) objects)]
-    (-> child-group
-        (update-in [:group-transform] m/matrix-times (:transform group))
-        (assoc-in [:objects] new-grandchildren))))
-
-(defmethod update-group-transform :shape
-  [child-object group]
-  (update-in child-object [:group-transform] m/matrix-times (:transform group)))
+  "This function does _two_ things: maintaining a set of objects
+   which should be transformed together, as well as modifying the
+   individual transforms of each child object. This is done instead
+   of maintaining bidirectional references between parents and
+   children, which is not easily possible using raw Clojure maps
+   without resorting to some sort of tracking of IDs. This proves
+   to be a much simpler, and pure, way of accomplishing the same goals."
+  ([objects]
+   (make-group objects I₄))
+  ([objects transform]
+   (let [new-group {:object-type :group
+                    :children    objects}]
+     (transform-group new-group transform))))
 
 (defn add-children
-  [group objects]
-  (let [new-child-objects (map #(update-group-transform % group) objects)]
-    (update-in group [:objects] concat new-child-objects)))
+  [group new-objects]
+  (update-in group [:children] concat new-objects))
+
+;; TODO: Need to improve the API here for allowing
+;;       bulk updating of certain properties like:
+;;
+;;          set-material
+;;          set-color

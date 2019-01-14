@@ -16,14 +16,14 @@
   (update-in scene [:objects] concat objects))
 
 (defmulti intersections-for
-  (fn [object _] (:object-type object)))
+  (fn [{:keys [object-type] :as object} _]
+    object-type))
 
 (defmethod intersections-for :group
-  [{:keys [objects transform] :as group} ray]
-  (let [local-ray (r/transform ray (m/inverse transform))]
-    (->> objects
-         (map #(intersections-for % local-ray))
-         (apply concat))))
+  [{:keys [children] :as group} ray]
+  (->> children
+       (map #(intersections-for % ray))
+       (apply concat)))
 
 (defmethod intersections-for :shape
   [shape ray]
