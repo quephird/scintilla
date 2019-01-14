@@ -29,7 +29,7 @@
 
 (deftest testing-all-intersections-for-group
   (testing "group with no children"
-    (let [empty-group (g/make-group)
+    (let [empty-group (g/make-group [])
           ray         (r/make-ray [0 0 0 1] [0 0 1 0])
           scene       (make-scene [empty-group] l/default-light)]
       (is (= [] (all-intersections-for scene ray)))))
@@ -44,8 +44,7 @@
           sphere-3        (s/make-sphere {:transform transform-3
                                           :name "sphere 3"})
 
-          three-spheres   (-> (g/make-group)
-                              (g/add-children [sphere-1 sphere-2 sphere-3]))
+          three-spheres   (g/make-group [sphere-1 sphere-2 sphere-3])
 
           ray             (r/make-ray [0 0 -5 1] [0 0 1 0])
           scene           (make-scene [three-spheres] l/default-light)
@@ -56,7 +55,7 @@
       ;; :group-transform attributes will have been updated. We don't
       ;; have object references or IDs to rely on so we use :name attributes
       ;; just to be able to track objects for this test.
-      (is (= expected-values (->> (all-intersections-for three-spheres ray)
+      (is (= expected-values (->> (all-intersections-for scene ray)
                                   (map :shape)
                                   (map :name))))))
   (testing "a transformed group"
@@ -64,8 +63,7 @@
           sphere            (s/make-sphere {:transform transform-o})
 
           transform-g       (t/scaling-matrix 2 2 2)
-          transformed-group (-> (g/make-group transform-g)
-                                (g/add-children [sphere]))
+          transformed-group (g/make-group [sphere] transform-g)
 
           ray               (r/make-ray [10 0 -10 1] [0 0 1 0])
           scene             (make-scene [transformed-group] l/default-light)

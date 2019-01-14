@@ -288,17 +288,15 @@
    that coordinate system by deferring the specialized
    implementation for the shape, then transforms it back to the
    world coordinate system."
-  [{:keys [transform group-transform] :as shape} world-point]
+  [{:keys [transform] :as shape} world-point]
   (let [inverse-transform       (m/inverse transform)
         local-normal            (->> world-point
-;                                     (m/tuple-times inverse-group-transform)
                                      (m/tuple-times inverse-transform)
                                      (local-normal-for shape))]
     (as-> local-normal $
           (m/tuple-times (m/transpose inverse-transform) $)
           (assoc $ 3 0)  ;; TODO: This is a hack per the book; look for better way
-          (u/normalize $)
-          )))
+          (u/normalize $))))
 
 (defn color-for
   "This function either returns the simple color for the

@@ -23,13 +23,17 @@
     (assoc-in group [:children] transformed-children)))
 
 (defn make-group
-  "This function does _two_ things: maintaining a set of objects
-   which should be transformed together, as well as modifying the
-   individual transforms of each child object. This is done instead
-   of maintaining bidirectional references between parents and
+  "The approach here is much different from the one in the book.
+   Instead of maintaining bidirectional references between parents and
    children, which is not easily possible using raw Clojure maps
-   without resorting to some sort of tracking of IDs. This proves
-   to be a much simpler, and pure, way of accomplishing the same goals."
+   without resorting to some sort of tracking of IDs, we simply
+   maintain a tree of maps. Any time a group is transformed, that
+   matrix is immediately 'pushed' down the entire tree of shapes,
+   and pre-multiplied with the existing transform matrix on each.
+   We can get away with this here because there is no need for any
+   ad hoc navigation around the tree, or any other requirement to
+   select or 'mutate' any portion of the tree, or differentiate
+   between shape space and its group space."
   ([objects]
    (make-group objects I₄))
   ([objects transform]
