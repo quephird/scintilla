@@ -3,8 +3,7 @@
             [scintilla.ray :as r]
             [scintilla.scene :as e]
             [scintilla.shapes :as s]
-            [scintilla.tuple :as u]
-            [clojure.pprint :refer :all]))
+            [scintilla.tuple :as u]))
 
 (defn make-light
   [position intensity]

@@ -1,9 +1,12 @@
 (ns scintilla.shapes-test
   (:require [clojure.test :refer :all]
-            [scintilla.numeric :refer [≈]]
+            [scintilla.groups :as g]
+            [scintilla.numeric :refer :all]
             [scintilla.ray :as r]
             [scintilla.shapes :refer :all]
             [scintilla.transformation :as t]
+            [scintilla.scene :as e]
+            [scintilla.lighting :as l]
             [scintilla.tuple :as u]))
 
 (deftest testing-intersections-for-sphere
@@ -308,3 +311,21 @@
           expected-values [[0.5 -0.70711 0.5 0]
                            [-0.70711 0.70711 0 0]]]
       (is (≈ expected-values (map #(normal-for cone %) points))))))
+
+(deftest testing-normal-for-child-of-group
+  (testing "child object of nested group"
+    (let [sphere-transform      (t/translation-matrix 5 0 0)
+          sphere                (make-sphere {:transform sphere-transform})
+
+          inner-group-transform (t/scaling-matrix 1 2 3)
+          inner-group           (g/make-group [sphere] inner-group-transform)
+
+          outer-group-transform (t/rotation-y-matrix π⟋2)
+          outer-group           (g/make-group [inner-group] outer-group-transform)
+
+          ;; Note that we dig in for the doubly transformed sphere in order
+          ;; to perform a proper test below.
+          sphere'               (-> outer-group :children first :children first)
+
+          expected-value        [0.2857 0.4286 -0.8571 0]]
+      (is (≈ expected-value (normal-for sphere' [1.7321 1.1547 -5.5774 1]))))))

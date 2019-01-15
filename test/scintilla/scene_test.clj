@@ -1,5 +1,6 @@
 (ns scintilla.scene-test
   (:require [clojure.test :refer :all]
+            [scintilla.groups :as g]
             [scintilla.lighting :as l]
             [scintilla.materials :as a]
             [scintilla.numeric :refer [≈]]
@@ -8,7 +9,7 @@
             [scintilla.shapes :as s]
             [scintilla.transformation :as t]))
 
-(deftest testing-find-all-intersections
+(deftest testing-all-intersections-for-shape
   (testing "a ray that intersects a sphere at two points"
     (let [material1     (a/make-material {:color [0.8 1.0 0.6]
                                           :ambient 0.1
@@ -25,6 +26,49 @@
           intersections (all-intersections-for scene ray)]
       (is (= 4 (count intersections)))
       (is (≈ [4.0 4.5 5.5 6.0] (set (mapv :t intersections)))))))
+
+(deftest testing-all-intersections-for-group
+  (testing "group with no children"
+    (let [empty-group (g/make-group [])
+          ray         (r/make-ray [0 0 0 1] [0 0 1 0])
+          scene       (make-scene [empty-group] l/default-light)]
+      (is (= [] (all-intersections-for scene ray)))))
+  (testing "a non-empty group"
+    (let [sphere-1        (s/make-sphere {:name "sphere 1"})
+
+          transform-2     (t/translation-matrix 0 0 -3)
+          sphere-2        (s/make-sphere {:transform transform-2
+                                          :name "sphere 2"})
+
+          transform-3     (t/translation-matrix 5 0 0)
+          sphere-3        (s/make-sphere {:transform transform-3
+                                          :name "sphere 3"})
+
+          three-spheres   (g/make-group [sphere-1 sphere-2 sphere-3])
+
+          ray             (r/make-ray [0 0 -5 1] [0 0 1 0])
+          scene           (make-scene [three-spheres] l/default-light)
+          intersections   (all-intersections-for scene ray)
+          expected-values ["sphere 2" "sphere 2" "sphere 1" "sphere 1"]]
+      ;; NOTA BENE: We cannot simply compare the original shapes with
+      ;; the ones after they've been added to the group because their
+      ;; :group-transform attributes will have been updated. We don't
+      ;; have object references or IDs to rely on so we use :name attributes
+      ;; just to be able to track objects for this test.
+      (is (= expected-values (->> (all-intersections-for scene ray)
+                                  (map :shape)
+                                  (map :name))))))
+  (testing "a transformed group"
+    (let [transform-o       (t/translation-matrix 5 0 0)
+          sphere            (s/make-sphere {:transform transform-o})
+
+          transform-g       (t/scaling-matrix 2 2 2)
+          transformed-group (g/make-group [sphere] transform-g)
+
+          ray               (r/make-ray [10 0 -10 1] [0 0 1 0])
+          scene             (make-scene [transformed-group] l/default-light)
+          intersections     (all-intersections-for scene ray)]
+      (is (= 2 (count intersections))))))
 
 (deftest testing-find-hit
   (testing "when all intersections have positive t"

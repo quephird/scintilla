@@ -1,5 +1,6 @@
 (ns scintilla.example
   (:require [scintilla.camera :as c]
+            [scintilla.groups :as g]
             [scintilla.lighting :as l]
             [scintilla.materials :as a]
             [scintilla.matrix :as m]
@@ -305,3 +306,60 @@
                                                     [0 1 0 0])
         camera         (c/make-camera 400 400 π⟋3 view-transform)]
     (r/render-to-file camera scene "cone-on-plane.ppm")))
+
+(defn two-jacks-on-plane
+  []
+  (let [jack-material  (a/make-material {:color [0.95 0.6 0.0]})
+        knob-end       (s/make-sphere {:material jack-material})
+        knob-shaft     (s/make-cone {:material  jack-material
+                                     :minimum   -0.6
+                                     :maximum   -0.1
+                                     :capped?   true
+                                     :transform (m/matrix-times
+                                                 (t/translation-matrix 0 0 0)
+                                                 (t/scaling-matrix 1 6 1))})
+
+        lobed-knob     (g/make-group [knob-end knob-shaft])
+        transforms     (for [i (range 4)]
+                         (m/matrix-times
+                          (t/rotation-z-matrix (* i π⟋2))
+                          (t/translation-matrix 0 4 0)))
+        lobed-knobs    (map #(g/transform-group lobed-knob %) transforms)
+
+        unlobed-knob   (g/make-group [knob-shaft])
+        transforms2    (for [i (range 2)]
+                         (m/matrix-times
+                          (t/rotation-x-matrix (+ π⟋2 (* i π)))
+                          (t/translation-matrix 0 4 0)))
+        unlobed-knobs  (map #(g/transform-group unlobed-knob %) transforms2)
+
+        jack           (g/make-group (concat lobed-knobs unlobed-knobs))
+
+        left-transform (m/matrix-times
+                        (t/translation-matrix -6 3.0 0)
+                        (t/rotation-y-matrix π⟋2)
+                        (t/rotation-x-matrix 0.72)
+                        (t/rotation-z-matrix π⟋4))
+        left-jack      (g/transform-group jack left-transform)
+
+        right-transform (m/matrix-times
+                         (t/translation-matrix 6 3.0 0)
+                         (t/rotation-y-matrix π⟋3)
+                         (t/rotation-x-matrix 0.72)
+                         (t/rotation-z-matrix π⟋4))
+        right-jack      (g/transform-group jack right-transform)
+
+        checkers       (p/make-checker-pattern [1 1 1]
+                                               [0 0 0]
+                                               (t/scaling-matrix 6 6 6))
+        floor-material (a/make-material {:color   nil
+                                         :pattern checkers})
+        floor          (s/make-plane {:material floor-material})
+
+        light          (l/make-light [-5 10 -5 1] [1 1 1])
+        scene          (e/make-scene [left-jack right-jack floor] light)
+        view-transform (t/view-transform-matrix-for [0 5 -15 1]
+                                                    [0 1 0 1]
+                                                    [0 1 0 0])
+        camera         (c/make-camera 600 300 π⟋2 view-transform)]
+    (r/render-to-file camera scene "two-jacks-on-plane.ppm")))

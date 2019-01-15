@@ -7,15 +7,16 @@
             [scintilla.tuple :as u]))
 
 (def default-options
-  {:material   a/default-material
-   :transform  I₄
-   :minimum    (- Double/MAX_VALUE)
-   :maximum    Double/MAX_VALUE
-   :capped?    false})
+  {:material        a/default-material
+   :transform       I₄
+   :minimum         (- Double/MAX_VALUE)
+   :maximum         Double/MAX_VALUE
+   :capped?         false})
 
 (defn make-shape
   [shape-type options]
-  (merge {:shape-type shape-type}
+  (merge {:object-type :shape
+          :shape-type shape-type}
          default-options
          options))
 
@@ -288,16 +289,14 @@
    implementation for the shape, then transforms it back to the
    world coordinate system."
   [{:keys [transform] :as shape} world-point]
-  (let [local-normal (as-> transform $
-                           (m/inverse $)
-                           (m/tuple-times $ world-point)
-                           (local-normal-for shape $))]
-    (-> transform
-        m/inverse
-        m/transpose
-        (m/tuple-times local-normal)
-        (assoc 3 0)  ;; TODO: This is a hack per the book; look for better way
-        u/normalize)))
+  (let [inverse-transform       (m/inverse transform)
+        local-normal            (->> world-point
+                                     (m/tuple-times inverse-transform)
+                                     (local-normal-for shape))]
+    (as-> local-normal $
+          (m/tuple-times (m/transpose inverse-transform) $)
+          (assoc $ 3 0)  ;; TODO: This is a hack per the book; look for better way
+          (u/normalize $))))
 
 (defn color-for
   "This function either returns the simple color for the
