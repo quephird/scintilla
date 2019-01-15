@@ -5,6 +5,9 @@
 (declare transform-group)
 
 (defmulti transform-child
+  "This multimethod either pre-multiplies the transform of the
+   given object if it is a shape by the new transform passed in,
+   or otherwise recurses by transforming the entire group."
   (fn [{:keys [object-type] :as object} _]
     object-type))
 
@@ -18,6 +21,7 @@
   (transform-group group new-transform))
 
 (defn transform-group
+  "Recursively applies the transform to each child object in the group."
   [{:keys [children] :as group} transform]
   (let [transformed-children (map #(transform-child % transform) children)]
     (assoc-in group [:children] transformed-children)))
@@ -42,6 +46,8 @@
      (transform-group new-group transform))))
 
 (defn add-children
+  "Convenience function to append the new objects to the extant list
+   of children in the group."
   [group new-objects]
   (update-in group [:children] concat new-objects))
 

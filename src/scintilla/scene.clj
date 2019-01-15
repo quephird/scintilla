@@ -8,14 +8,18 @@
 
 (defn make-scene
   [objects light]
-  {:objects     objects
-   :light       light})
+  {:objects objects
+   :light   light})
 
 (defn add-objects
   [scene objects]
   (update-in scene [:objects] concat objects))
 
 (defmulti intersections-for
+  "This multimethod either delegates the computation of intersections
+   to `scintilla.shapes/intersections-for` if the object is a shape,
+   or recursively calls `intersections-for` for all of the child
+   objects if it is a group."
   (fn [{:keys [object-type] :as object} _]
     object-type))
 
