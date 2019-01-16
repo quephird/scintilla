@@ -10,23 +10,44 @@ I've been wanting to write a ray tracer for _years_ but every single time I look
 
 The book only supplies tests which you need to get to pass, and only pseudocode or code fragments as implementations; the rest is up to you. I chose Clojure, since it's the programming language that I'm most comfortable with and in the event I needed libraries, I had the JVM and the whole Java ecosystem at my disposal.
 
-However, it turned out that the book actually makes you build _everything_ from the ground up, from code to perform matrix and vector arithmetic to being able to generate a file in the PPM format. And so I decided that these would be my goals for this project:
+However, it turned out that the book actually shows you how to build _everything_ from the ground up, from being able perform matrix and vector arithmetic to generating an image file in `.ppm` format. And so I decided that these would be my goals for this project:
 
 * Make the code mutation free and purely functional as possible
 * Use raw data structures instead of Java objects or Clojure `defrecord`s
 * Implement everything and not bring in any external libraries
 * Focus on making the code as readable as possible, not caring about performance
 * Putting in as many docstrings and comments as possible
+* Keep things as simple as possible.
+
+Regarding simplicity, most of the "objects" in this project are either Clojure vectors or merely hashmaps, with keywords as keys. Restricting myself to data types native to Clojure made it much simpler to experiment and evolve the codebase. I must admit that there were times that I _did_ wish I had types that the compiler could have checked rather than simply getting cryptic errors or unexpected results at runtime.
 
 ### Usage
 
-#### Shapes 
+It's necessary to describe from the bottom up the components of this implementation.
 
-* Sphere
-* Cube
-* Plane
-* Cylinder
-* Cone
+#### Vectors, points, and rays
+
+Vectors and points are merely Clojure vectors of length 4, with the fourth component differentiating the two types. `[1 2 3 1]` is the point (1, 2, 3) and `[1 2 3 0]` is the vector 𝒊 + 2𝒋 + 3𝒌.
+
+Rays are hashmaps with keys `:point` and `:direction`, and can be made with the `scintilla.ray/make-ray`. To make a ray that starts at the origin and points to (-1, 3, -5), just call:
+
+```
+(require '[scintilla.ray :as r])
+
+(r/make-ray [0 0 0 1] [-1 3 -5 0])
+```
+
+#### Shapes
+
+Shapes are all defined in `scintilla.shapes`; there are five different standard shapes implemented in this ray tracer:
+
+| Shape | Defaults |
+|---|---|
+| Sphere | origin: (0, 0, 0) <br> radius: 1 |
+| Cube | origin: (0, 0, 0) <br> length: 2 |
+| Plane | xz-plane |
+| Cylinder | origin: (0, 0, 0)<br>radius: 1 <br> main axis: y <br> minimum height: -∞ <br> maximum height: ∞ <br> capped?: false |
+| Cone | Origin: (0, 0, 0) <br> main axis: y <br> minimum height: -∞ <br> maximum height: ∞ <br> capped?: false|
 
 List of shared shape attributes
 
