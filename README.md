@@ -26,6 +26,8 @@ Regarding simplicity, most of the "objects" in this project are either Clojure v
 # TODO: Elaborate more here
 It's necessary to describe the components of this implementation from the bottom up. You should see a pattern appear throughout most of the code here; options for all of the object constructors are supplied as simple hashmaps with keyword keys.
 
+# TODO: put somewhat complex example below
+
 #### Vectors, points, rays, and matrices
 
 Vectors and points are merely Clojure vectors of length 4, with the fourth component differentiating the two types. `[1 2 3 1]` is the point (1, 2, 3) and `[1 2 3 0]` is the vector 𝒊 + 2𝒋 + 3𝒌.
@@ -99,56 +101,93 @@ We shall talk about these in greater detail below.
 
 #### Materials
 
-Materials are use to describe the all of the optical properties of a specific shape. The following attributes are currently supported:
+Materials are used to describe the all of the optical properties of a shape. The following attributes are currently supported:
 
 * `:ambient` - a value from 0.0 to 1.0 which controls the proportion of the object's color used in its shadowed portions. The default value is 0.1.
 * `:color` - the actual color of the shape if a pattern is not specified. The default value is `[1 1 1]`.
-* `:diffuse` - a value from 0.0 to 1.0 which controls how matte-like the surface of the shape should be. The default value is 0.9.
+* `:diffuse` - a value from 0.0 to 1.0 which controls how matte-like the surface of the shape should be from a direct light source. The default value is 0.9.
 * `:pattern` - the pattern associated with the shape whose implementation computes the color. There is no default pattern and instead the color value is used if no pattern is specified.
-* `:reflective`
+* `:reflective` - a value from 0.0 to 1.0 which controls how reflective a shape is from light from other objects. The default value is 0.0.
 * `:refractive-index` - a value greater than or equal to 1.0 which effectively controls how a light ray bends when it moves from one medium into another. The default value is 1.0.
 * `:shininess` -  a unbounded positive value that controls the size of the specular highlight on a shape. The default value is 200.
-* `:specular` - a value from 0.0 to 1.0 which controls the proportion of light from a light source that reflects off of a point on the surface of the shape should contribute to the overall color. The default value is 0.9.
-* `:transparency`
+* `:specular` - a value from 0.0 to 1.0 which controls the proportion of light from a direct light source that reflects off of a point on the surface of the shape should contribute to the overall color. The default value is 0.9.
+* `:transparency` - a value from 0.0 to 1.0 which controls the proportion of light from that passes through a point on the surface of a shape. The default value is 0.0.
 
-It should be noted that this ray tracer employs a form of the Phong reflection algorithm for modelling how light reflects off surfaces, and so several of thes properties correspond with concepts in that model. You can read more about this algorithm in this excellent [Wikipedia page](https://en.wikipedia.org/wiki/Phong_reflection_model).
+It should be noted that this ray tracer employs a form of the Phong reflection algorithm for modeling how light from a direct source reflects off of surfaces; the `:ambient`, `:diffuse`, `:specular`, and `:shininess` properties specifically parameterize this effect. You can read more about this algorithm in this excellent [Wikipedia page](https://en.wikipedia.org/wiki/Phong_reflection_model).
 
-As an example, to create a purple sphere, you must first create a material with that color, and then associate that material with the sphere, as in the following: 
+As an example of using a material, to create a purple sphere, you must first create a material with that color, and then associate that material with the sphere, as in the following: 
 
 ```clj
 (require '[scintilla.materials :as a])
 (require '[scintilla.shapes :as s])
 
-(def purple-material (a/make-material {:color [0.5 0.0 1.0]}))
+(def purple-material
+  (a/make-material {:color [0.5 0.0 1.0]}))
 
-(s/make-sphere {:material material})
+(s/make-sphere {:material purple-material})
 ```
 
 Unspecified options for a material will be set to their default values as listed above.
 
 #### Transforms 
 
-There are four different classes of transformations that can be applied to three dimensional shapes; they are the following:
+There are four different classes of transformations that can be applied to three dimensional shapes; they are all implemented in `scintilla.transformation`:
 
-* Scaling
-* Translation
-* Rotation on x,y, and z axes
-* Shearing
+* Scaling - there is just one function, `scaling-matrix`, which takes three parameters to govern how to scale along each of the x, y, and z axes.
+* Translation - there is just one function, `translation-matrix`, which also takes three parameters to govern how to scale along each of the x, y, and z axes
+* Rotation - there are _three_ functions, `rotation-x-matrix`, `rotation-y-matrix`, and `rotation-z-matrix`, that each take a single parameter in radians
+* Shearing - there is one function, `shearing-matrix`, that takes six parameters governing each of the possible shearing ratios.
 
-Each of these types can be mapped to a set of 4x4 matrices; you can read more about these so-called affine transformations [here](https://www.mathworks.com/help/images/matrix-representation-of-geometric-transformations.html#bvnhvau).
+Each of these function types produces a 4x4 matrix; you can read more about these so-called affine transformation matrices [here](https://www.mathworks.com/help/images/matrix-representation-of-geometric-transformations.html#bvnhvau).
 
-```
-(require '[scintilla.materials :as a])
+As a simple example, to make an egg-shaped object, you could do the following:
+
+```clj
+(require '[scintilla.transformation :as t])
 (require '[scintilla.shapes :as s])
 
-(make-transform)
+(def deform-into-egg
+  (t/scaling-matrix 1 0.5 0.5))
 
-(make-sphere {:transform transform})
+(s/make-sphere {:transform deform-into-egg})
+```
+
+You can also combine transformations right to left using `scintilla.matrix/matrix-times`. To deform, rotate, then move the same egg shape as before, you could do the following:
+
+```clj
+(require '[scintilla.matrix :as m])
+(require '[scintilla.transformation :as t])
+(require '[scintilla.shapes :as s])
+
+(def combined-transform
+  (m/matrix-times
+    (t/translation-matrix 
+    (t/rotate-z-matrix π⟋4)
+    (t/scaling-matrix 1 0.5 0.5))
+
+(s/make-sphere {:transform combined-transform})
 ```
 
 #### Patterns
 
-List of pattern types
+There are four pattern types implemented in scintilla:
+
+* Stripes
+
+![](images/stripes.png)
+
+* Rings
+
+![](images/rings.png)
+
+* Checkered
+
+![](images/checkered.png)
+
+* Linear gradient
+
+![](images/gradient.png)
+
 
 List of pattern attributes
 
