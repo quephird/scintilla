@@ -1,4 +1,4 @@
-## Scintilla
+# scintilla
 
 ### Purpose
 
@@ -19,14 +19,77 @@ However, it turned out that the book actually shows you how to build _everything
 * Putting in as many docstrings and comments as possible
 * Keep things as simple as possible.
 
-Regarding simplicity, most of the "objects" in this project are either Clojure vectors or merely hashmaps, with keywords as keys. Restricting myself to data types native to Clojure made it much simpler to experiment and evolve the codebase. I must admit that there were times that I _did_ wish I had types that the compiler could have checked rather than simply getting cryptic errors or unexpected results at runtime.
+Regarding simplicity, most of the "objects" in this project are either Clojure vectors or merely hashmaps, with keywords as keys. Moreover, options for all of the object constructors are supplied as simple hashmaps with keyword keys. Restricting myself to data types native to Clojure made it much simpler to experiment and evolve the codebase. I must admit that there were times that I _did_ wish I had types that the compiler could have checked rather than simply getting cryptic errors or unexpected results at runtime.
 
 ### Usage
 
-# TODO: Elaborate more here
-It's necessary to describe the components of this implementation from the bottom up. You should see a pattern appear throughout most of the code here; options for all of the object constructors are supplied as simple hashmaps with keyword keys.
+So... if you wanna jump right in and see a realtively robust code sample and its result, you could start up a REPL (with `lein repl`) and copy/paste the following:
 
-# TODO: put somewhat complex example below
+```clj
+(require '[scintilla.camera :as c])
+(require '[scintilla.lighting :as l])
+(require '[scintilla.materials :as a])
+(require '[scintilla.matrix :as m])
+(require '[scintilla.numeric :refer :all])
+(require '[scintilla.patterns :as p])
+(require '[scintilla.rendering :as r])
+(require '[scintilla.scene :as e])
+(require '[scintilla.shapes :as s])
+(require '[scintilla.transformation :as t])
+
+(let [;; Set up the cube
+      left-position  (m/matrix-times
+                        (t/translation-matrix -2 1 1)
+                        (t/rotation-y-matrix π⟋6))
+      left-pattern   (p/make-checker-pattern [1 0.5 0]
+                                             [0.5 0 1]
+                                             (t/scaling-matrix 2 2 2))
+      left-material  (a/make-material {:pattern left-pattern
+                                       :specular 0.9
+                                       :shininess 50})
+      left-shape     (s/make-cube {:material left-material
+                                   :transform left-position})
+
+      ;; Set up the sphere
+      right-position (m/matrix-times
+                      (t/translation-matrix 2 1 -1)
+                      (t/rotation-y-matrix π⟋4))
+      right-material (a/make-material {:color [0 0 0.1]
+                                       :reflective 0.9
+                                       :refractive-index 1.5
+                                       :specular 0.9
+                                       :transparency 0.7
+                                       :shininess 20})
+      right-shape    (s/make-sphere {:material right-material
+                                     :transform right-position})
+
+      ;; Set up the floor
+      floor-pattern  (p/make-checker-pattern [0 0 0] [1 1 1])
+      floor-material (a/make-material {:pattern floor-pattern
+                                       :reflective 1.0
+                                       :shininess 50
+                                       :specular 0.9})
+      floor          (s/make-plane {:material floor-material})
+
+      ;; Assemble the entire scene
+      light          (l/make-light [-5 5 -5 1] [1 1 1])
+      scene          (e/make-scene [left-shape right-shape floor] light)
+
+      ;; Set up the camera
+      view-transform (t/view-transform-matrix-for [0 2 -10 1]
+                                                  [0 1 0 1]
+                                                  [0 1 0 0])
+      camera         (c/make-camera 600 300 π⟋3 view-transform)]
+
+  ;; Render the scene!
+  (r/render-to-file camera scene "example.ppm")))
+```
+
+You should see a file generated at the root of the project directory, after about a minute or so, and it should look something like this:
+
+![](images/example.png)
+
+There's a lot of stuff going on up there! Different shape types, patterns, colors, materials, a light, a camera, etc. If you already have played with something like [POVRay](http://www.povray.org), another ray tracer which has a scene description language, you could probably just dive into the code and play! If you haven't, it would help to read the sections below which describe all of the components of this implementation from the bottom up. 
 
 #### Vectors, points, rays, and matrices
 
@@ -50,7 +113,7 @@ Matrices (2-dimensional ones, that is) are implemented merely as a vector of vec
 (m/determinant some-matrix)
 ```
 
-# TODO: Fill this out
+# TODO: Fill this section out
 #### Colors
 
 #### Shapes
@@ -170,33 +233,35 @@ You can also combine transformations right to left using `scintilla.matrix/matri
 
 #### Patterns
 
-There are four pattern types implemented in scintilla:
+There are four pattern types implemented in `scintilla.patterns`, and each of them takes two color parameters:
 
-* Stripes
+* Stripes - `make-stripe-pattern`
 
 ![](images/stripes.png)
 
-* Rings
+* Rings - `make-ring-pattern`
 
 ![](images/rings.png)
 
-* Checkered
+* Checkered - `make-checker-pattern`
 
 ![](images/checkered.png)
 
-* Linear gradient
+* Linear gradient - `make-gradient-pattern`
 
 ![](images/gradient.png)
 
+Here's an example of a cube with a red and green checkered pattern: 
 
-List of pattern attributes
+```clj
+(require '[scintilla.matrix :as m])
+(require '[scintilla.patterns :as p])
+(require '[scintilla.shapes :as s])
 
-```
-(make-pattern)
+(def red-and-green-checkers
+  (a/make-material {:pattern (p/make-pattern [1 0 0] [0 1 0])}))
 
-(make-material {:pattern pattern})
-
-(make-sphere {:material material})
+(s/make-cube {:material red-and-green-checkers})
 ```
 
 
