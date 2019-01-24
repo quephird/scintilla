@@ -130,7 +130,7 @@ As with points and vectors, you will not need to maniplute colors, but if you ar
 
 #### Shapes
 
-Shapes are all defined in `scintilla.shapes`; there are five different primitive shapes implemented in this ray tracer. The table below lists them as well as eac of their default attributes:
+Shapes are all defined in `scintilla.shapes`; there are five different primitive shapes implemented in this ray tracer. The table below lists them as well as each of their default attributes:
 
 | Shape | Defaults |
 |---|---|
@@ -263,18 +263,35 @@ Here's an example of a cube with a red and green checkered pattern:
 (s/make-cube {:material red-and-green-checkers})
 ```
 
-
 #### Groups
 
-```
-(make-group [...] transform)
+Shapes can be grouped and then transformed together too. For example, to move a sphere and a cube together, you can do the following:
+
+```clj
+(require '[scintilla.groups :as g])
+(require '[scintilla.shapes :as s])
+(require '[scintilla.transformation :as t])
+
+(let [sphere (s/make-sphere {:transform (t/translation-matrix -2 0 0)})
+      cube   (s/make-cube {:transform (t/translation-matrix 2 0 0)})
+  (g/make-group [sphere cube] (t/rotation-y-matrix π⟋2)))
 ```
 
-#### Light
+You can also add child objects to an extant group as well as nest groups within groups, with `add-children`, as well apply another transform to an extant group, with `transform-group`.
+
+ACHTUNG!!! This codebase is written in a purely functional style, and so the two methods mentioned above do _not_ mutate original inputs! So make sure to `let` new computations into new variables!
+
+#### Lights
+
+Creating a light is as simple as specifying is position and color:
 
 ```
-(make-light ...)
+(require '[scintilla.lighting :as l])
+
+(l/make-light [-10 10 -10 1] [1 1 1])
 ```
+
+For now, this ray tracer only supports a single point light source. This will hopefully change in the near future.
 
 #### Scene
 
