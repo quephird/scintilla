@@ -140,7 +140,7 @@ Shapes are all defined in `scintilla.shapes`; there are five different primitive
 | Cylinder | radius: 1 <br> main axis: y <br> minimum y-value: -∞ <br> maximum y-value: ∞ <br> capped?: false |
 | Cone | main axis: y <br> minimum y-value: -∞ <br> maximum y-value: ∞ <br> capped?: false |
 
-For example, you can create a new sphere, set at the origin with all other default attributes, by simply typing:
+For example, you can create a new sphere, set at the origin and with all other default attributes, by simply typing:
 
 ```clj
 (require '[scintilla.shapes :as s])
@@ -189,7 +189,7 @@ As an example of using a material, to create a purple sphere, you must first cre
 (s/make-sphere {:material purple-material})
 ```
 
-Unspecified options for a material will be set to their default values as listed above.
+Unspecified options for a material will be set to their default values as listed above. There is also a material defined in the same namespace with default values for all of the optical properties, `default-material`.
 
 #### Transforms 
 
@@ -263,6 +263,8 @@ Here's an example of a cube with a red and green checkered pattern:
 (s/make-cube {:material red-and-green-checkers})
 ```
 
+Patterns _themselves_ can also be transformed with respect to object space; to do so, you can pass in a third parameter with a transformation matrix.
+
 #### Groups
 
 Shapes can be grouped and then transformed together too. For example, to move a sphere and a cube together, you can do the following:
@@ -273,7 +275,7 @@ Shapes can be grouped and then transformed together too. For example, to move a 
 (require '[scintilla.transformation :as t])
 
 (let [sphere (s/make-sphere {:transform (t/translation-matrix -2 0 0)})
-      cube   (s/make-cube {:transform (t/translation-matrix 2 0 0)})
+      cube   (s/make-cube {:transform (t/translation-matrix 2 0 0)})]
   (g/make-group [sphere cube] (t/rotation-y-matrix π⟋2)))
 ```
 
@@ -291,13 +293,76 @@ Creating a light is as simple as specifying is position and color:
 (l/make-light [-10 10 -10 1] [1 1 1])
 ```
 
-For now, this ray tracer only supports a single point light source. This will hopefully change in the near future.
+You can also use a light with default properties, `default-light`.
 
 #### Scene
 
+The scene contains all of the objects and groups you wish to render, as well as the singular light source.
+
+```clj
+(require '[scintilla.scene :as e])
+(require '[scintilla.shapes :as s])
+(require '[scintilla.transformation :as t])
+
+(let [sphere (s/make-sphere {:transform (t/translation-matrix -2 0 0)})
+      cube   (s/make-cube {:transform (t/translation-matrix 2 0 0)})
+      light  (l/make-light [-10 10 -10 1] [1 0 0])]
+  (e/make-scene [sphere cube] light))
+```
+
+NOTA BENE: For now, this ray tracer only supports a single light source. This will hopefully change in the near future.
+
 #### Camera
 
+The camera is the viewpoint of the rendering process, and is parameterized by four components:
+
+* The width of the canvas to be rendered to in pixels
+* The height of the canvas to be rendered to in pixels
+* The so-called field-of-view whose value represents the solid angle subtended by the canvas to the camera position
+* A view transform matrix
+
+The view transform matrix is _not_ like the transformation matrices for transforming shapes. It itself is parameterized by three things:
+
+* The position of the camera
+* The position that the camera is pointed at
+* The vector that specifies which way is up
+
+So... putting it all together... to make a camera that sets up for a 400x400 canvas, with a field-of-view of π/2 radians, placed on the xz-plane ten units back on the z axis, looking at the origin, and with positive y being "up", we can do the following:
+
+```clj
+(require '[scintilla.camera :as c])
+(require '[scintilla.numeric :refer :all])
+(require '[scintilla.transformation :as t])
+
+(let [view-transform (t/view-transform-matrix-for [0 0 -10 1]
+                                                  [0 0 0 1]
+                                                  [0 1 0 0])]
+  (c/make-camera 400 400 π⟋2 view-transform))
+```
+
 #### Rendering
+
+Finally! Once you have a camera and a scene, you can render to a file; here's an example of a trivial scene:
+
+```clj
+(require '[scintilla.camera :as c])
+(require '[scintilla.lighting :as l])
+(require '[scintilla.numeric :refer :all])
+(require '[scintilla.rendering :as r])
+(require '[scintilla.scene :as e])
+(require '[scintilla.shapes :as s])
+(require '[scintilla.transformation :as t])
+
+(let [sphere         (s/make-sphere)
+      view-transform (t/view-transform-matrix-for [0 0 -5 1]
+                                                  [0 0 0 1]
+                                                  [0 1 0 0])
+      camera         (c/make-camera 400 400 π⟋2 view-transform)
+      scene          (e/make-scene [sphere] l/default-light)]
+  (r/render-to-file camera scene "trivial.ppm"))
+```
+
+Currently, this ray tracer only writes out directly to a file in `.ppm` format, not to any others nor to a window. Those are also features I hope to implement sometime in the future.
 
 ### Future goals
 
@@ -314,8 +379,8 @@ Take a drive with a differnt PL
   [https://www.mathworks.com/help/images/matrix-representation-of-geometric-transformations.html#bvnhvau](https://www.mathworks.com/help/images/matrix-representation-of-geometric-transformations.html#bvnhvau)
 * Wikipedia page on the Phong reflection model  
   [https://en.wikipedia.org/wiki/Phong_reflection_model](https://en.wikipedia.org/wiki/Phong_reflection_model)  
-* 
-
+* PPM file format   
+[https://en.wikipedia.org/wiki/Netpbm_format#PPM_example](https://en.wikipedia.org/wiki/Netpbm_format#PPM_example)
 ### License
 Copyright (C) 2019, ⅅ₳ℕⅈⅇℒℒⅇ Ҝⅇℱℱoℜⅆ.
 
