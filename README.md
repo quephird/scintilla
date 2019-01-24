@@ -89,13 +89,13 @@ You should see a file generated at the root of the project directory, after abou
 
 ![](images/example.png)
 
-There's a lot of stuff going on up there! Different shape types, patterns, colors, materials, a light, a camera, etc. If you already have played with something like [POVRay](http://www.povray.org), another ray tracer which has a scene description language, you could probably just dive into the code and play! If you haven't, it would help to read the sections below which describe all of the components of this implementation from the bottom up. 
+There's a lot of stuff going on up there! Different shape types, patterns, colors, materials, a light, a camera, etc. If you already have played with something like [POV-Ray](http://www.povray.org), another ray tracer which has a scene description language, you could probably just dive into the code and play! If you haven't, it would probably help to read the sections below which describe all of the components of this implementation from the bottom up. We'll start with raw mathematical data structures.
 
 #### Vectors, points, rays, and matrices
 
 Vectors and points are merely Clojure vectors of length 4, with the fourth component differentiating the two types. `[1 2 3 1]` is the point (1, 2, 3) and `[1 2 3 0]` is the vector 𝒊 + 2𝒋 + 3𝒌.
 
-Rays are hashmaps with keys `:point` and `:direction`, and can be made with the `scintilla.ray/make-ray`. To make a ray that starts at the origin and points to (-1, 3, -5), just call:
+Rays are hashmaps with keys `:point` and `:direction`, and can be made with the `scintilla.ray/make-ray` function. To make a ray that starts at the origin and points to (-1, 3, -5), just call:
 
 ```clj
 (require '[scintilla.ray :as r])
@@ -103,28 +103,42 @@ Rays are hashmaps with keys `:point` and `:direction`, and can be made with the 
 (r/make-ray [0 0 0 1] [-1 3 -5 0])
 ```
 
-Matrices (2-dimensional ones, that is) are implemented merely as a vector of vectors. There aren't any convenience methods for creating matrices, but all of the common matrix manipulation functions are in `scintilla.matrix`. So, if you wanted to take the determinant of a matrix, you could do the following:
+You will not need them to just create and render scenes but methods for manipulating points and vectors are defined in `scintilla.tuple`, and for rays in `scintilla.ray`.
+
+Matrices (2-dimensional ones, that is) are implemented merely as a vector of vectors. There aren't any convenience methods for creating matrices, but all of the common matrix manipulation functions are in `scintilla.matrix`. So, if you wanted to multiply two matrices, you could do the following:
 
 ```clj
 (require '[scintilla.matrix :as m])
 
-(def some-matrix [[1 2 3 4] [2 3 4 5] [3 4 5 6] [4 5 6 7]])
+(def some-matrix [[1 2 3 4]
+                  [2 3 4 5]
+                  [3 4 5 6]
+                  [4 5 6 7]])
+(def another-matrix [[1 1 1 1]
+                     [2 2 2 2]
+                     [3 3 3 3]
+                     [4 4 4 4]])
 
-(m/determinant some-matrix)
+(m/matrix-times some-matrix another-matrix)
 ```
 
-# TODO: Fill this section out
 #### Colors
+
+Colors are represented internally by 3-vectors of positive floats, where they represent the red, green, and blue components, in that order. The expected range of each value is [0.0, 1.0]; values that fall outside that range are eventually "clamped" when rendered. So, red would be `[1 0 0]` and purple would be `[0.5 0 1]`.
+
+As with points and vectors, you will not need to maniplute colors, but if you are curious you can look in `scintilla.color`.
 
 #### Shapes
 
-Shapes are all defined in `scintilla.shapes`; there are five different primitive shapes implemented in this ray tracer:
+Shapes are all defined in `scintilla.shapes`; there are five different primitive shapes implemented in this ray tracer. The table below lists them as well as eac of their default attributes:
 
-* Sphere
-* Cube
-* Plane
-* Cylinder
-* Cone
+| Shape | Defaults |
+|---|---|
+| Sphere | radius: 1 |
+| Cube | length: 2 |
+| Plane | lies in xz-plane |
+| Cylinder | radius: 1 <br> main axis: y <br> minimum y-value: -∞ <br> maximum y-value: ∞ <br> capped?: false |
+| Cone | main axis: y <br> minimum y-value: -∞ <br> maximum y-value: ∞ <br> capped?: false |
 
 For example, you can create a new sphere, set at the origin with all other default attributes, by simply typing:
 
@@ -136,31 +150,16 @@ For example, you can create a new sphere, set at the origin with all other defau
 
 By default, _all_ shapes are centered at the origin, and different shape types can have different properties and default values for them.
 
-#TODO: fix this
-The table below lists them as well as their default attributes:
-
-| Shape | Defaults |
-|---|---|
-| Sphere | radius: 1 |
-| Cube | length: 2 |
-| Plane | lies in xz-plane |
-| Cylinder | radius: 1 <br> main axis: y <br> minimum height: -∞ <br> maximum height: ∞ <br> capped?: false |
-| Cone | main axis: y <br> minimum height: -∞ <br> maximum height: ∞ <br> capped?: false |
-
-
-
-Cones and cylinders are slightly more complicated and have these additional properties:
-
-* `:minimum` - the y value of correspondent with the bottom of the shape
-* `:maximum` - the y value of correspondent with the top of the shape
-* `:capped?` - set to `true` if the ends are closed or `false` if open
-
 Currently there are two attributes that are shared across all shapes:
 
 * `:material` - the hashmap that describes various optical properties of the shape
 * `:transform` - the matrix that describes how a shape is moved or altered
 
-We shall talk about these in greater detail below.
+Cones and cylinders are slightly more complicated than the other three and have these additional properties:
+
+* `:minimum` - the y value of correspondent with the bottom of the shape
+* `:maximum` - the y value of correspondent with the top of the shape
+* `:capped?` - set to `true` if the ends are closed or `false` if open
 
 #### Materials
 
@@ -170,7 +169,7 @@ Materials are used to describe the all of the optical properties of a shape. The
 * `:color` - the actual color of the shape if a pattern is not specified. The default value is `[1 1 1]`.
 * `:diffuse` - a value from 0.0 to 1.0 which controls how matte-like the surface of the shape should be from a direct light source. The default value is 0.9.
 * `:pattern` - the pattern associated with the shape whose implementation computes the color. There is no default pattern and instead the color value is used if no pattern is specified.
-* `:reflective` - a value from 0.0 to 1.0 which controls how reflective a shape is from light from other objects. The default value is 0.0.
+* `:reflective` - a value from 0.0 to 1.0 which controls how reflective a shape is from light _from other objects_. The default value is 0.0.
 * `:refractive-index` - a value greater than or equal to 1.0 which effectively controls how a light ray bends when it moves from one medium into another. The default value is 1.0.
 * `:shininess` -  a unbounded positive value that controls the size of the specular highlight on a shape. The default value is 200.
 * `:specular` - a value from 0.0 to 1.0 which controls the proportion of light from a direct light source that reflects off of a point on the surface of the shape should contribute to the overall color. The default value is 0.9.
@@ -292,6 +291,8 @@ Take a drive with a differnt PL
 
 * The Ray Tracer Challenge listing on the PragProg site.  
   [https://pragprog.com/book/jbtracer/the-ray-tracer-challenge](https://pragprog.com/book/jbtracer/the-ray-tracer-challenge)  
+* POV-Ray  
+  [https://www.povray.org](https://www.povray.org)
 * 3D affine transformation matrices  
   [https://www.mathworks.com/help/images/matrix-representation-of-geometric-transformations.html#bvnhvau](https://www.mathworks.com/help/images/matrix-representation-of-geometric-transformations.html#bvnhvau)
 * Wikipedia page on the Phong reflection model  
