@@ -1,8 +1,27 @@
 (ns scintilla.groups
-  (:require [scintilla.matrix :refer [I₄] :as m]))
+  (:require [scintilla.matrix :refer [I₄] :as m]
+            [scintilla.shapes :as s]
+            [scintilla.transformation :as t]))
+
+;; TODO: Need to improve the API here for allowing
+;;       bulk updating of certain properties like:
+;;
+;;          set-material
+;;          set-color
+
+(defn make-bounding-box
+  [points]
+  (let [bottom-left-front (apply map min points)
+        top-right-back    (apply map max points)
+        [sx sy sz _]      (map - top-right-back bottom-left-front)
+        [tx ty tz _]      (map #(* 0.5 (+ %1 %2)) top-right-back bottom-left-front)
+        transform         (m/matrix-times
+                           (t/translation-matrix tx ty tz)
+                           (t/scaling-matrix sx sy sz))]
+    (s/make-cube {:transform transform})))
 
 (declare transform-child)
-(declare transform-group)
+(declare transform-children)
 
 (defmulti transform-child
   "This multimethod either pre-multiplies the transform of the
@@ -18,13 +37,12 @@
 
 (defmethod transform-child :group
   [group new-transform]
-  (transform-group group new-transform))
+  (update-in group [:children] transform-children new-transform))
 
-(defn transform-group
+(defn transform-children
   "Recursively applies the transform to each child object in the group."
-  [{:keys [children] :as group} transform]
-  (let [transformed-children (map #(transform-child % transform) children)]
-    (assoc-in group [:children] transformed-children)))
+  [children transform]
+  (map #(transform-child % transform) children))
 
 (defn make-group
   "The approach here is much different from the one in the book.
@@ -41,18 +59,15 @@
   ([objects]
    (make-group objects I₄))
   ([objects transform]
-   (let [new-group {:object-type :group
-                    :children    objects}]
-     (transform-group new-group transform))))
+   (let [transformed-objects (transform-children objects transform)
+         ]
+     ;; Need to compute and assoc in bounding box
+     {:object-type :group
+      :children    transformed-objects})))
 
 (defn add-children
   "Convenience function to append the new objects to the extant list
    of children in the group."
   [group new-objects]
+  ;; Need to recompute bounding box
   (update-in group [:children] concat new-objects))
-
-;; TODO: Need to improve the API here for allowing
-;;       bulk updating of certain properties like:
-;;
-;;          set-material
-;;          set-color

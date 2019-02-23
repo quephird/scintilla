@@ -308,3 +308,30 @@
     (if (nil? pattern)
       color
       (p/color-for prepared-hit))))
+
+(defmulti local-corners-for :shape-type)
+
+(defmethod local-corners-for :circle
+  [_]
+  (for [x [-1 1] y [-1 1] z [-1 1]]
+    (vector x y z 1)))
+
+(defmethod local-corners-for :cube
+  [_]
+  (for [x [-1 1] y [-1 1] z [-1 1]]
+    (vector x y z 1)))
+
+(defmethod local-corners-for :cone
+  [{:keys [minimum maximum]}]
+  (for [x [-1 1] y [minimum maximum] z [-1 1]]
+    (vector x y z 1)))
+
+(defmethod local-corners-for :cylinder
+  [{:keys [minimum maximum]}]
+  (for [x [-1 1] y [minimum maximum] z [-1 1]]
+    (vector x y z 1)))
+
+(defn eight-corners-for
+  [{:keys [transform] :as shape}]
+  (let [raw-corners (local-corners-for shape)]
+    (map #(m/tuple-times transform %) raw-corners)))
