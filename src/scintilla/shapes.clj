@@ -311,7 +311,7 @@
 
 (defmulti local-corners-for :shape-type)
 
-(defmethod local-corners-for :circle
+(defmethod local-corners-for :sphere
   [_]
   (for [x [-1 1] y [-1 1] z [-1 1]]
     (vector x y z 1)))

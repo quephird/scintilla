@@ -9,11 +9,26 @@
 ;;          set-material
 ;;          set-color
 
+(declare eight-corners-for)
+(declare make-bounding-box)
+
+(defmulti eight-corners-for :object-type)
+
+(defmethod eight-corners-for :group
+  [{:keys [children]}]
+  (let [bounding-box (make-bounding-box children)]
+    (s/eight-corners-for bounding-box)))
+
+(defmethod eight-corners-for :shape
+  [shape]
+  (s/eight-corners-for shape))
+
 (defn make-bounding-box
-  [points]
-  (let [bottom-left-front (apply map min points)
-        top-right-back    (apply map max points)
-        [sx sy sz _]      (map - top-right-back bottom-left-front)
+  [objects]
+  (let [all-corners       (mapcat eight-corners-for objects)
+        bottom-left-front (apply map min all-corners)
+        top-right-back    (apply map max all-corners)
+        [sx sy sz _]      (map #(* 0.5 (- %1 %2)) top-right-back bottom-left-front)
         [tx ty tz _]      (map #(* 0.5 (+ %1 %2)) top-right-back bottom-left-front)
         transform         (m/matrix-times
                            (t/translation-matrix tx ty tz)
@@ -31,18 +46,32 @@
     object-type))
 
 (defmethod transform-child :shape
-  [shape new-transform]
-  (update-in shape [:transform] (fn [old-transform]
-                                    (m/matrix-times new-transform old-transform))))
+  [{:keys [transform] :as shape} new-transform]
+  (let [transform' (m/matrix-times new-transform transform)]
+    (-> shape
+        (assoc-in [:transform] transform'))))
 
 (defmethod transform-child :group
-  [group new-transform]
-  (update-in group [:children] transform-children new-transform))
+  [{:keys [children] :as group} new-transform]
+  (let [new-children (transform-children children new-transform)
+        bounding-box (make-bounding-box new-children)]
+    (-> group
+        (assoc-in [:children] new-children)
+        (assoc-in [:bounding-box] bounding-box))))
 
 (defn transform-children
   "Recursively applies the transform to each child object in the group."
   [children transform]
   (map #(transform-child % transform) children))
+
+(defn transform-group
+  "Convenience function."
+  [{:keys [children] :as group} transform]
+  (let [new-children     (transform-children children transform)
+        new-bounding-box (make-bounding-box new-children)]
+    (-> group
+        (assoc-in [:children] new-children)
+        (assoc-in [:bounding-box] new-bounding-box))))
 
 (defn make-group
   "The approach here is much different from the one in the book.
@@ -60,14 +89,16 @@
    (make-group objects I₄))
   ([objects transform]
    (let [transformed-objects (transform-children objects transform)
+         bounding-box        (make-bounding-box transformed-objects)
          ]
-     ;; Need to compute and assoc in bounding box
-     {:object-type :group
-      :children    transformed-objects})))
+     {:object-type  :group
+      :children     transformed-objects
+      :bounding-box bounding-box
+      })))
 
 (defn add-children
   "Convenience function to append the new objects to the extant list
    of children in the group."
   [group new-objects]
-  ;; Need to recompute bounding box
+  ;; TODO: Need to recompute bounding box
   (update-in group [:children] concat new-objects))

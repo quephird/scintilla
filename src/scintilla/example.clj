@@ -363,3 +363,43 @@
                                                     [0 1 0 0])
         camera         (c/make-camera 600 300 π⟋2 view-transform)]
     (r/render-to-file camera scene "two-jacks-on-plane.ppm")))
+
+(defn patterned-plane
+  []
+  (let [left-position  (m/matrix-times
+                        (t/translation-matrix -2 1 1)
+                        (t/rotation-y-matrix π⟋6))
+        left-pattern   (p/make-checker-pattern [1 0.5 0]
+                                               [0.5 0 1]
+                                               (t/scaling-matrix 2 2 2))
+        left-material  (a/make-material {:pattern left-pattern
+                                         :specular 0.9
+                                         :shininess 50})
+        left-shape     (s/make-cube {:material left-material
+                                     :transform left-position})
+
+        right-position (m/matrix-times
+                        (t/translation-matrix 2 1 -1)
+                        (t/rotation-y-matrix π⟋4))
+        right-material (a/make-material {:color [0 0 0.1]
+                                         :reflective 0.9
+                                         :refractive-index 1.5
+                                         :specular 0.9
+                                         :transparency 0.7
+                                         :shininess 20})
+        right-shape    (s/make-sphere {:material right-material
+                                       :transform right-position})
+        
+        pattern        (p/make-checker-pattern [0 0 0] [1 1 1])
+        material       (a/make-material {:pattern pattern
+                                         :reflective 1.0
+                                         :shininess 50
+                                         :specular 0.9})
+        floor          (s/make-plane {:material material})
+        light          (l/make-light [-5 5 -5 1] [1 1 1])
+        scene          (e/make-scene [left-shape right-shape floor] light)
+        view-transform (t/view-transform-matrix-for [0 2 -10 1]
+                                                    [0 1 0 1]
+                                                    [0 1 0 0])
+        camera         (c/make-camera 200 100 π⟋3 view-transform)]
+    (r/render-to-file camera scene "patterned-plane.ppm")))
