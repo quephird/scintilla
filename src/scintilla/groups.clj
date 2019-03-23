@@ -45,39 +45,39 @@
                              (t/scaling-matrix sx sy sz))]
       (s/make-cube {:transform transform}))))
 
-(declare transform-child)
-(declare transform-children)
+(declare transform-object)
+(declare transform-objects)
 
-(defmulti transform-child
+(defmulti transform-object
   "This multimethod either pre-multiplies the transform of the
    given object if it is a shape by the new transform passed in,
    or otherwise recurses by transforming the entire group."
   (fn [{:keys [object-type] :as object} _]
     object-type))
 
-(defmethod transform-child :shape
+(defmethod transform-object :shape
   [{:keys [transform] :as shape} new-transform]
   (let [transform' (m/matrix-times new-transform transform)]
     (-> shape
         (assoc-in [:transform] transform'))))
 
-(defmethod transform-child :group
+(defmethod transform-object :group
   [{:keys [children] :as group} new-transform]
-  (let [new-children (transform-children children new-transform)
+  (let [new-children (transform-objects children new-transform)
         bounding-box (make-bounding-box new-children)]
     (-> group
         (assoc-in [:children] new-children)
         (assoc-in [:bounding-box] bounding-box))))
 
-(defn transform-children
+(defn transform-objects
   "Recursively applies the transform to each child object in the group."
   [children transform]
-  (map #(transform-child % transform) children))
+  (map #(transform-object % transform) children))
 
 (defn transform-group
   "Convenience function."
   [{:keys [children] :as group} transform]
-  (let [new-children     (transform-children children transform)
+  (let [new-children     (transform-objects children transform)
         new-bounding-box (make-bounding-box new-children)]
     (-> group
         (assoc-in [:children] new-children)
@@ -98,17 +98,6 @@
   ([objects]
    (make-group objects I₄))
   ([objects transform]
-   (let [transformed-objects (transform-children objects transform)
-         bounding-box        (make-bounding-box transformed-objects)
-         ]
-     {:object-type  :group
-      :children     transformed-objects
-      :bounding-box bounding-box
-      })))
-
-(defn add-children
-  "Convenience function to append the new objects to the extant list
-   of children in the group."
-  [group new-objects]
-  ;; TODO: Need to recompute bounding box
-  (update-in group [:children] concat new-objects))
+   (let [new-group {:object-type  :group
+                    :children     objects}]
+     (transform-group new-group transform))))
