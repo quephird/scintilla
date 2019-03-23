@@ -8,15 +8,14 @@
 
 (deftest testing-make-group
   (testing "empty group"
-    (is (= {:object-type :group
-            :children    []} (make-group []))))
+    (let [empty-group (make-group [])]
+      (is (= (:children empty-group) []))))
   (testing "group of objects with no specified transform"
     (let [sphere  (s/make-sphere)
           cone    (s/make-cone)
           cube    (s/make-cube)
           group   (make-group [sphere cone cube])]
-      (is (= {:object-type :group
-              :children    [sphere cone cube]} group))))
+      (is (= (:children group) [sphere cone cube]))))
   (testing "transformed group of objects"
     (let [sphere    (s/make-sphere)
           cone      (s/make-cone)

@@ -1,5 +1,6 @@
 (ns scintilla.groups
   (:require [scintilla.matrix :refer [I₄] :as m]
+            [scintilla.numeric :refer [ε]]
             [scintilla.shapes :as s]
             [scintilla.transformation :as t]))
 
@@ -23,17 +24,26 @@
   [shape]
   (s/eight-corners-for shape))
 
+(defmethod eight-corners-for :default
+  [_]
+  nil)
+
 (defn make-bounding-box
   [objects]
-  (let [all-corners       (mapcat eight-corners-for objects)
-        bottom-left-front (apply map min all-corners)
-        top-right-back    (apply map max all-corners)
-        [sx sy sz _]      (map #(* 0.5 (- %1 %2)) top-right-back bottom-left-front)
-        [tx ty tz _]      (map #(* 0.5 (+ %1 %2)) top-right-back bottom-left-front)
-        transform         (m/matrix-times
-                           (t/translation-matrix tx ty tz)
-                           (t/scaling-matrix sx sy sz))]
-    (s/make-cube {:transform transform})))
+  (if (empty? objects)
+    ;; This is a bit of a hack to insure that we _always_
+    ;; make a bounding box, even for an empty group. That way
+    ;; we avoid having to nil-check everything downstream.
+    (s/make-cube {:transform (t/scaling-matrix ε ε ε)})
+    (let [all-corners       (mapcat eight-corners-for objects)
+          bottom-left-front (apply map min all-corners)
+          top-right-back    (apply map max all-corners)
+          [sx sy sz _]      (map #(* 0.5 (- %1 %2)) top-right-back bottom-left-front)
+          [tx ty tz _]      (map #(* 0.5 (+ %1 %2)) top-right-back bottom-left-front)
+          transform         (m/matrix-times
+                             (t/translation-matrix tx ty tz)
+                             (t/scaling-matrix sx sy sz))]
+      (s/make-cube {:transform transform}))))
 
 (declare transform-child)
 (declare transform-children)
