@@ -24,10 +24,13 @@
     object-type))
 
 (defmethod intersections-for :group
-  [{:keys [children] :as group} ray]
-  (->> children
-       (map #(intersections-for % ray))
-       (apply concat)))
+  [{:keys [children bounding-box] :as group} ray]
+  (let [hits (intersections-for bounding-box ray)]
+    (if (empty? hits)
+      hits
+      (->> children
+           (map #(intersections-for % ray))
+           (apply concat)))))
 
 (defmethod intersections-for :shape
   [shape ray]

@@ -1,30 +1,87 @@
 (ns scintilla.groups
-  (:require [scintilla.matrix :refer [I₄] :as m]))
+  (:require [scintilla.matrix :refer [I₄] :as m]
+            [scintilla.numeric :refer [ε]]
+            [scintilla.shapes :as s]
+            [scintilla.transformation :as t]))
 
-(declare transform-child)
-(declare transform-group)
+;; TODO: Need to improve the API here for allowing
+;;       bulk updating of certain properties like:
+;;
+;;          set-material
+;;          set-color
 
-(defmulti transform-child
+(declare eight-corners-for)
+(declare make-bounding-box)
+
+(defmulti eight-corners-for :object-type)
+
+(defmethod eight-corners-for :group
+  [{:keys [children]}]
+  (let [bounding-box (make-bounding-box children)]
+    (s/eight-corners-for bounding-box)))
+
+(defmethod eight-corners-for :shape
+  [shape]
+  (s/eight-corners-for shape))
+
+(defmethod eight-corners-for :default
+  [_]
+  nil)
+
+(defn make-bounding-box
+  [objects]
+  (if (empty? objects)
+    ;; This is a bit of a hack to insure that we _always_
+    ;; make a bounding box, even for an empty group. That way
+    ;; we avoid having to nil-check everything downstream.
+    (s/make-cube {:transform (t/scaling-matrix ε ε ε)})
+    (let [all-corners       (mapcat eight-corners-for objects)
+          bottom-left-front (apply map min all-corners)
+          top-right-back    (apply map max all-corners)
+          [sx sy sz _]      (map #(* 0.5 (- %1 %2)) top-right-back bottom-left-front)
+          [tx ty tz _]      (map #(* 0.5 (+ %1 %2)) top-right-back bottom-left-front)
+          transform         (m/matrix-times
+                             (t/translation-matrix tx ty tz)
+                             (t/scaling-matrix sx sy sz))]
+      (s/make-cube {:transform transform}))))
+
+(declare transform-object)
+(declare transform-objects)
+
+(defmulti transform-object
   "This multimethod either pre-multiplies the transform of the
    given object if it is a shape by the new transform passed in,
    or otherwise recurses by transforming the entire group."
   (fn [{:keys [object-type] :as object} _]
     object-type))
 
-(defmethod transform-child :shape
-  [shape new-transform]
-  (update-in shape [:transform] (fn [old-transform]
-                                    (m/matrix-times new-transform old-transform))))
+(defmethod transform-object :shape
+  [{:keys [transform] :as shape} new-transform]
+  (let [transform' (m/matrix-times new-transform transform)]
+    (-> shape
+        (assoc-in [:transform] transform'))))
 
-(defmethod transform-child :group
-  [group new-transform]
-  (transform-group group new-transform))
+(defmethod transform-object :group
+  [{:keys [children] :as group} new-transform]
+  (let [new-children (transform-objects children new-transform)
+        bounding-box (make-bounding-box new-children)]
+    (-> group
+        (assoc-in [:children] new-children)
+        (assoc-in [:bounding-box] bounding-box))))
+
+(defn transform-objects
+  "Recursively applies the transform to each child object in the group."
+  [children transform]
+  (map #(transform-object % transform) children))
 
 (defn transform-group
-  "Recursively applies the transform to each child object in the group."
+  "Convenience function."
   [{:keys [children] :as group} transform]
-  (let [transformed-children (map #(transform-child % transform) children)]
-    (assoc-in group [:children] transformed-children)))
+  (let [new-children     (transform-objects children transform)
+        new-bounding-box (make-bounding-box new-children)]
+    (-> group
+        (assoc-in [:children] new-children)
+        (assoc-in [:bounding-box] new-bounding-box))))
 
 (defn make-group
   "The approach here is much different from the one in the book.
@@ -41,18 +98,6 @@
   ([objects]
    (make-group objects I₄))
   ([objects transform]
-   (let [new-group {:object-type :group
-                    :children    objects}]
+   (let [new-group {:object-type  :group
+                    :children     objects}]
      (transform-group new-group transform))))
-
-(defn add-children
-  "Convenience function to append the new objects to the extant list
-   of children in the group."
-  [group new-objects]
-  (update-in group [:children] concat new-objects))
-
-;; TODO: Need to improve the API here for allowing
-;;       bulk updating of certain properties like:
-;;
-;;          set-material
-;;          set-color
