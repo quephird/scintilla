@@ -51,6 +51,16 @@
   [& options]
   (make-shape :cone (into {} options)))
 
+(defn make-triangle
+  [p1 p2 p3 & options]
+  (let [e1     (u/subtract p2 p1)
+        e2     (u/subtract p3 p1)
+        normal (u/normalize (u/cross-product e2 e1))
+        triangle-options {:p1 p1 :p2 p2 :p3 p3
+                          :e1 e1 :e2 e2
+                          :normal normal}]
+    (make-shape :triangle (merge triangle-options options))))
+
 (defn- quadratic-roots-for
   "Helper function to determine the set of real roots to the quadratic equation:
    𝑎𝑥² + 𝑏𝑥 + 𝑐 = 𝟢"
@@ -280,6 +290,10 @@
         [x (- (Math/sqrt distance-squared)) z 0]
       :else
         [x (Math/sqrt distance-squared) z 0])))
+
+(defmethod local-normal-for :triangle
+  [{:keys [normal]} _]
+  normal)
 
 (defn normal-for
   "This is the 'public' interface for computing the normal

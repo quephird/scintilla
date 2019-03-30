@@ -312,6 +312,15 @@
                            [-0.70711 0.70711 0 0]]]
       (is (≈ expected-values (map #(normal-for cone %) points))))))
 
+(deftest testing-normal-for-triangle
+  (testing "a simple triangle"
+    (let [p1 [0 1 0 1]
+          p2 [-1 0 0 1]
+          p3 [1 0 0 1]
+          triangle (make-triangle p1 p2 p3)
+          expected-value [0 0 -1 0]]
+      (is (every? #(≈ expected-value %) (map #(normal-for triangle %) [p1 p2 p3]))))))
+
 (deftest testing-normal-for-child-of-group
   (testing "child object of nested group"
     (let [sphere-transform      (t/translation-matrix 5 0 0)
