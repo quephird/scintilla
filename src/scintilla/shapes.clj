@@ -59,7 +59,7 @@
         triangle-options {:p1 p1 :p2 p2 :p3 p3
                           :e1 e1 :e2 e2
                           :normal normal}]
-    (make-shape :triangle (merge triangle-options options))))
+    (make-shape :triangle (apply merge triangle-options options))))
 
 (defn- quadratic-roots-for
   "Helper function to determine the set of real roots to the quadratic equation:
@@ -163,6 +163,7 @@
 (defn- intersections-for-cone-wall
   [{:keys [transform minimum maximum] :as shape}
    {[px py pz _] :point [dx dy dz _] :direction :as ray}]
+  ;; TODO: Possible bug here; we don't ever transform the ray below
    (let [a     (+ (* dx dx) (* -1.0 dy dy) (* dz dz))
          b     (* 2 (+ (* px dx) (* -1.0 py dy) (* pz dz)))
          c     (+ (* px px) (* -1.0 py py) (* pz pz))
@@ -182,6 +183,29 @@
   (let [{:keys [point direction] :as local-ray} (r/transform ray (m/inverse transform))]
     (concat (intersections-for-cone-wall shape local-ray)
             (intersections-for-cone-caps shape local-ray))))
+
+(defmethod intersections-for :triangle
+  [{:keys [transform p1 e1 e2] :as shape} ray]
+  (let [{:keys [point direction] :as local-ray} (r/transform ray (m/inverse transform))
+        ray-direction-cross-e2 (u/cross-product direction e2)
+        determinant            (u/dot-product e1 ray-direction-cross-e2)
+        f                      (/ 1.0 determinant)]
+    (if (> ε (Math/abs determinant))
+      ;; Is the ray parallel to the triangle?
+      []
+      (let [p1-to-ray-point    (u/subtract point p1)
+            u                  (* f (u/dot-product p1-to-ray-point ray-direction-cross-e2))]
+        (if (or (< u 0) (> u 1))
+          ;; Does the ray not intersect the p1-p3 edge?
+          []
+          (let [ray-origin-cross-e1 (u/cross-product p1-to-ray-point e1)
+                v                   (* f (u/dot-product direction ray-origin-cross-e1))]
+            (if (or (< v 0) (> (+ u v) 1))
+              ;; Does the ray fall anywhere else outside the triangle?
+              []
+              (let [t (* f (u/dot-product e2 ray-origin-cross-e1))]
+                ;; We have a hit!!!
+                [(make-intersection t shape)]))))))))
 
 (defn- check-axis
   "Helper function for computing minimum and maximum
