@@ -190,18 +190,18 @@
         ray-direction-cross-e2 (u/cross-product direction e2)
         determinant            (u/dot-product e1 ray-direction-cross-e2)
         f                      (/ 1.0 determinant)]
+    ;; Is the ray parallel to the triangle?
     (if (> ε (Math/abs determinant))
-      ;; Is the ray parallel to the triangle?
       []
       (let [p1-to-ray-point    (u/subtract point p1)
             u                  (* f (u/dot-product p1-to-ray-point ray-direction-cross-e2))]
+        ;; Does the ray not intersect the p1-p3 edge?
         (if (or (< u 0) (> u 1))
-          ;; Does the ray not intersect the p1-p3 edge?
           []
           (let [ray-origin-cross-e1 (u/cross-product p1-to-ray-point e1)
                 v                   (* f (u/dot-product direction ray-origin-cross-e1))]
+            ;; Does the ray fall anywhere else outside the triangle?
             (if (or (< v 0) (> (+ u v) 1))
-              ;; Does the ray fall anywhere else outside the triangle?
               []
               (let [t (* f (u/dot-product e2 ray-origin-cross-e1))]
                 ;; We have a hit!!!
