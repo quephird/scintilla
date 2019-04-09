@@ -17,10 +17,14 @@
 ;; 
 
 (defn make-empty-parse-results
+  "This structure tracks the set of vertices as the file
+   is being parsed, as well as the set of parse group names
+   and their respective triangles. It also is set up to
+   track the current group name."
   []
-  {:vertices  []
-   :triangles []
-   :groups    []})
+  {:vertices      []
+   :groups        {:default []}
+   :current-group :default})
 
 (defmulti parse-line
   "Takes a line read in from an OBJ file as well as
@@ -40,10 +44,13 @@
 
 ;; Face statement
 (defmethod parse-line "f"
-  [line objects]
-  (let [[_ & args]     (str/split line #" ")
-        vertex-indices (vec (map #(Integer/parseInt %) args))]
-    (update-in objects [:triangles] conj vertex-indices)))
+  [line parser-results]
+  (let [[_ & vertices] (str/split line #" ")
+        [starting-index & other-indices] (vec (map #(Integer/parseInt %) vertices))
+        vertex-pairs   (partition 2 1 other-indices)
+        new-triangles  (mapv #(into [] (cons starting-index %)) vertex-pairs)
+        current-group  (:current-group parser-results)]
+    (update-in parser-results [:groups current-group] into new-triangles)))
 
 ;; Comment
 (defmethod parse-line "#"
