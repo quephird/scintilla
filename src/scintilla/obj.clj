@@ -16,6 +16,12 @@
 ;;
 ;; 
 
+(defn make-empty-parse-results
+  []
+  {:vertices  []
+   :triangles []
+   :groups    []})
+
 (defmulti parse-line
   "Takes a line read in from an OBJ file as well as
    the set of all objects parsed up until this point
@@ -25,17 +31,24 @@
   (fn [line _]
     (-> line (str/split #" ") first)))
 
+;; Vertex statement
 (defmethod parse-line "v"
   [line objects]
   (let [[_ & args] (str/split line #" ")
         point      (vec (map #(Double/parseDouble %) args))]
     (update-in objects [:vertices] conj point)))
 
+;; Face statement
 (defmethod parse-line "f"
   [line objects]
   (let [[_ & args]     (str/split line #" ")
         vertex-indices (vec (map #(Integer/parseInt %) args))]
-    (update-in objects [:faces] conj vertex-indices)))
+    (update-in objects [:triangles] conj vertex-indices)))
+
+;; Comment
+(defmethod parse-line "#"
+  [_ objects]
+  objects)
 
 (defmethod parse-line :default
   [line objects]
@@ -44,16 +57,15 @@
     (throw (ex-info "Cannot parse line"
                     {:causes #{:invalid-command}}))))
 
-(defn load
-  "Takes a path to an OBJ file and returns a Scintilla
-   group structure representing the scene described in it."
+(defn parse-file
+  "Takes a path to an OBJ file and returns a set of parsed
+   objects in a hashmap."
   [filename]
   (with-open [reader (io/reader (io/resource filename))]
     (let [lines (line-seq reader)]
-      (loop [objects {:vertices [] :faces []}
+      (loop [results (make-empty-parse-results)
              [current & remaining] lines]
-        (let [new-objects (parse-line current objects)]
+        (let [new-results (parse-line current results)]
           (if (empty? remaining)
-            new-objects
-            (recur new-objects remaining))))
-      )))
+            new-results
+            (recur new-results remaining)))))))
