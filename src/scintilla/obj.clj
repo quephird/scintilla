@@ -38,14 +38,14 @@
 ;; Vertex statement
 (defmethod parse-line "v"
   [line parser-results]
-  (let [[_ & args] (str/split line #" ")
+  (let [[_ & args] (str/split line #"\s+")
         point      (vec (map #(Double/parseDouble %) args))]
     (update-in parser-results [:vertices] conj point)))
 
 ;; Face statement
 (defmethod parse-line "f"
   [line parser-results]
-  (let [[_ & vertices] (str/split line #" ")
+  (let [[_ & vertices] (str/split line #"\s+")
         [starting-index & other-indices] (vec (map #(Integer/parseInt %) vertices))
         vertex-pairs   (partition 2 1 other-indices)
         new-triangles  (mapv #(into [] (cons starting-index %)) vertex-pairs)
@@ -55,7 +55,7 @@
 ;; Group statement
 (defmethod parse-line "g"
   [line parser-results]
-  (let [[_ name & _] (str/split line #" ")
+  (let [[_ name & _] (str/split line #"\s+")
         new-group    (keyword name)]
     (assoc-in parser-results [:current-group] new-group)))
 
