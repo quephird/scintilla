@@ -369,6 +369,13 @@
   (for [x [-1 1] y [minimum maximum] z [-1 1]]
     (vector x y z 1)))
 
+(defmethod local-corners-for :triangle
+  [{:keys [p1 p2 p3]}]
+  (let [[xmin ymin zmin] (map min p1 p2)
+        [xmax ymax zmax] (map max p1 p2)]
+    (for [x [xmin xmax] y [ymin ymax] z [zmin zmax]]
+      (vector x y z 1))))
+
 (defn eight-corners-for
   [{:keys [transform] :as shape}]
   (let [raw-corners (local-corners-for shape)]

@@ -5,10 +5,6 @@
             [scintilla.shapes :as s]))
 
 (deftest testing-parse-file
-  (testing "file with gibberish"
-    (is (thrown-with-msg? RuntimeException
-                          #"Cannot parse line"
-                          (parse-file "gibberish.obj"))))
   (testing "file with comments"
     (let [parsed-results (parse-file "just_comments.obj")]
       (is (zero? (count (:vertices parsed-results))))
@@ -41,6 +37,17 @@
           expected-groups   {:default [[1 2 3]
                                        [1 3 4]
                                        [1 4 5]]}]
+      (is (≈ expected-vertices (:vertices parsed-results)))
+      (is (= expected-groups (:groups parsed-results)))))
+  (testing "file with two named groups"
+    (let [parsed-results    (parse-file "groups.obj")
+          expected-vertices [[-1 1 0]
+                             [-1 0 0]
+                             [1 0 0]
+                             [1 1 0]]
+          expected-groups   {:default     []
+                             :FirstGroup  [[1 2 3]]
+                             :SecondGroup [[1 3 4]]}]
       (is (≈ expected-vertices (:vertices parsed-results)))
       (is (= expected-groups (:groups parsed-results)))))
 )

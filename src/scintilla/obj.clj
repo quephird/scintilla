@@ -37,10 +37,10 @@
 
 ;; Vertex statement
 (defmethod parse-line "v"
-  [line objects]
+  [line parser-results]
   (let [[_ & args] (str/split line #" ")
         point      (vec (map #(Double/parseDouble %) args))]
-    (update-in objects [:vertices] conj point)))
+    (update-in parser-results [:vertices] conj point)))
 
 ;; Face statement
 (defmethod parse-line "f"
@@ -52,17 +52,17 @@
         current-group  (:current-group parser-results)]
     (update-in parser-results [:groups current-group] into new-triangles)))
 
-;; Comment
-(defmethod parse-line "#"
-  [_ objects]
-  objects)
+;; Group statement
+(defmethod parse-line "g"
+  [line parser-results]
+  (let [[_ name & _] (str/split line #" ")
+        new-group    (keyword name)]
+    (assoc-in parser-results [:current-group] new-group)))
 
+;; All blank lines and other non-supported statements
 (defmethod parse-line :default
-  [line objects]
-  (if (empty? line)
-    objects
-    (throw (ex-info "Cannot parse line"
-                    {:causes #{:invalid-command}}))))
+  [_ parser-results]
+  parser-results)
 
 (defn parse-file
   "Takes a path to an OBJ file and returns a set of parsed
@@ -76,3 +76,28 @@
           (if (empty? remaining)
             new-results
             (recur new-results remaining)))))))
+
+(defn make-triangle-for
+  [triangle vertices]
+  (let [[p1 p2 p3] (->> triangle
+                        (map dec)
+                        (map #(get vertices %))
+                        (map #(conj % 1)))]
+    (s/make-triangle p1 p2 p3)))
+
+(defn make-group-for
+  [group vertices]
+  (let [triangles (map #(make-triangle-for % vertices) group)]
+    (g/make-group triangles)))
+
+(defn results->group
+  [{:keys [groups vertices] :as results}]
+  (let [named-groups (map (fn [[_ indices]]
+                            (make-group-for indices vertices)) groups)]
+    (g/make-group named-groups)))
+
+(defn load-obj-file
+  [filename]
+  (-> filename
+      parse-file
+      results->group))
