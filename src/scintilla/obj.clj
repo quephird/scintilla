@@ -4,17 +4,26 @@
             [clojure.java.io :as io]
             [clojure.string :as str]))
 
-;; TODO: Fully describe the format of the Wavefront OBJ file
+;; This namespace is responsible for parsing Wavefront OBJ files.
+;; It currently supports the following statement types:
 ;;
-;; vertex line
+;; vertex statement
 ;;
-;; * v 1 2 3
+;;    v 1 2 3
 ;;
-;; face line
+;; face statement (just one of three possible variations
 ;;
-;; * f 1 2 4
+;;    f 1 2 4
 ;;
+;; group statement
+;;
+;;    g SomeGroupName
+;;
+;; comment
 ;; 
+;;    # This is an example comment
+;;
+;; All other statement types are currently ignored.
 
 (defn make-empty-parse-results
   "This structure tracks the set of vertices as the file
