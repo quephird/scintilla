@@ -61,6 +61,17 @@
                           :normal normal}]
     (make-shape :triangle (apply merge triangle-options options))))
 
+(defn make-smooth-triangle
+  [[p1 p2 p3] [n1 n2 n3] & options]
+  (let [e1     (u/subtract p2 p1)
+        e2     (u/subtract p3 p1)
+        normal (u/normalize (u/cross-product e2 e1))
+        triangle-options {:p1 p1 :p2 p2 :p3 p3
+                          :n1 n1 :n2 n2 :n3 n3
+                          :e1 e1 :e2 e2
+                          :normal normal}]
+    (make-shape :smooth-triangle (apply merge triangle-options options))))
+
 (defn- quadratic-roots-for
   "Helper function to determine the set of real roots to the quadratic equation:
    𝑎𝑥² + 𝑏𝑥 + 𝑐 = 𝟢"
@@ -78,9 +89,11 @@
 
 (defn make-intersection
   "Constructs a data structure representing an intersection"
-  [t shape]
-  {:t t
-   :shape shape})
+  ([t shape] {:t t
+              :shape shape})
+  ([t shape u v] {:t t
+                  :shape shape
+                  :u u :v v}))
 
 (defmulti intersections-for
   "Takes an abritrary shape and a ray and returns a list
@@ -205,7 +218,7 @@
               []
               (let [t (* f (u/dot-product e2 ray-origin-cross-e1))]
                 ;; We have a hit!!!
-                [(make-intersection t shape)]))))))))
+                [(make-intersection t shape u v)]))))))))
 
 (defn- check-axis
   "Helper function for computing minimum and maximum
