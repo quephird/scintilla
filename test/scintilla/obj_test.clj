@@ -49,5 +49,4 @@
                              :FirstGroup  [[1 2 3]]
                              :SecondGroup [[1 3 4]]}]
       (is (≈ expected-vertices (:vertices parsed-results)))
-      (is (= expected-groups (:groups parsed-results)))))
-)
+      (is (= expected-groups (:groups parsed-results))))))

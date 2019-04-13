@@ -266,18 +266,18 @@
        (map #(make-intersection % shape) [t-min t-max]))))
 
 ;; TODO: Need diagrams for below
-(defmulti local-normal-for (fn [shape _] (:shape-type shape)))
+(defmulti local-normal-for (fn [shape _ _] (:shape-type shape)))
 
 (defmethod local-normal-for :sphere
-  [_ local-point]
+  [_ local-point _]
   (u/subtract local-point [0.0 0.0 0.0 1.0]))
 
 (defmethod local-normal-for :plane
-  [_ _]
+  [_ _ _]
   [0 1 0 0])
 
 (defmethod local-normal-for :cube
-  [_ [x y z _ :as local-point]]
+  [_ [x y z _ :as local-point] _]
   (let [max-coordinate (->> [x y z]
                            (map #(Math/abs %))
                            (apply max))]
@@ -291,7 +291,8 @@
 
 (defmethod local-normal-for :cylinder
   [{:keys [minimum maximum] :as shape}
-   [x y z _ :as local-point]]
+   [x y z _ :as local-point]
+   _]
   (let [distance-squared (+ (* x x) (* z z))]
     (cond
       (and (< distance-squared 1) (>= y (- maximum ε)))
@@ -303,7 +304,8 @@
 
 (defmethod local-normal-for :cone
   [{:keys [minimum maximum] :as shape}
-   [x y z _ :as local-point]]
+   [x y z _ :as local-point]
+   _]
   (let [distance-squared (+ (* x x) (* z z))]
     (cond
       (and (< distance-squared 1) (>= y (- maximum ε)))
@@ -316,7 +318,7 @@
         [x (Math/sqrt distance-squared) z 0])))
 
 (defmethod local-normal-for :triangle
-  [{:keys [normal]} _]
+  [{:keys [normal] :as shape} _ {:keys [u v] :as hit}]
   normal)
 
 (defn normal-for
@@ -326,11 +328,11 @@
    that coordinate system by deferring the specialized
    implementation for the shape, then transforms it back to the
    world coordinate system."
-  [{:keys [transform] :as shape} world-point]
+  [{:keys [transform] :as shape} world-point hit]
   (let [inverse-transform       (m/inverse transform)
-        local-normal            (->> world-point
-                                     (m/tuple-times inverse-transform)
-                                     (local-normal-for shape))]
+        local-normal            (as-> world-point $
+                                      (m/tuple-times inverse-transform $)
+                                      (local-normal-for shape $ hit))]
     (as-> local-normal $
           (m/tuple-times (m/transpose inverse-transform) $)
           (assoc $ 3 0)  ;; TODO: This is a hack per the book; look for better way

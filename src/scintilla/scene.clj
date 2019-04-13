@@ -79,9 +79,9 @@
 (defn make-prepared-hit
   "Returns a map representing the object hit by the ray
    with other pre-computed entities associated with it."
-  [hit ray all-intersections]
-  (let [surface-point    (r/position ray (:t hit))
-        surface-normal   (s/normal-for (:shape hit) surface-point)
+  [{:keys [t shape] :as hit} ray all-intersections]
+  (let [surface-point    (r/position ray t)
+        surface-normal   (s/normal-for shape surface-point hit)
         eye-direction    (u/subtract (:direction ray))
         reflected-vector (r/reflected-vector-for (:direction ray) surface-normal)
         inside?          (> 0 (u/dot-product surface-normal eye-direction))
