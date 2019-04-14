@@ -340,8 +340,14 @@
         [x (Math/sqrt distance-squared) z 0])))
 
 (defmethod local-normal-for :triangle
-  [{:keys [normal] :as shape} _ {:keys [u v] :as hit}]
+  [{:keys [normal] :as shape} _ _]
   normal)
+
+(defmethod local-normal-for :smooth-triangle
+  [{:keys [n1 n2 n3] :as shape} _ {:keys [u v] :as hit}]
+  (u/plus (u/scalar-times n2 u)
+          (u/scalar-times n3 v)
+          (u/scalar-times n1 (- 1 u v))))
 
 (defn normal-for
   "This is the 'public' interface for computing the normal

@@ -387,6 +387,19 @@
       (is (every? #(≈ expected-value %)
                   (map #(normal-for triangle % bogus-hit) [p1 p2 p3]))))))
 
+(deftest testing-normal-for-smooth-triangle
+  (testing "a ray that hits the middle of the triangle"
+    (let [vertices        [[0 1 0 1]
+                           [-1 0 0 1]
+                           [1 0 0 1]]
+          normals         [[0 1 0 0]
+                           [-1 0 0 0]
+                           [1 0 0 0]]
+          smooth-triangle (make-smooth-triangle vertices normals)
+          hit             (make-intersection 1.0 smooth-triangle 0.45 0.25)
+          test-point      [0 0 0 1]]
+      (is (≈ [-0.5547 0.83205 0 0] (normal-for smooth-triangle test-point hit))))))
+
 (deftest testing-normal-for-child-of-group
   (testing "child object of nested group"
     (let [sphere-transform      (t/translation-matrix 5 0 0)
