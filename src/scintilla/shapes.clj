@@ -197,7 +197,7 @@
     (concat (intersections-for-cone-wall shape local-ray)
             (intersections-for-cone-caps shape local-ray))))
 
-(defmethod intersections-for :triangle
+(defn- intersections-for-all-triangles
   [{:keys [transform p1 e1 e2] :as shape} ray]
   (let [{:keys [point direction] :as local-ray} (r/transform ray (m/inverse transform))
         ray-direction-cross-e2 (u/cross-product direction e2)
@@ -219,6 +219,15 @@
               (let [t (* f (u/dot-product e2 ray-origin-cross-e1))]
                 ;; We have a hit!!!
                 [(make-intersection t shape u v)]))))))))
+
+;; TODO: Look into using hierarchies below
+(defmethod intersections-for :triangle
+  [shape ray]
+  (intersections-for-all-triangles shape ray))
+
+(defmethod intersections-for :smooth-triangle
+  [shape ray]
+  (intersections-for-all-triangles shape ray))
 
 (defn- check-axis
   "Helper function for computing minimum and maximum

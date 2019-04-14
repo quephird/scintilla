@@ -250,6 +250,20 @@
       (is (= 1 (count intersections)))
       (is (≈ 2 (:t (first intersections)))))))
 
+(deftest testing-intersections-for-smooth-triangle
+  (testing "a ray that hits the middle of the triangle"
+    (let [vertices        [[0 1 0 1]
+                           [-1 0 0 1]
+                           [1 0 0 1]]
+          normals         [[0 1 0 0]
+                           [-1 0 0 0]
+                           [1 0 0 0]]
+          smooth-triangle (make-smooth-triangle vertices normals)
+          ray             (r/make-ray [-0.2 0.3 -2 1] [0 0 1 0])
+          intersections   (intersections-for smooth-triangle ray)]
+      (is (≈ 0.45 (:u (first intersections))))
+      (is (≈ 0.25 (:v (first intersections)))))))
+
 ;; NOTA BENE: `normal-for` now needs a third argument but for
 ;;            all shapes except the triangle, it's not ever used
 ;;            and so all the relevant tests below just pass in
