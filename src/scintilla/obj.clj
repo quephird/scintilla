@@ -11,6 +11,10 @@
 ;;
 ;;    v 1 2 3
 ;;
+;; vertex normal statement
+;;
+;;    vn 0.1 0.7071 0.5
+;;
 ;; face statement (just one of three possible variations
 ;;
 ;;    f 1 2 4
@@ -32,6 +36,7 @@
    track the current group name."
   []
   {:vertices      []
+   :normals       []
    :groups        {:default []}
    :current-group :default})
 
@@ -57,6 +62,13 @@
         point      (vec (map #(Double/parseDouble %) args))]
     (update-in parser-results [:vertices] conj point)))
 
+;; Vertex normal statement
+(defmethod parse-line "vn"
+  [line parser-results]
+  (let [[_ & args] (str/split line #"\s+")
+        point      (vec (map #(Double/parseDouble %) args))]
+    (update-in parser-results [:normals] conj point)))
+
 (defn- parse-all-indices
   "Helper function to parse all indices from the vertex data in a
    face statement. Vertex data can be in the following forms:
@@ -76,7 +88,9 @@
   (->> vertex-data
        (map #(str/split % #"/"))
        (map (fn [index-group]
-              (map #(Integer/parseInt %) index-group)))))
+              (map #(if (empty? %)
+                      nil
+                      (Integer/parseInt %)) index-group)))))
 
 (defn make-triangle-triplets-for
   "Helper function to take a list of vertex indices for a single face

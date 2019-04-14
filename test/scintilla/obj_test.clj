@@ -49,4 +49,20 @@
                              :FirstGroup  [[1 2 3]]
                              :SecondGroup [[1 3 4]]}]
       (is (≈ expected-vertices (:vertices parsed-results)))
-      (is (= expected-groups (:groups parsed-results))))))
+      (is (= expected-groups (:groups parsed-results)))))
+  (testing "file with faces and normals"
+    (let [parsed-results    (parse-file "faces_with_normals.obj")
+          expected-vertices [[0 1 0]
+                             [-1 0 0]
+                             [1 0 0]]
+          expected-normals  [[-1 0 0]
+                             [1 0 0]
+                             [0 1 0]]
+          expected-groups   {:default [[1 2 3]
+                                       [1 2 3]]}]
+      (println parsed-results)
+      (is (≈ expected-vertices (:vertices parsed-results)))
+      (is (≈ expected-normals (:normals parsed-results)))
+      (is (= expected-groups (:groups parsed-results)))))
+
+  )
