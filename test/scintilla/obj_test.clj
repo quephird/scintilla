@@ -23,8 +23,8 @@
                              [-1 0 0]
                              [1 0 0]
                              [1 1 0]]
-          expected-groups {:default [[1 2 3]
-                                     [1 3 4]]}]
+          expected-groups {:default [{:vertices [1 2 3]}
+                                     {:vertices [1 3 4]}]}]
       (is (≈ expected-vertices (:vertices parsed-results)))
       (is (= expected-groups (:groups parsed-results)))))
   (testing "file with polygon"
@@ -34,9 +34,9 @@
                              [1 0 0]
                              [1 1 0]
                              [0 2 0]]
-          expected-groups   {:default [[1 2 3]
-                                       [1 3 4]
-                                       [1 4 5]]}]
+          expected-groups   {:default [{:vertices [1 2 3]}
+                                       {:vertices [1 3 4]}
+                                       {:vertices [1 4 5]}]}]
       (is (≈ expected-vertices (:vertices parsed-results)))
       (is (= expected-groups (:groups parsed-results)))))
   (testing "file with two named groups"
@@ -46,8 +46,8 @@
                              [1 0 0]
                              [1 1 0]]
           expected-groups   {:default     []
-                             :FirstGroup  [[1 2 3]]
-                             :SecondGroup [[1 3 4]]}]
+                             :FirstGroup  [{:vertices [1 2 3]}]
+                             :SecondGroup [{:vertices [1 3 4]}]}]
       (is (≈ expected-vertices (:vertices parsed-results)))
       (is (= expected-groups (:groups parsed-results)))))
   (testing "file with faces and normals"
@@ -58,9 +58,8 @@
           expected-normals  [[-1 0 0]
                              [1 0 0]
                              [0 1 0]]
-          expected-groups   {:default [[1 2 3]
-                                       [1 2 3]]}]
-      (println parsed-results)
+          expected-groups   {:default [{:vertices [1 2 3] :normals [3 1 2]}
+                                       {:vertices [1 2 3] :normals [3 1 2]}]}]
       (is (≈ expected-vertices (:vertices parsed-results)))
       (is (≈ expected-normals (:normals parsed-results)))
       (is (= expected-groups (:groups parsed-results)))))

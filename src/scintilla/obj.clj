@@ -69,6 +69,11 @@
         point      (vec (map #(Double/parseDouble %) args))]
     (update-in parser-results [:normals] conj point)))
 
+(defn- third
+  "Useful convenience function"
+  [list]
+  (-> list rest rest first))
+
 ;; TODO: I really don't like relying on `nil`s here;
 ;;       is there a way to avoid them?
 (defn- parse-all-indices
@@ -94,26 +99,28 @@
                       nil
                       (Integer/parseInt %)) index-group)))))
 
+  ;; (let [index-groups       (map #(str/split % #"/") vertex-data)
+  ;;       vertex-indices-raw (map first index-groups)
+  ;;       vertex-indices     {:vertices (map (fn [index]
+  ;;                                            (Integer/parseInt index)) vertex-indices-raw)}
+  ;;       normal-index-raw (map third all-indices)
+  ;;       vertic
+
 ;; TODO: Give example inputs and outputs
 (defn make-triangle-maps-for
   "Helper function to take a list of vertex indices and list of normal
    indices for a single face, and return a list of maps of triplets of
    indices for each triangle in the face."
   [[v1 & vs :as vertex-indices] [n1 & ns :as normal-indices]]
-  (let [vertex-pairs (partition 2 1 vs)
-        vertex-triples (mapv #(into [] (cons v1 %)) vertex-pairs)]
-    (map (fn [vt] {:vertices vt}) vertex-triples)))
-
-
-    ;;     normal-pairs (partition 2 1 ns)
-    ;;     normal-triples (mapv #(into [] (cons n1 %)) normal-pairs)]
-    ;; (map (fn [vt nt]
-    ;;        {:vertices vt :normals nt}) vertex-triples normal-triples)))
-
-(defn- third
-  "Useful convenience function"
-  [list]
-  (-> list rest rest first))
+  (let [vertex-pairs   (partition 2 1 vs)
+        vertex-triples (mapv #(into [] (cons v1 %)) vertex-pairs)
+        triangle-maps  (map (fn [vt] {:vertices vt}) vertex-triples)]
+    (if (some nil? normal-indices)
+      triangle-maps
+      (let [normal-pairs   (partition 2 1 ns)
+            normal-triples (mapv #(into [] (cons n1 %)) normal-pairs)]
+        (map (fn [triangle-map nt]
+               (assoc triangle-map :normals nt)) triangle-maps normal-triples)))))
 
 ;; Face statement
 (defmethod parse-line "f"
@@ -154,27 +161,33 @@
 (defn- make-triangle-for
   "Takes a triple of triangle indices, and the list of all vertices,
    and returns a Scintilla triangle object."
-  [{triangle-vertices :vertices} vertices]
-  (let [[p1 p2 p3] (->> triangle-vertices
-                        (map dec)
-                        (map #(get vertices %))
-                        (map #(conj % 1)))]
-    (s/make-triangle p1 p2 p3)))
+  [{:keys [vertices normals]} all-vertices all-normals]
+  (let [vertex-points (->> vertices
+                           (map dec)
+                           (map #(get all-vertices %))
+                           (map #(conj % 1)))]
+    (if (nil? normals)
+      (s/make-triangle vertex-points)
+      (let [normal-vectors (->> normals
+                                (map dec)
+                                (map #(get all-normals %))
+                                (map #(conj % 0)))]
+        (s/make-smooth-triangle vertex-points normal-vectors)))))
 
 (defn- make-group-for
   "Takes a set of parsed data for a group, named or default, and
    the list of all vertices, and returns a Scintilla group object."
-  [group-data vertices]
-  (let [triangles (map #(make-triangle-for % vertices) group-data)]
+  [group-data vertices normals]
+  (let [triangles (map #(make-triangle-for % vertices normals) group-data)]
     (g/make-group triangles)))
 
 (defn results->groups
   "Takes the complete set of parsed vertices, textures, groups, etc.
    and returns a Scintilla group containing all objects represented
    in the OBJ file."
-  [{:keys [groups vertices] :as results}]
+  [{:keys [groups vertices normals] :as results}]
   (let [named-groups (map (fn [[group-name group-data]]
-                            (make-group-for group-data vertices)) groups)]
+                            (make-group-for group-data vertices normals)) groups)]
     (g/make-group named-groups)))
 
 (defn load-obj-file

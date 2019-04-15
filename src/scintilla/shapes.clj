@@ -52,7 +52,7 @@
   (make-shape :cone (into {} options)))
 
 (defn make-triangle
-  [p1 p2 p3 & options]
+  [[p1 p2 p3] & options]
   (let [e1     (u/subtract p2 p1)
         e2     (u/subtract p3 p1)
         normal (u/normalize (u/cross-product e2 e1))
@@ -63,9 +63,9 @@
 
 (defn make-smooth-triangle
   [[p1 p2 p3] [n1 n2 n3] & options]
-  (let [e1     (u/subtract p2 p1)
-        e2     (u/subtract p3 p1)
-        normal (u/normalize (u/cross-product e2 e1))
+  (let [e1         (u/subtract p2 p1)
+        e2         (u/subtract p3 p1)
+        normal     (u/normalize (u/cross-product e2 e1))
         triangle-options {:p1 p1 :p2 p2 :p3 p3
                           :n1 n1 :n2 n2 :n3 n3
                           :e1 e1 :e2 e2
@@ -400,6 +400,13 @@
     (vector x y z 1)))
 
 (defmethod local-corners-for :triangle
+  [{:keys [p1 p2 p3]}]
+  (let [[xmin ymin zmin] (map min p1 p2)
+        [xmax ymax zmax] (map max p1 p2)]
+    (for [x [xmin xmax] y [ymin ymax] z [zmin zmax]]
+      (vector x y z 1))))
+
+(defmethod local-corners-for :smooth-triangle
   [{:keys [p1 p2 p3]}]
   (let [[xmin ymin zmin] (map min p1 p2)
         [xmax ymax zmax] (map max p1 p2)]
