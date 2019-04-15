@@ -69,6 +69,8 @@
         point      (vec (map #(Double/parseDouble %) args))]
     (update-in parser-results [:normals] conj point)))
 
+;; TODO: I really don't like relying on `nil`s here;
+;;       is there a way to avoid them?
 (defn- parse-all-indices
   "Helper function to parse all indices from the vertex data in a
    face statement. Vertex data can be in the following forms:
@@ -92,23 +94,37 @@
                       nil
                       (Integer/parseInt %)) index-group)))))
 
-(defn make-triangle-triplets-for
-  "Helper function to take a list of vertex indices for a single face
-   and returning a list of triplets of indices for each triagle in the
-   face."
-  [[starting-index & other-indices :as vertex-indices]]
-  (let [vertex-pairs (partition 2 1 other-indices)]
-    (mapv #(into [] (cons starting-index %)) vertex-pairs)))
+;; TODO: Give example inputs and outputs
+(defn make-triangle-maps-for
+  "Helper function to take a list of vertex indices and list of normal
+   indices for a single face, and return a list of maps of triplets of
+   indices for each triangle in the face."
+  [[v1 & vs :as vertex-indices] [n1 & ns :as normal-indices]]
+  (let [vertex-pairs (partition 2 1 vs)
+        vertex-triples (mapv #(into [] (cons v1 %)) vertex-pairs)]
+    (map (fn [vt] {:vertices vt}) vertex-triples)))
+
+
+    ;;     normal-pairs (partition 2 1 ns)
+    ;;     normal-triples (mapv #(into [] (cons n1 %)) normal-pairs)]
+    ;; (map (fn [vt nt]
+    ;;        {:vertices vt :normals nt}) vertex-triples normal-triples)))
+
+(defn- third
+  "Useful convenience function"
+  [list]
+  (-> list rest rest first))
 
 ;; Face statement
 (defmethod parse-line "f"
   [line parser-results]
   (let [[_ & vertex-data] (str/split line #"\s+")
-        all-indices    (parse-all-indices vertex-data)
-        vertex-indices (map first all-indices)
-        new-triangles  (make-triangle-triplets-for vertex-indices)
-        current-group  (:current-group parser-results)]
-    (update-in parser-results [:groups current-group] into new-triangles)))
+        all-indices       (parse-all-indices vertex-data)
+        vertex-indices    (map first all-indices)
+        normal-indices    (map third all-indices)
+        new-triangle-maps (make-triangle-maps-for vertex-indices normal-indices)
+        current-group     (:current-group parser-results)]
+    (update-in parser-results [:groups current-group] into new-triangle-maps)))
 
 ;; Group statement
 (defmethod parse-line "g"
@@ -138,8 +154,8 @@
 (defn- make-triangle-for
   "Takes a triple of triangle indices, and the list of all vertices,
    and returns a Scintilla triangle object."
-  [triangle-indices vertices]
-  (let [[p1 p2 p3] (->> triangle-indices
+  [{triangle-vertices :vertices} vertices]
+  (let [[p1 p2 p3] (->> triangle-vertices
                         (map dec)
                         (map #(get vertices %))
                         (map #(conj % 1)))]
@@ -152,13 +168,13 @@
   (let [triangles (map #(make-triangle-for % vertices) group-data)]
     (g/make-group triangles)))
 
-(defn results->group
+(defn results->groups
   "Takes the complete set of parsed vertices, textures, groups, etc.
    and returns a Scintilla group containing all objects represented
    in the OBJ file."
   [{:keys [groups vertices] :as results}]
-  (let [named-groups (map (fn [[_ indices]]
-                            (make-group-for indices vertices)) groups)]
+  (let [named-groups (map (fn [[group-name group-data]]
+                            (make-group-for group-data vertices)) groups)]
     (g/make-group named-groups)))
 
 (defn load-obj-file
@@ -168,4 +184,4 @@
   [filename]
   (-> filename
       parse-file
-      results->group))
+      results->groups))

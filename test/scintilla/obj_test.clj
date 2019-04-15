@@ -66,3 +66,11 @@
       (is (= expected-groups (:groups parsed-results)))))
 
   )
+
+(deftest testing-load-obj-file
+  (testing "file with triangle faces"
+    (let [main-group    (load-obj-file "triangle_faces.obj")
+          child-groups  (:children main-group)
+          triangles     (-> child-groups first :children)]
+      (is (= 1 (count child-groups)))
+      (is (= 2 (count triangles))))))
