@@ -218,33 +218,33 @@
 
 (deftest testing-intersections-for-triangle
   (testing "a ray parallel to triangle"
-    (let [triangle (make-triangle [0 1 0 1]
-                                  [-1 0 0 1]
-                                  [1 0 0 1])
+    (let [triangle (make-triangle [[0 1 0 1]
+                                   [-1 0 0 1]
+                                   [1 0 0 1]])
           ray      (r/make-ray [0 -1 -2 1] [0 1 0 0])]
       (is (empty? (intersections-for triangle ray)))))
   (testing "a ray misses the p1-p3 edge"
-    (let [triangle (make-triangle [0 1 0 1]
-                                  [-1 0 0 1]
-                                  [1 0 0 1])
+    (let [triangle (make-triangle [[0 1 0 1]
+                                   [-1 0 0 1]
+                                   [1 0 0 1]])
           ray      (r/make-ray [1 1 -2 1] [0 0 1 0])]
       (is (empty? (intersections-for triangle ray)))))
   (testing "a ray misses the p1-p2 edge"
-    (let [triangle (make-triangle [0 1 0 1]
-                                  [-1 0 0 1]
-                                  [1 0 0 1])
+    (let [triangle (make-triangle [[0 1 0 1]
+                                   [-1 0 0 1]
+                                   [1 0 0 1]])
           ray      (r/make-ray [-1 1 -2 1] [0 0 1 0])]
       (is (empty? (intersections-for triangle ray)))))
   (testing "a ray misses the p2-p3 edge"
-    (let [triangle (make-triangle [0 1 0 1]
-                                  [-1 0 0 1]
-                                  [1 0 0 1])
+    (let [triangle (make-triangle [[0 1 0 1]
+                                   [-1 0 0 1]
+                                   [1 0 0 1]])
           ray      (r/make-ray [0 -1 -2 1] [0 0 1 0])]
       (is (empty? (intersections-for triangle ray)))))
   (testing "a ray strikes a triangle"
-    (let [triangle (make-triangle [0 1 0 1]
-                                  [-1 0 0 1]
-                                  [1 0 0 1])
+    (let [triangle (make-triangle [[0 1 0 1]
+                                   [-1 0 0 1]
+                                   [1 0 0 1]])
           ray      (r/make-ray [0 0.5 -2 1] [0 0 1 0])
           intersections (intersections-for triangle ray)]
       (is (= 1 (count intersections)))
@@ -381,7 +381,7 @@
     (let [p1             [0 1 0 1]
           p2             [-1 0 0 1]
           p3             [1 0 0 1]
-          triangle       (make-triangle p1 p2 p3)
+          triangle       (make-triangle [p1 p2 p3])
           bogus-hit      {}
           expected-value [0 0 -1 0]]
       (is (every? #(≈ expected-value %)

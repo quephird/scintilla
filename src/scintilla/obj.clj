@@ -114,14 +114,14 @@
    produce four triangles to 'cover' the face like this:
 
                    2 ____________ 3
-                    /         ,-'\
-                   /      ,-'     \
-                  /   ,-'          \
-              1  /,_'_______________\ 4
-                 \'-,               /
-                  \   '-,          /
-                   \      '-,     /
-                    \         '-,/
+                    /         ,-'﹨
+                   /      ,-'     ﹨
+                  /   ,-'          ﹨
+              1  /,_'_______________﹨ 4
+                 ﹨'-,               /
+                  ﹨   '-,          /
+                   ﹨      '-,     /
+                    ﹨         '-,/
                    6 ‾‾‾‾‾‾‾‾‾‾‾‾ 5
 
    Specifically, we want to produce triples of vertices like:
