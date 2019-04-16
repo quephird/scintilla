@@ -99,18 +99,47 @@
                       nil
                       (Integer/parseInt %)) index-group)))))
 
-  ;; (let [index-groups       (map #(str/split % #"/") vertex-data)
-  ;;       vertex-indices-raw (map first index-groups)
-  ;;       vertex-indices     {:vertices (map (fn [index]
-  ;;                                            (Integer/parseInt index)) vertex-indices-raw)}
-  ;;       normal-index-raw (map third all-indices)
-  ;;       vertic
-
-;; TODO: Give example inputs and outputs
 (defn make-triangle-maps-for
   "Helper function to take a list of vertex indices and list of normal
    indices for a single face, and return a list of maps of triplets of
-   indices for each triangle in the face."
+   indices representing each triangle that composes the face.
+
+   The strategy used here is to create a fan of triangles with the
+   first index for each list shared across all triangles as the
+   starting point. Consider the following face statement:
+
+      f 1//6 2//5 3//4 4//3 5//2 6//1
+
+   This is assumed to represent a hexagonal face, and so we need to
+   produce four triangles to 'cover' the face like this:
+
+                   2 ____________ 3
+                    /         ,-'\
+                   /      ,-'     \
+                  /   ,-'          \
+              1  /,_'_______________\ 4
+                 \'-,               /
+                  \   '-,          /
+                   \      '-,     /
+                    \         '-,/
+                   6 ‾‾‾‾‾‾‾‾‾‾‾‾ 5
+
+   Specifically, we want to produce triples of vertices like:
+
+      [1 2 3] [1 3 4] [1 4 5] [1 5 6]
+
+   Additionally, we need to produce the corresponding list of normal
+   vector indices like so:
+
+      [6 5 4] [6 4 3] [6 3 2] [6 2 1]
+
+   Putting it all together, the desired return value of this function is
+
+      [{:vertices [1 2 3] :normals [6 5 4]}
+       {:vertices [1 3 4] :normals [6 4 3]}
+       {:vertices [1 4 5] :normals [6 3 2]}
+       {:vertices [1 5 6] :normals [6 2 1]}]
+  "
   [[v1 & vs :as vertex-indices] [n1 & ns :as normal-indices]]
   (let [vertex-pairs   (partition 2 1 vs)
         vertex-triples (mapv #(into [] (cons v1 %)) vertex-pairs)
@@ -159,8 +188,9 @@
             (recur new-results remaining)))))))
 
 (defn- make-triangle-for
-  "Takes a triple of triangle indices, and the list of all vertices,
-   and returns a Scintilla triangle object."
+  "Takes a triple of triangle indices, and the list of all vertices and
+   all normals and either returns a Scintilla triangle object or
+   smooth triangle object if vertex normals are specified."
   [{:keys [vertices normals]} all-vertices all-normals]
   (let [vertex-points (->> vertices
                            (map dec)
