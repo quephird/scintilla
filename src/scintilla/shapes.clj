@@ -52,7 +52,7 @@
   (make-shape :cone (into {} options)))
 
 (defn make-triangle
-  [p1 p2 p3 & options]
+  [[p1 p2 p3] & options]
   (let [e1     (u/subtract p2 p1)
         e2     (u/subtract p3 p1)
         normal (u/normalize (u/cross-product e2 e1))
@@ -60,6 +60,17 @@
                           :e1 e1 :e2 e2
                           :normal normal}]
     (make-shape :triangle (apply merge triangle-options options))))
+
+(defn make-smooth-triangle
+  [[p1 p2 p3] [n1 n2 n3] & options]
+  (let [e1         (u/subtract p2 p1)
+        e2         (u/subtract p3 p1)
+        normal     (u/normalize (u/cross-product e2 e1))
+        triangle-options {:p1 p1 :p2 p2 :p3 p3
+                          :n1 n1 :n2 n2 :n3 n3
+                          :e1 e1 :e2 e2
+                          :normal normal}]
+    (make-shape :smooth-triangle (apply merge triangle-options options))))
 
 (defn- quadratic-roots-for
   "Helper function to determine the set of real roots to the quadratic equation:
@@ -78,9 +89,11 @@
 
 (defn make-intersection
   "Constructs a data structure representing an intersection"
-  [t shape]
-  {:t t
-   :shape shape})
+  ([t shape] {:t t
+              :shape shape})
+  ([t shape u v] {:t t
+                  :shape shape
+                  :u u :v v}))
 
 (defmulti intersections-for
   "Takes an abritrary shape and a ray and returns a list
@@ -184,7 +197,7 @@
     (concat (intersections-for-cone-wall shape local-ray)
             (intersections-for-cone-caps shape local-ray))))
 
-(defmethod intersections-for :triangle
+(defn- intersections-for-all-triangles
   [{:keys [transform p1 e1 e2] :as shape} ray]
   (let [{:keys [point direction] :as local-ray} (r/transform ray (m/inverse transform))
         ray-direction-cross-e2 (u/cross-product direction e2)
@@ -205,7 +218,16 @@
               []
               (let [t (* f (u/dot-product e2 ray-origin-cross-e1))]
                 ;; We have a hit!!!
-                [(make-intersection t shape)]))))))))
+                [(make-intersection t shape u v)]))))))))
+
+;; TODO: Look into using hierarchies below
+(defmethod intersections-for :triangle
+  [shape ray]
+  (intersections-for-all-triangles shape ray))
+
+(defmethod intersections-for :smooth-triangle
+  [shape ray]
+  (intersections-for-all-triangles shape ray))
 
 (defn- check-axis
   "Helper function for computing minimum and maximum
@@ -266,18 +288,18 @@
        (map #(make-intersection % shape) [t-min t-max]))))
 
 ;; TODO: Need diagrams for below
-(defmulti local-normal-for (fn [shape _] (:shape-type shape)))
+(defmulti local-normal-for (fn [shape _ _] (:shape-type shape)))
 
 (defmethod local-normal-for :sphere
-  [_ local-point]
+  [_ local-point _]
   (u/subtract local-point [0.0 0.0 0.0 1.0]))
 
 (defmethod local-normal-for :plane
-  [_ _]
+  [_ _ _]
   [0 1 0 0])
 
 (defmethod local-normal-for :cube
-  [_ [x y z _ :as local-point]]
+  [_ [x y z _ :as local-point] _]
   (let [max-coordinate (->> [x y z]
                            (map #(Math/abs %))
                            (apply max))]
@@ -291,7 +313,8 @@
 
 (defmethod local-normal-for :cylinder
   [{:keys [minimum maximum] :as shape}
-   [x y z _ :as local-point]]
+   [x y z _ :as local-point]
+   _]
   (let [distance-squared (+ (* x x) (* z z))]
     (cond
       (and (< distance-squared 1) (>= y (- maximum ε)))
@@ -303,7 +326,8 @@
 
 (defmethod local-normal-for :cone
   [{:keys [minimum maximum] :as shape}
-   [x y z _ :as local-point]]
+   [x y z _ :as local-point]
+   _]
   (let [distance-squared (+ (* x x) (* z z))]
     (cond
       (and (< distance-squared 1) (>= y (- maximum ε)))
@@ -316,8 +340,14 @@
         [x (Math/sqrt distance-squared) z 0])))
 
 (defmethod local-normal-for :triangle
-  [{:keys [normal]} _]
+  [{:keys [normal] :as shape} _ _]
   normal)
+
+(defmethod local-normal-for :smooth-triangle
+  [{:keys [n1 n2 n3] :as shape} _ {:keys [u v] :as hit}]
+  (u/plus (u/scalar-times n2 u)
+          (u/scalar-times n3 v)
+          (u/scalar-times n1 (- 1 u v))))
 
 (defn normal-for
   "This is the 'public' interface for computing the normal
@@ -326,11 +356,11 @@
    that coordinate system by deferring the specialized
    implementation for the shape, then transforms it back to the
    world coordinate system."
-  [{:keys [transform] :as shape} world-point]
+  [{:keys [transform] :as shape} world-point hit]
   (let [inverse-transform       (m/inverse transform)
-        local-normal            (->> world-point
-                                     (m/tuple-times inverse-transform)
-                                     (local-normal-for shape))]
+        local-normal            (as-> world-point $
+                                      (m/tuple-times inverse-transform $)
+                                      (local-normal-for shape $ hit))]
     (as-> local-normal $
           (m/tuple-times (m/transpose inverse-transform) $)
           (assoc $ 3 0)  ;; TODO: This is a hack per the book; look for better way
@@ -368,6 +398,20 @@
   [{:keys [minimum maximum]}]
   (for [x [-1 1] y [minimum maximum] z [-1 1]]
     (vector x y z 1)))
+
+(defmethod local-corners-for :triangle
+  [{:keys [p1 p2 p3]}]
+  (let [[xmin ymin zmin] (map min p1 p2)
+        [xmax ymax zmax] (map max p1 p2)]
+    (for [x [xmin xmax] y [ymin ymax] z [zmin zmax]]
+      (vector x y z 1))))
+
+(defmethod local-corners-for :smooth-triangle
+  [{:keys [p1 p2 p3]}]
+  (let [[xmin ymin zmin] (map min p1 p2)
+        [xmax ymax zmax] (map max p1 p2)]
+    (for [x [xmin xmax] y [ymin ymax] z [zmin zmax]]
+      (vector x y z 1))))
 
 (defn eight-corners-for
   [{:keys [transform] :as shape}]

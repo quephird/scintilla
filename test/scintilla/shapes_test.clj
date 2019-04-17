@@ -218,79 +218,105 @@
 
 (deftest testing-intersections-for-triangle
   (testing "a ray parallel to triangle"
-    (let [triangle (make-triangle [0 1 0 1]
-                                  [-1 0 0 1]
-                                  [1 0 0 1])
+    (let [triangle (make-triangle [[0 1 0 1]
+                                   [-1 0 0 1]
+                                   [1 0 0 1]])
           ray      (r/make-ray [0 -1 -2 1] [0 1 0 0])]
       (is (empty? (intersections-for triangle ray)))))
   (testing "a ray misses the p1-p3 edge"
-    (let [triangle (make-triangle [0 1 0 1]
-                                  [-1 0 0 1]
-                                  [1 0 0 1])
+    (let [triangle (make-triangle [[0 1 0 1]
+                                   [-1 0 0 1]
+                                   [1 0 0 1]])
           ray      (r/make-ray [1 1 -2 1] [0 0 1 0])]
       (is (empty? (intersections-for triangle ray)))))
   (testing "a ray misses the p1-p2 edge"
-    (let [triangle (make-triangle [0 1 0 1]
-                                  [-1 0 0 1]
-                                  [1 0 0 1])
+    (let [triangle (make-triangle [[0 1 0 1]
+                                   [-1 0 0 1]
+                                   [1 0 0 1]])
           ray      (r/make-ray [-1 1 -2 1] [0 0 1 0])]
       (is (empty? (intersections-for triangle ray)))))
   (testing "a ray misses the p2-p3 edge"
-    (let [triangle (make-triangle [0 1 0 1]
-                                  [-1 0 0 1]
-                                  [1 0 0 1])
+    (let [triangle (make-triangle [[0 1 0 1]
+                                   [-1 0 0 1]
+                                   [1 0 0 1]])
           ray      (r/make-ray [0 -1 -2 1] [0 0 1 0])]
       (is (empty? (intersections-for triangle ray)))))
   (testing "a ray strikes a triangle"
-    (let [triangle (make-triangle [0 1 0 1]
-                                  [-1 0 0 1]
-                                  [1 0 0 1])
+    (let [triangle (make-triangle [[0 1 0 1]
+                                   [-1 0 0 1]
+                                   [1 0 0 1]])
           ray      (r/make-ray [0 0.5 -2 1] [0 0 1 0])
           intersections (intersections-for triangle ray)]
       (is (= 1 (count intersections)))
       (is (≈ 2 (:t (first intersections)))))))
 
+(deftest testing-intersections-for-smooth-triangle
+  (testing "a ray that hits the middle of the triangle"
+    (let [vertices        [[0 1 0 1]
+                           [-1 0 0 1]
+                           [1 0 0 1]]
+          normals         [[0 1 0 0]
+                           [-1 0 0 0]
+                           [1 0 0 0]]
+          smooth-triangle (make-smooth-triangle vertices normals)
+          ray             (r/make-ray [-0.2 0.3 -2 1] [0 0 1 0])
+          intersections   (intersections-for smooth-triangle ray)]
+      (is (≈ 0.45 (:u (first intersections))))
+      (is (≈ 0.25 (:v (first intersections)))))))
+
+;; NOTA BENE: `normal-for` now needs a third argument but for
+;;            all shapes except the triangle, it's not ever used
+;;            and so all the relevant tests below just pass in
+;;            a necessary but bogus value for the hit.
 (deftest testing-normal-for-sphere
   (testing "the normal on a sphere at a point on the x axis"
     (let [sphere (make-sphere)
           point  [1 0 0 1]
+          bogus-hit {}
           expected-value [1 0 0 0]]
-      (is (≈ expected-value (normal-for sphere point)))))
+      (is (≈ expected-value (normal-for sphere point bogus-hit)))))
   (testing "the normal on a sphere at a point on the y axis"
     (let [sphere (make-sphere)
           point  [0 1 0 1]
+          bogus-hit {}
           expected-value [0 1 0 0]]
-      (is (≈ expected-value (normal-for sphere point)))))
+      (is (≈ expected-value (normal-for sphere point bogus-hit)))))
   (testing "the normal on a sphere at a point on the z axis"
     (let [sphere (make-sphere)
           point  [0 0 1 1]
+          bogus-hit {}
           expected-value [0 0 1 0]]
-      (is (≈ expected-value (normal-for sphere point)))))
+      (is (≈ expected-value (normal-for sphere point bogus-hit)))))
   (testing "the normal on a sphere at a non-axial point"
     (let [sphere         (make-sphere)
           √3⟋3           (/ (Math/sqrt 3) 3.0)
           point          [√3⟋3 √3⟋3 √3⟋3 1]
+          bogus-hit {}
           expected-value [√3⟋3 √3⟋3 √3⟋3 0]]
-      (is (≈ expected-value (normal-for sphere point)))))
+      (is (≈ expected-value (normal-for sphere point bogus-hit)))))
   (testing "the normal on a translated sphere"
     (let [transform      (t/translation-matrix 0 1 0)
           sphere         (make-sphere {:transform transform})
           point          [0 1.70711 -0.70711 1]
+          bogus-hit {}
           expected-value [0 0.70711 -0.70711 0]]
-      (is (≈ expected-value (normal-for sphere point)))))
+      (is (≈ expected-value (normal-for sphere point bogus-hit)))))
   (testing "the normal on a scaled sphere"
     (let [transform      (t/scaling-matrix 1.0 0.5 1.0)
           sphere         (make-sphere {:transform transform})
           point          [0 0.70711 -0.70711 1]
+          bogus-hit {}
           expected-value [0 0.97014 -0.24254 0]]
-      (is (≈ expected-value (normal-for sphere point))))))
+      (is (≈ expected-value (normal-for sphere point bogus-hit))))))
 
 (deftest testing-normal-for-plane
   (testing "the normal on any point of a plane"
     (let [plane          (make-plane)
           points         [[0 0 0 1] [10 0 -10 1] [-5 0 150 1]]
+          bogus-hit      {}
           expected-value [0 1 0 0]]
-      (is (every? #(≈ expected-value %) (map #(normal-for plane %) points))))))
+      (is (every? #(≈ expected-value %)
+                  (map #(normal-for plane % bogus-hit) points))))))
 
 (deftest testing-normal-for-cube
   (testing "points on various faces of a default cube"
@@ -303,6 +329,7 @@
                   [ 0.4  0.4  -1]
                   [ 1    1     1]
                   [-1   -1    -1]]
+          bogus-hit {}
           expected-values [[ 1  0  0]
                            [-1  0  0]
                            [ 0  1  0]
@@ -311,14 +338,15 @@
                            [ 0  0 -1]
                            [ 1  0  0]
                            [-1  0  0]]]
-      (is (≈ expected-values (map #(normal-for cube %) points))))))
+      (is (≈ expected-values (map #(normal-for cube % bogus-hit) points))))))
 
 (deftest testing-normal-for-cylinder
   (testing "normal vector on the cylinder wall"
     (let [cylinder        (make-cylinder)
           points          [[1 0 0 1] [0 5 -1 1] [0 -2 1 1] [-1 1 0 1]]
+          bogus-hit       {}
           expected-values [[1 0 0 0] [0 0 -1 0] [0 0 1 0] [-1 0 0 0]]]
-      (is (≈ expected-values (map #(normal-for cylinder %) points)))))
+      (is (≈ expected-values (map #(normal-for cylinder % bogus-hit) points)))))
   (testing "normal vector on the cylinder's caps"
     (let [cylinder        (make-cylinder {:minimum 1
                                           :maximum 2
@@ -329,31 +357,48 @@
                            [0 2 0 1]
                            [0.5 2 0 1]
                            [0 2 0.5 1]]
+          bogus-hit       {}
           expected-values [[0 -1 0 0]
                            [0 -1 0 0]
                            [0 -1 0 0]
                            [0 1 0 0]
                            [0 1 0 0]
                            [0 1 0 0]]]
-      (is (≈ expected-values (map #(normal-for cylinder %) points))))))
+      (is (≈ expected-values (map #(normal-for cylinder % bogus-hit) points))))))
 
 (deftest testing-normal-for-cone
   (testing "normal vector on a cone"
     (let [cone            (make-cone)
           points          [[1 1 1 1]
                            [-1 -1 0 1]]
+          bogus-hit       {}
           expected-values [[0.5 -0.70711 0.5 0]
                            [-0.70711 0.70711 0 0]]]
-      (is (≈ expected-values (map #(normal-for cone %) points))))))
+      (is (≈ expected-values (map #(normal-for cone % bogus-hit) points))))))
 
 (deftest testing-normal-for-triangle
   (testing "a simple triangle"
-    (let [p1 [0 1 0 1]
-          p2 [-1 0 0 1]
-          p3 [1 0 0 1]
-          triangle (make-triangle p1 p2 p3)
+    (let [p1             [0 1 0 1]
+          p2             [-1 0 0 1]
+          p3             [1 0 0 1]
+          triangle       (make-triangle [p1 p2 p3])
+          bogus-hit      {}
           expected-value [0 0 -1 0]]
-      (is (every? #(≈ expected-value %) (map #(normal-for triangle %) [p1 p2 p3]))))))
+      (is (every? #(≈ expected-value %)
+                  (map #(normal-for triangle % bogus-hit) [p1 p2 p3]))))))
+
+(deftest testing-normal-for-smooth-triangle
+  (testing "a ray that hits the middle of the triangle"
+    (let [vertices        [[0 1 0 1]
+                           [-1 0 0 1]
+                           [1 0 0 1]]
+          normals         [[0 1 0 0]
+                           [-1 0 0 0]
+                           [1 0 0 0]]
+          smooth-triangle (make-smooth-triangle vertices normals)
+          hit             (make-intersection 1.0 smooth-triangle 0.45 0.25)
+          test-point      [0 0 0 1]]
+      (is (≈ [-0.5547 0.83205 0 0] (normal-for smooth-triangle test-point hit))))))
 
 (deftest testing-normal-for-child-of-group
   (testing "child object of nested group"
@@ -370,5 +415,7 @@
           ;; to perform a proper test below.
           sphere'               (-> outer-group :children first :children first)
 
+          bogus-hit             {}
+          test-point            [1.7321 1.1547 -5.5774 1]
           expected-value        [0.2857 0.4286 -0.8571 0]]
-      (is (≈ expected-value (normal-for sphere' [1.7321 1.1547 -5.5774 1]))))))
+      (is (≈ expected-value (normal-for sphere' test-point bogus-hit))))))

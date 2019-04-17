@@ -2,10 +2,12 @@
   (:require [scintilla.numeric :refer [≈]]))
 
 (defn plus
-  [[_ _ _ w1 :as v1] [_ _ _ w2 :as v2]]
-  (if (or (zero? w1) (zero? w2))
-    (mapv clojure.core/+ v1 v2)
-    (throw (Exception. "Cannot add two points."))))
+  ([[_ _ _ w1 :as v1] [_ _ _ w2 :as v2]]
+   (if (or (zero? w1) (zero? w2))
+     (mapv clojure.core/+ v1 v2)
+     (throw (Exception. "Cannot add two points."))))
+  ([v1 v2 & vs]
+   (plus v1 (apply plus v2 vs))))
 
 (defn subtract
   ([v]
