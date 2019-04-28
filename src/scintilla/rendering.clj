@@ -7,10 +7,11 @@
   "Renders the scene using the camera and returns the image data in a canvas data structure."
   [{:keys [pixel-width pixel-height] :as camera} scene]
   (into []
-    (for [y (range pixel-height)]
-      (into []
-        (for [x (range pixel-width)]
-          (l/color-for scene (c/ray-for camera x y) l/max-reflections))))))
+    (partition pixel-width
+      (pmap (fn [[y x]]
+              (l/color-for scene (c/ray-for camera x y) l/max-reflections))
+            (for [y (range pixel-height) x (range pixel-width)]
+              [y x])))))
 
 (defn render-to-file
   "Renders the scene using the camera and saves the image to a file."
