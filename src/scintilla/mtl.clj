@@ -53,6 +53,16 @@
   [line parser-results]
   (parse-color-line line :specular parser-results))
 
+;; Shininess statement
+(defmethod parse-line "Ns"
+  [line parser-results]
+  (let [[_ & args]        (str/split line #"\s+")
+        shininess         (-> args
+                              first
+                              (Double/parseDouble))
+        current-material (:current-material parser-results)]
+    (assoc-in parser-results [:materials current-material :shininess] shininess)))
+
 ;; Handle for all blank lines and other non-supported statements
 (defmethod parse-line :default
   [_ parser-results]
