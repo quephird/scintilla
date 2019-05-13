@@ -1,5 +1,6 @@
 (ns scintilla.obj
   (:require [scintilla.groups :as g]
+            [scintilla.mtl :as mf]
             [scintilla.shapes :as s]
             [clojure.java.io :as io]
             [clojure.string :as str]))
@@ -35,10 +36,12 @@
    and their respective triangles. It also is set up to
    track the current group name."
   []
-  {:vertices      []
-   :normals       []
-   :groups        {:default []}
-   :current-group :default})
+  {:vertices         []
+   :normals          []
+   :groups           {:default []}
+   :materials        {}
+   :current-group    :default
+   :current-material nil})
 
 (defn- statement-type-for
   "Dispatcher for `parse-line` multimethod."
@@ -54,6 +57,22 @@
    first word on the line, representing a statement type."
   (fn [line _]
     (statement-type-for line)))
+
+;; Material file reference statement
+(defmethod parse-line "mtllib"
+  [line parser-results]
+  (let [[_ filename] (str/split line #"\s+")
+        materials    (-> filename
+                         mf/parse-file
+                         :materials)]
+    (update-in parser-results [:materials] merge materials)))
+
+;; Material file reference statement
+(defmethod parse-line "usemtl"
+  [line parser-results]
+  (let [[_ name] (str/split line #"\s+")
+        material (keyword name)]
+    (assoc-in parser-results [:current-material] material)))
 
 ;; Vertex statement
 (defmethod parse-line "v"
@@ -140,10 +159,14 @@
        {:vertices [1 4 5] :normals [6 3 2]}
        {:vertices [1 5 6] :normals [6 2 1]}]
   "
-  [[v1 & vs :as vertex-indices] [n1 & ns :as normal-indices]]
+  [[v1 & vs :as vertex-indices]
+   [n1 & ns :as normal-indices]
+   current-material]
   (let [vertex-pairs   (partition 2 1 vs)
         vertex-triples (mapv #(into [] (cons v1 %)) vertex-pairs)
-        triangle-maps  (map (fn [vt] {:vertices vt}) vertex-triples)]
+        triangle-maps  (map (fn [vt]
+                              {:vertices vt
+                               :material current-material}) vertex-triples)]
     (if (some nil? normal-indices)
       triangle-maps
       (let [normal-pairs   (partition 2 1 ns)
@@ -158,7 +181,10 @@
         all-indices       (parse-all-indices vertex-data)
         vertex-indices    (map first all-indices)
         normal-indices    (map third all-indices)
-        new-triangle-maps (make-triangle-maps-for vertex-indices normal-indices)
+        current-material  (:current-material parser-results)
+        new-triangle-maps (make-triangle-maps-for vertex-indices
+                                                  normal-indices
+                                                  current-material)
         current-group     (:current-group parser-results)]
     (update-in parser-results [:groups current-group] into new-triangle-maps)))
 
@@ -191,33 +217,39 @@
   "Takes a triple of triangle indices, and the list of all vertices and
    all normals and either returns a Scintilla triangle object or
    smooth triangle object if vertex normals are specified."
-  [{:keys [vertices normals]} all-vertices all-normals]
+  [{:keys [vertices normals material] :as group-data}
+   {all-vertices  :vertices
+    all-normals   :normals
+    all-materials :materials :as results}]
   (let [vertex-points (->> vertices
                            (map dec)
                            (map #(get all-vertices %))
-                           (map #(conj % 1)))]
+                           (map #(conj % 1)))
+        material      (get-in all-materials [material])]
     (if (nil? normals)
-      (s/make-triangle vertex-points)
+      (s/make-triangle vertex-points :material material)
       (let [normal-vectors (->> normals
                                 (map dec)
                                 (map #(get all-normals %))
                                 (map #(conj % 0)))]
-        (s/make-smooth-triangle vertex-points normal-vectors)))))
+        (s/make-smooth-triangle vertex-points
+                                normal-vectors
+                                :material material)))))
 
 (defn- make-group-for
   "Takes a set of parsed data for a group, named or default, and
    the list of all vertices, and returns a Scintilla group object."
-  [group-data vertices normals]
-  (let [triangles (map #(make-triangle-for % vertices normals) group-data)]
+  [group-data results]
+  (let [triangles (map #(make-triangle-for % results) group-data)]
     (g/make-group triangles)))
 
 (defn results->groups
   "Takes the complete set of parsed vertices, textures, groups, etc.
    and returns a Scintilla group containing all objects represented
    in the OBJ file."
-  [{:keys [groups vertices normals] :as results}]
+  [{:keys [groups] :as results}]
   (let [named-groups (map (fn [[group-name group-data]]
-                            (make-group-for group-data vertices normals)) groups)]
+                            (make-group-for group-data results)) groups)]
     (g/make-group named-groups)))
 
 (defn load-obj-file

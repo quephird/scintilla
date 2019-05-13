@@ -52,25 +52,27 @@
   (make-shape :cone (into {} options)))
 
 (defn make-triangle
-  [[p1 p2 p3] & options]
+  [[p1 p2 p3] & material]
   (let [e1     (u/subtract p2 p1)
         e2     (u/subtract p3 p1)
         normal (u/normalize (u/cross-product e2 e1))
         triangle-options {:p1 p1 :p2 p2 :p3 p3
                           :e1 e1 :e2 e2
-                          :normal normal}]
-    (make-shape :triangle (apply merge triangle-options options))))
+                          :normal normal
+                          :material (apply merge a/default-material material)}]
+    (make-shape :triangle triangle-options)))
 
 (defn make-smooth-triangle
-  [[p1 p2 p3] [n1 n2 n3] & options]
+  [[p1 p2 p3] [n1 n2 n3] & {:keys [material] :or {material {}}}]
   (let [e1         (u/subtract p2 p1)
         e2         (u/subtract p3 p1)
         normal     (u/normalize (u/cross-product e2 e1))
         triangle-options {:p1 p1 :p2 p2 :p3 p3
                           :n1 n1 :n2 n2 :n3 n3
                           :e1 e1 :e2 e2
-                          :normal normal}]
-    (make-shape :smooth-triangle (apply merge triangle-options options))))
+                          :normal normal
+                          :material (merge a/default-material material)}]
+    (make-shape :smooth-triangle triangle-options)))
 
 (defn- quadratic-roots-for
   "Helper function to determine the set of real roots to the quadratic equation:

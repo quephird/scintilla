@@ -1,6 +1,5 @@
 (ns scintilla.mtl
-  (:require [scintilla.groups :as g]
-            [scintilla.shapes :as s]
+  (:require [scintilla.materials :as a]
             [clojure.java.io :as io]
             [clojure.string :as str]))
 
@@ -39,9 +38,14 @@
     (assoc-in parser-results [:materials current-material color-type] color)))
 
 ;; Ambient color statement
+;; NOTA BENE: For now, just set the color attribute of the
+;;            material to stay consistent with the current model.
+;;            What is currently specified in the :ambient
+;;            attribute should actually be the ambient light of
+;;            the _scene_.
 (defmethod parse-line "Ka"
   [line parser-results]
-  (parse-color-line line :ambient parser-results))
+  (parse-color-line line :color parser-results))
 
 ;; Diffuse color statement
 (defmethod parse-line "Kd"
@@ -78,3 +82,18 @@
           (if (empty? remaining)
             new-results
             (recur new-results remaining)))))))
+
+(defn results->materials
+  "Takes the complete set of parsed materials and returns a
+   collection of Scintilla material data structures."
+  [{:keys [materials] :as results}]
+  (map #(a/make-material %) (vals materials)))
+
+(defn load-mtl-file
+  "Intended to be the main public interface to this namespace, this
+   takes a filename for an OBJ file, parses it entirely, and returns
+   the Scintilla representation of the entire scene in the file."
+  [filename]
+  (-> filename
+      parse-file
+      results->materials))

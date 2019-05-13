@@ -1,6 +1,9 @@
+# Canonical but low-poly Utah teapot
+# Adapted from:
 #
-# object Teapot001
-#
+#    https://graphics.cs.utah.edu/courses/cs6620/fall2013/prj05/teapot-low.obj
+
+mtllib teapot_low.mtl
 
 v  7.0000 0.0000 12.0000
 v  4.9700 -4.9700 12.0000
@@ -361,6 +364,7 @@ vt 0.2500 0.9500 0.0000
 vt 0.0000 0.9500 0.0000
 # 78 texture coords
 
+usemtl Glossy
 g Teapot001
 f 1/1/1 2/2/2 3/3/3 4/4/4 
 f 4/4/4 3/3/3 5/5/5 6/6/6 

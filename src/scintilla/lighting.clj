@@ -29,15 +29,41 @@
     (and (not (nil? light-hit))
          (< (:t light-hit) (u/magnitude light-direction)))))
 
+(defmulti ambient*
+  (fn [ambient _] (class ambient)))
+
+(defmethod ambient* java.lang.Double
+  [ambient effective-color]
+  (c/scalar-times effective-color ambient))
+
+(defmethod ambient* clojure.lang.PersistentVector
+  [ambient effective-color]
+  (c/hadamard-product effective-color ambient))
+
 (defn ambient
   [{:keys [intensity] :as light}
    {:keys [shape] :as prepared-hit}]
   (let [{:keys [ambient]} (:material shape)
         color             (s/color-for prepared-hit)
         effective-color   (c/hadamard-product color intensity)]
-    (c/scalar-times effective-color ambient)))
+    (ambient* ambient effective-color)))
 
-(defn diffuse
+(defmulti diffuse*
+  (fn [diffuse _ _] (class diffuse)))
+
+(defmethod diffuse* java.lang.Double
+  [diffuse light-dot-normal effective-color]
+  (->> light-dot-normal
+       (* diffuse)
+       (c/scalar-times effective-color)))
+
+(defmethod diffuse* clojure.lang.PersistentVector
+  [diffuse light-dot-normal effective-color]
+  (->> light-dot-normal
+       (c/scalar-times diffuse)
+       (c/hadamard-product effective-color)))
+
+(defn diffuse 
   [{:keys [intensity position] :as light}
    {:keys [shape surface-normal surface-point] :as prepared-hit}]
   (let [{diffuse :diffuse} (:material shape)
@@ -46,8 +72,23 @@
         light-vector       (u/normalize (u/subtract position surface-point))
         light-dot-normal   (u/dot-product light-vector surface-normal)]
     (if (< light-dot-normal 0)
-        [0 0 0]
-        (c/scalar-times effective-color (* diffuse light-dot-normal)))))
+      [0 0 0]
+      (diffuse* diffuse light-dot-normal effective-color))))
+
+(defmulti specular*
+  (fn [specular _ _] (class specular)))
+
+(defmethod specular* java.lang.Double
+  [specular reflection-coefficient intensity]
+  (->> reflection-coefficient
+       (* specular)
+       (c/scalar-times intensity)))
+
+(defmethod specular* clojure.lang.PersistentVector
+  [specular reflection-coefficient intensity]
+  (->> reflection-coefficient
+       (c/scalar-times specular)
+       (c/hadamard-product intensity)))
 
 (defn specular
   [{:keys [intensity position] :as light}
@@ -59,8 +100,8 @@
         reflect-dot-eye              (u/dot-product reflected-vector eye-direction)
         reflection-coefficient       (Math/pow reflect-dot-eye shininess)]
     (if (or (< light-dot-normal 0) (< reflection-coefficient 0))
-        [0 0 0]
-        (c/scalar-times intensity (* specular reflection-coefficient)))))
+      [0 0 0]
+      (specular* specular reflection-coefficient intensity))))
 
 (defn color-from-direct-light
   "Determines the color for the point associated with the hit

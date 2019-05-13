@@ -1,0 +1,12 @@
+mtllib materials.mtl
+
+v -1 1 0
+v -1 0 0
+v 1 0 0
+v 1 1 0
+
+usemtl FirstMaterial
+f 1 2 3
+
+usemtl SecondMaterial
+f 1 3 4
