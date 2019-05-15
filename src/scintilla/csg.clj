@@ -1,5 +1,5 @@
 (ns scintilla.csg
-  (:require [scinilla.shapes :as s]))
+  (:require [scintilla.shapes :as s]))
 
 (defn make-csg-shape
   [operation-type left-shape right-shape]
@@ -15,8 +15,18 @@
   [operation-type left-shape-hit? inside-left-shape? inside-right-shape?]
   (case operation-type
     :union
-      (if (or (and left-shape-hit? inside-right-shape?)
-              (and (not left-shape-hit?) inside-left-shape?))
+    ;;                            ______  ______ 
+    ;;                          ⟋       ⟋⟍       ⟍ 
+    ;;                         /       /  \        \
+    ;;             -----------✅------|----|-------✅-------
+    ;;                         \       \  /        /
+    ;;                          ⟍       ⟍⟋       ⟋ 
+    ;;                            ‾‾‾‾‾‾  ‾‾‾‾‾‾
+    ;; We only want to count intersections that either hit the left shape
+    ;; but _not_ from within the other, _or_ hit the right shape and not from
+    ;; within it
+      (if (or (and left-shape-hit? (not inside-right-shape?))
+              (and (not left-shape-hit?) (not inside-left-shape?)))
         true
         false)
     :else
